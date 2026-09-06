@@ -2,18 +2,19 @@
 <html lang="zh-CN" style="height: 100%">
 <head>
   <meta charset="utf-8">
-  <title>巨富长街区各街道界面评价权重与构成差异分析</title>
+  <title>衡复风貌区各街道界面评价权重与构成差异分析</title>
   <!-- 引入 ECharts 5 CDN -->
   <script src="echarts.min.js"></script>
-  <link rel="stylesheet" href="chart-theme.css">
+  <meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="studies.css"><script src="survey-data.js"></script>
   <script src="monochrome.js"></script>
 </head>
-<body style="height: 100%; margin: 0; background-color: #f8fafc;">
-  <div id="container" style="height: 100%; width: 100%;"></div>
+<body data-study="2">
+  <header><a href="../visualizations.html" aria-label="返回图表目录">←</a><h1>02 街道空间评分因素权重分析</h1><span class="meta"></span></header><p class="note">各街道有效评分均值，遮荫率换算为5分制，占比为六项均值构成比例，六项评分合计30分</p><div id="container" style="flex:1;min-height:0;width:100%"></div>
 
   <script type="text/javascript">
     const resData = {"roads": ["东湖路", "乌鲁木齐中路", "五原路", "华亭路", "南昌路", "嘉善路", "复兴中路", "太原路", "安福路", "宝庆路", "富民路", "巨鹿路", "延庆路", "建国西路", "新乐路", "武康路", "永嘉路", "永康路", "汾阳路", "绍兴路", "茂名南路", "襄阳北路", "襄阳南路", "长乐路", "陕西南路"], "series": {"界面开放度": [4.25, 4.0, 4.1111, 3.0, 2.25, 3.8889, 4.0, 2.9286, 3.5, 4.0, 3.28, 3.4, 3.66, 3.6333, 3.3333, 3.8462, 2.8571, 3.75, 3.11, 3.25, 4.0, 2.0, 3.3263, 2.8333, 3.0], "临街互动性": [4.0, 4.1818, 3.0, 4.0, 4.0, 4.1111, 5.0, 3.1071, 3.3333, 3.0, 3.84, 3.8, 3.36, 3.6667, 3.4167, 3.2308, 3.0, 4.5, 3.6667, 3.25, 3.0, 2.0, 3.4958, 3.5, 3.0], "视觉丰富度": [4.25, 4.2727, 4.0, 3.0, 4.0, 2.7778, 1.0, 3.7143, 3.5, 3.0, 3.46, 3.8, 3.2, 3.8333, 4.1667, 3.8462, 3.5714, 4.75, 3.3333, 2.5, 3.0, 5.0, 3.0868, 3.8333, 2.5], "历史感知度": [4.0, 2.0909, 2.75, 2.0, 3.75, 2.4444, 3.0, 3.9643, 2.8333, 2.0, 3.32, 3.8, 3.04, 4.0, 2.4167, 2.5385, 3.7143, 3.25, 3.6667, 2.25, 1.0, 1.0, 3.1679, 4.0, 2.5], "遮阴率": [1.75, 2.1818, 3.8571, 1.5, 2.0, 3.1944, 3.5, 3.0, 2.3333, 3.0, 2.8, 3.9, 2.8, 3.4167, 2.6667, 3.3542, 3.9167, 3.375, 3.8333, 2.5, 3.75, 2.5, 3.5526, 5.0, 4.25], "路面状态": [4.5, 4.0, 4.375, 3.0, 4.0, 3.5556, 5.0, 4.7143, 4.3333, 5.0, 3.36, 4.0, 3.6, 4.3333, 3.9167, 4.8462, 4.7143, 5.0, 4.5567, 4.5, 4.5, 4.0, 3.6921, 3.6667, 4.0]}};
 
+    document.querySelector('.meta').textContent='2026人因空间·'+window.SURVEY.rows.length+'RECORDS';
     const dom = document.getElementById('container');
     const myChart = echarts.init(dom);
 
@@ -43,14 +44,7 @@
     }));
 
     const option = {
-      title: {
-        text: '巨富长街区 - 不同街道节点界面评价权重与构成差异分析',
-        subtext: '全量总表(0906) · 各街道有效评分均值；遮荫率÷20换算为5分制；占比为六项均值的构成比例',
-        left: 'center',
-        top: '20px',
-        textStyle: { fontSize: 18, fontWeight: 'bold', color: '#1e293b' },
-        subtextStyle: { fontSize: 12, color: '#64748b' }
-      },
+
       tooltip: {
         trigger: 'axis',
         axisPointer: { type: 'shadow' },
@@ -69,7 +63,7 @@
         }
       },
       legend: {
-        top: '65px',
+        top: '8px',
         data: categories,
         textStyle: { color: '#334155' }
       },
@@ -77,12 +71,12 @@
         left: '3%',
         right: '4%',
         bottom: '3%',
-        top: '110px',
+        top: '45px',
         containLabel: true
       },
       xAxis: {
         type: 'value',
-        name: '六项评分均值合计 (满分30分)',
+        name: '',
         nameLocation: 'middle',
         nameGap: 30,
         splitLine: { lineStyle: { type: 'dashed', color: '#cbd5e1' } }

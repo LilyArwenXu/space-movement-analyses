@@ -1,5 +1,6 @@
 from build_data import ROOT,read_source
 import json,re
+from urllib.parse import urlsplit
 data=json.loads((ROOT/'spacemovement/survey-data.js').read_text(encoding='utf-8').removeprefix('window.SURVEY = ').strip().rstrip(';'))
 _,raw=read_source()
 source=[r for r in raw[3:] if isinstance(r.get('C'),str) and r['C'].strip()]
@@ -17,7 +18,7 @@ for pair in data['correlations']:
 for html in (ROOT/'dist').rglob('*.html'):
     for url in re.findall(r'(?:href|src)="([^"]+)"',html.read_text(encoding='utf-8')):
         if url.startswith(('http','#','data:')):continue
-        assert (html.parent/url.split('?')[0]).exists(),(html,url)
+        assert (html.parent/urlsplit(url).path).exists(),(html,url)
 for name in ['studies.js','studies.css','survey-data.js','echarts.min.js']:
     assert (ROOT/'spacemovement'/name).read_bytes()==(ROOT/'dist/spacemovement'/name).read_bytes()
 print('Source record counts, address aggregation, six behavior totals, missing metrics, local links and published-directory copies verified.')

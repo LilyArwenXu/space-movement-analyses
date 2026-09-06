@@ -3,3 +3,6 @@
 body[data-study="7"] #workspace{display:block;overflow-y:auto;overflow-x:hidden;scrollbar-color:#666 #111;overscroll-behavior:contain}body[data-study="7"] #workspace .plot{width:100%;flex:none}
 
 body[data-study="12"] #workspace,body[data-study="13"] #workspace{display:block;overflow:auto;scrollbar-color:#666 #111}body[data-study="12"] .plot,body[data-study="13"] .plot{width:100%;flex:none}.low-sample{height:auto;color:#777;padding:24px}.low-sample summary{cursor:pointer;font-size:14px;color:#999}.low-sample table{margin-top:18px}
+body[data-study="11"] nav{flex-wrap:nowrap;overflow-x:auto;scrollbar-color:#666 #111}body[data-study="11"] nav button{flex-shrink:0;white-space:nowrap}
+
+.note,.report,.plot,nav button{font-family:"Times New Roman",SimSun,"Songti SC",serif}.meta{white-space:nowrap}body[data-study="6"] .plot{flex:1 1 0}@media(max-width:700px){header{flex-wrap:wrap}.meta{display:block;font-size:10px}body[data-study="6"] #workspace{display:block;overflow:auto}body[data-study="6"] .plot{height:420px}}

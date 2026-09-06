@@ -8,6 +8,7 @@
       const chart = originalInit.apply(this, arguments);
       const originalSetOption = chart.setOption;
       chart.setOption = function (option) {
+        option.textStyle = {fontFamily:'Times New Roman, SimSun, Songti SC, serif',color:'#ddd'};
         option.backgroundColor = '#101010';
         option.color = palette;
         if (option.title) {
