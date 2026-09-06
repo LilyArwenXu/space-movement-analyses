@@ -7,6 +7,23 @@ body{height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidd
 .topbar h1{margin:0;font-size:16px;font-weight:400;letter-spacing:.18em;text-align:right}
 .accordion{display:flex;flex:1;min-height:0;width:100%;gap:1px;background:var(--rule)}
 .panel{position:relative;flex:1 1 0;min-width:0;overflow:hidden;background:var(--ink);color:var(--paper);text-decoration:none;transition:flex-grow .55s cubic-bezier(.22,.61,.36,1),background-color .3s,color .3s}
+.panel::before{content:"";position:absolute;top:0;right:0;width:100%;height:58%;pointer-events:none;background:url("images/map.png") var(--map-x,50%) var(--map-y,50%)/auto 240% no-repeat;filter:grayscale(1) contrast(1.2);mix-blend-mode:multiply;-webkit-mask-image:linear-gradient(135deg,transparent 10%,#000 70%),linear-gradient(to bottom,#000 20%,transparent 100%);-webkit-mask-composite:source-in;mask-image:linear-gradient(135deg,transparent 10%,#000 70%),linear-gradient(to bottom,#000 20%,transparent 100%);mask-composite:intersect;opacity:0;transition:opacity .25s;}
+/* Each study looks into a different part of the same cover map. */
+.panel:nth-child(1){--map-x:28%;--map-y:16%}
+.panel:nth-child(2){--map-x:45%;--map-y:16%}
+.panel:nth-child(3){--map-x:62%;--map-y:16%}
+.panel:nth-child(4){--map-x:78%;--map-y:16%}
+.panel:nth-child(5){--map-x:25%;--map-y:40%}
+.panel:nth-child(6){--map-x:42%;--map-y:40%}
+.panel:nth-child(7){--map-x:59%;--map-y:40%}
+.panel:nth-child(8){--map-x:76%;--map-y:40%}
+.panel:nth-child(9){--map-x:28%;--map-y:64%}
+.panel:nth-child(10){--map-x:45%;--map-y:64%}
+.panel:nth-child(11){--map-x:62%;--map-y:64%}
+.panel:nth-child(12){--map-x:78%;--map-y:64%}
+.panel:nth-child(13){--map-x:36%;--map-y:88%}
+.panel:nth-child(14){--map-x:66%;--map-y:88%}
+.panel:is(:hover,:focus-visible)::before{opacity:.65;transition:opacity .4s .15s;}
 .panel-spine{position:absolute;left:50%;bottom:20px;transform:translateX(-50%);writing-mode:vertical-rl;font-size:16px;line-height:1.25;letter-spacing:.12em;white-space:nowrap;transition:opacity .16s}
 .panel-detail{position:absolute;left:clamp(24px,3vw,52px);right:clamp(24px,3vw,52px);bottom:52px;opacity:0;visibility:hidden;transform:translateY(12px);transition:opacity .15s,transform .3s,visibility .15s;pointer-events:none}
 .panel-number{display:block;font-family:"Arial Narrow",Impact,Arial,sans-serif;font-size:80px;font-weight:700;line-height:1;letter-spacing:-.04em}
@@ -20,4 +37,4 @@ body{height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidd
 .brand:focus-visible{outline:1px solid var(--paper);outline-offset:8px}
 @media(max-width:700px){.topbar{height:82px;padding:0 18px;gap:16px}.brand{font-size:12px;letter-spacing:.1em}.topbar h1{font-size:11px;letter-spacing:.08em;max-width:180px;line-height:1.7}.panel-spine{font-size:12px;letter-spacing:.06em;bottom:16px}.panel-detail{left:16px;right:16px;bottom:30px}.panel-number{font-size:54px}.panel-detail h2{font-size:20px;margin:20px 0 24px}.panel-link{font-size:10px;letter-spacing:0;white-space:normal}}
 @media(max-height:550px){.topbar{height:64px}.panel-spine{font-size:12px;letter-spacing:0;bottom:12px}.panel-detail{bottom:20px}.panel-number{font-size:48px}.panel-detail h2{margin:14px 0 18px;font-size:22px}}
-@media(prefers-reduced-motion:reduce){.panel,.panel-spine,.panel-detail,.panel:is(:hover,:focus-visible) .panel-detail{transition:none}}
+@media(prefers-reduced-motion:reduce){.panel,.panel::before,.panel:is(:hover,:focus-visible)::before,.panel-spine,.panel-detail,.panel:is(:hover,:focus-visible) .panel-detail{transition:none}}

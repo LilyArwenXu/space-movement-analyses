@@ -5,22 +5,24 @@
   --pointer-x: 50vw;
   --pointer-y: 50vh;
   --reveal-size: 0px;
+  --frame-gap: clamp(12px, 2.5vmin, 36px);
 }
 
 html, body { min-height: 100%; background: var(--ink); }
 body { overflow: auto; color: var(--paper); font-family: Arial, "PingFang SC", "Microsoft YaHei", sans-serif; }
 #wrapper { min-height: 100%; height: auto; position: fixed; background: #050505; }
-#bg, #reveal { inset: 0; width: 100%; height: 100%; position: fixed; background: center/cover no-repeat url("images/map.png"); animation: none; }
+#map-frame { position: fixed; inset: var(--frame-gap); overflow: hidden; border: 1px solid rgba(255,255,255,.55); box-sizing: border-box; pointer-events: none; }
+#bg, #reveal { inset: 0; width: 100%; height: 100%; position: absolute; background: center/cover no-repeat url("images/map.png"); animation: none; }
 #bg { filter: grayscale(1) invert(1) contrast(1.25); opacity: .68; }
-#reveal { filter: grayscale(1) contrast(1.2); clip-path: circle(var(--reveal-size) at var(--pointer-x) var(--pointer-y)); transition: clip-path .12s ease-out; }
-#overlay { inset: 0; position: fixed; background: rgba(0,0,0,.43); }
+#reveal { filter: grayscale(1) contrast(1.2); clip-path: circle(var(--reveal-size) at calc(var(--pointer-x) - var(--frame-gap) - 1px) calc(var(--pointer-y) - var(--frame-gap) - 1px)); transition: clip-path .12s ease-out; }
+#overlay { inset: 0; width: 100%; height: 100%; position: absolute; background: rgba(0,0,0,.43); }
 #main { position: relative; display: grid; place-items: end start; min-height: 100vh; padding: 2rem 7vw 15vh; }
 #header { width: min(780px, 100%); text-align: left; transform: none; }
 #header .eyebrow { margin: 0 0 1rem; font: 700 .72rem/1.2 Arial, sans-serif; letter-spacing: .22em; }
 #header h1 { font: 900 clamp(3rem, 8vw, 6.8rem)/1 Arial, "PingFang SC", sans-serif; letter-spacing: -.06em; text-shadow: none; }
 #header .dek { margin: 1.3rem 0 0; font-size: 1rem; letter-spacing: .4em; }
 #header nav { margin-top: 3rem; }
-#header nav ul { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; padding: 0; border: 1px solid var(--line); background: var(--line); }
+#header nav ul { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; padding: 0; border: 1px solid var(--line); background: var(--line); }
 #header nav li { display: block; background: rgba(5,5,5,.83); }
 #header nav li { width: auto; height: auto; padding: 0; }
 #header nav li a.portal { display: flex; width: 100%; height: 54px; min-height: 54px; padding: 0 1.2rem; border: 0; border-radius: 0; flex-direction: row; gap: 1.2rem; justify-content: flex-start; align-items: center; font-size: 1rem; font-weight: 700; letter-spacing: .08em; line-height: 1.2; }
@@ -32,8 +34,9 @@ body { overflow: auto; color: var(--paper); font-family: Arial, "PingFang SC", "
 #footer { position: fixed; bottom: 1rem; color: #fff; font-size: .62rem; letter-spacing: .12em; opacity: .7; }
 @media (max-width: 680px) {
   #main { align-items: end; padding: 1.25rem 1.25rem 12vh; }
-  #header nav ul { grid-template-columns: 1fr; }
-  #header nav li a.portal { min-height: 48px; height: 48px; flex-direction: row; align-items: center; }
+  #header nav ul { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  #header nav li a.portal { min-height: 48px; height: 48px; padding: 0 4px; gap: 3px; justify-content: center; font-size: clamp(10px, 2.5vw, 14px); letter-spacing: 0; white-space: nowrap; }
+  #header nav .number { font-size: 8px; }
   #footer { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { #wrapper { animation: none; opacity: 1; } #reveal { transition: none; } }
