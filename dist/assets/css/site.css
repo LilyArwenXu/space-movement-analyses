@@ -14,22 +14,26 @@ body { overflow: auto; color: var(--paper); font-family: Arial, "PingFang SC", "
 #bg { filter: grayscale(1) invert(1) contrast(1.25); opacity: .68; }
 #reveal { filter: grayscale(1) contrast(1.2); clip-path: circle(var(--reveal-size) at var(--pointer-x) var(--pointer-y)); transition: clip-path .12s ease-out; }
 #overlay { inset: 0; position: fixed; background: rgba(0,0,0,.43); }
-#main { position: relative; display: grid; place-items: center; min-height: 100vh; padding: 2rem; }
-#header { width: min(980px, 100%); text-align: left; transform: none; }
+#main { position: relative; display: grid; place-items: end start; min-height: 100vh; padding: 2rem 7vw 15vh; }
+#header { width: min(780px, 100%); text-align: left; transform: none; }
 #header .eyebrow { margin: 0 0 1rem; font: 700 .72rem/1.2 Arial, sans-serif; letter-spacing: .22em; }
-#header h1 { font: 900 clamp(3.2rem, 11vw, 8.8rem)/.88 Arial, "PingFang SC", sans-serif; letter-spacing: -.08em; text-shadow: none; }
+#header h1 { font: 900 clamp(3rem, 8vw, 6.8rem)/1 Arial, "PingFang SC", sans-serif; letter-spacing: -.06em; text-shadow: none; }
 #header .dek { margin: 1.3rem 0 0; font-size: 1rem; letter-spacing: .4em; }
 #header nav { margin-top: 3rem; }
 #header nav ul { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; padding: 0; border: 1px solid var(--line); background: var(--line); }
 #header nav li { display: block; background: rgba(5,5,5,.83); }
-#header nav li a.portal { display: flex; width: 100%; height: auto; min-height: 150px; padding: 1.2rem; border: 0; border-radius: 0; flex-direction: column; justify-content: space-between; align-items: flex-start; font-size: 1rem; font-weight: 700; letter-spacing: .08em; }
+#header nav li { width: auto; height: auto; padding: 0; }
+#header nav li a.portal { display: flex; width: 100%; height: 54px; min-height: 54px; padding: 0 1.2rem; border: 0; border-radius: 0; flex-direction: row; gap: 1.2rem; justify-content: flex-start; align-items: center; font-size: 1rem; font-weight: 700; letter-spacing: .08em; line-height: 1.2; }
+#header nav li a.portal:before { display:none; }
+#header nav a.portal span { display: inline; }
+#main:before { display: none; }
 #header nav li a.portal:hover, #header nav li a.portal:focus-visible { background: #fff; color: #000; transform: none; }
 .portal .number { font: 400 .7rem/1 monospace; opacity: .7; }
 #footer { position: fixed; bottom: 1rem; color: #fff; font-size: .62rem; letter-spacing: .12em; opacity: .7; }
 @media (max-width: 680px) {
-  #main { align-items: center; padding: 1.25rem; }
+  #main { align-items: end; padding: 1.25rem 1.25rem 12vh; }
   #header nav ul { grid-template-columns: 1fr; }
-  #header nav li a.portal { min-height: 82px; flex-direction: row; align-items: center; }
+  #header nav li a.portal { min-height: 48px; height: 48px; flex-direction: row; align-items: center; }
   #footer { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { #wrapper { animation: none; opacity: 1; } #reveal { transition: none; } }

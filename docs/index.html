@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<!--
+	Aerial by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html>
+	<head>
+		<title>巨富长街区｜空间与行为研究</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="assets/css/main.css" />
+		<link rel="stylesheet" href="assets/css/site.css" />
+		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+	</head>
+	<body class="is-preload">
+		<div id="wrapper">
+			<div id="bg" aria-hidden="true"></div>
+			<div id="reveal" aria-hidden="true"></div>
+			<div id="overlay" aria-hidden="true"></div>
+			<div id="main">
+
+				<!-- Header -->
+					<header id="header">
+						<p class="eyebrow">JUFU–CHANGLE DISTRICT / FIELD ATLAS</p>
+						<h1>巨富长街区</h1>
+						<p class="dek">空间 · 数据 · 行为</p>
+						<nav>
+							<ul>
+								<li><a href="https://hfinvestigation.site/" class="portal" target="_blank" rel="noopener"><span class="number">01</span><span>调研网页</span></a></li>
+								<li><a href="visualizations.html" class="portal"><span class="number">02</span><span>数据可视化</span></a></li>
+								<li><a href="behavior-analysis.html" class="portal"><span class="number">03</span><span>行为分析</span></a></li>
+							</ul>
+						</nav>
+					</header>
+
+				<!-- Footer -->
+					<footer id="footer">
+					<span class="copyright">巨富长街区空间移动研究 · 2026</span>
+					</footer>
+
+			</div>
+		</div>
+		<script>
+			window.onload = function() { document.body.classList.remove('is-preload'); }
+			const root = document.documentElement;
+			window.addEventListener('pointermove', function (event) {
+				root.style.setProperty('--pointer-x', event.clientX + 'px');
+				root.style.setProperty('--pointer-y', event.clientY + 'px');
+				root.style.setProperty('--reveal-size', 'clamp(110px, 18vw, 240px)');
+			});
+			window.addEventListener('pointerleave', function () {
+				root.style.setProperty('--reveal-size', '0px');
+			});
+		</script>
+	</body>
+</html>

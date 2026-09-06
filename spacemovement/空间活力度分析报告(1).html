@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<!-- saved from url=(0233)file:///E:/University/%EF%BC%812026%E7%A7%8B/%E5%B0%8F%E5%AD%A6%E6%9C%9F%E4%BA%BA%E5%9B%A0%E7%A9%BA%E9%97%B4/%E6%95%B0%E6%8D%AE%E5%88%86%E6%9E%90/%E7%A9%BA%E9%97%B4%E6%B4%BB%E5%8A%9B%E5%BA%A6%E5%88%86%E6%9E%90%E6%8A%A5%E5%91%8A1.html -->
+<html lang="zh-CN"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spearman 多因素关联性分析报告</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    background: #f4f6f9; color: #2c3e50; line-height: 1.7; padding: 30px 20px;
+  }
+  .container { max-width: 1200px; margin: 0 auto; }
+  h1 {
+    font-size: 26px; font-weight: 700; color: #1a2b4a;
+    border-left: 5px solid #2c5f8a; padding-left: 14px; margin-bottom: 8px;
+  }
+  .subtitle { color: #7a8a9e; font-size: 14px; margin-bottom: 28px; }
+  .card {
+    background: #fff; border-radius: 10px; padding: 24px 28px;
+    margin-bottom: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  }
+  h2 {
+    font-size: 19px; color: #2c5f8a; margin-bottom: 14px;
+    padding-bottom: 8px; border-bottom: 2px solid #e8eef5;
+  }
+  .meta-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px; margin-bottom: 10px;
+  }
+  .meta-item {
+    background: #f0f5fa; border-radius: 8px; padding: 12px 16px;
+  }
+  .meta-item .label { font-size: 12px; color: #7a8a9e; }
+  .meta-item .value { font-size: 20px; font-weight: 700; color: #2c5f8a; }
+  .var-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .var-box h3 { font-size: 15px; color: #555; margin-bottom: 8px; }
+  .var-box ul { padding-left: 20px; font-size: 14px; color: #444; }
+  .var-box li { margin-bottom: 3px; }
+  table.data-table {
+    width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px;
+  }
+  table.data-table th, table.data-table td {
+    border: 1px solid #dde3ec; padding: 8px 10px; text-align: center;
+  }
+  table.data-table th {
+    background: #2c5f8a; color: #fff; font-weight: 600;
+    position: sticky; top: 0;
+  }
+  table.data-table td.row-label {
+    background: #f0f5fa; font-weight: 600; text-align: left;
+    color: #2c3e50; white-space: nowrap;
+  }
+  table.data-table td.p-sig { color: #c0392b; font-weight: 600; }
+  .heatmap-img { width: 100%; max-width: 900px; display: block; margin: 0 auto; border-radius: 6px; }
+  .legend {
+    display: flex; gap: 18px; flex-wrap: wrap; margin-top: 12px;
+    font-size: 13px; color: #555;
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .legend .dot { width: 14px; height: 14px; border-radius: 3px; display: inline-block; }
+  .note { font-size: 12px; color: #999; margin-top: 10px; }
+  .scroll-x { overflow-x: auto; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>空间活力度相关性分析</h1>
+  <p class="subtitle">衡复风貌区调研 · 空间属性 (X) 与行人行为 (Y) 的Spearman 多因素关联性分析</p>
+
+  <!-- 数据概况 -->
+  <div class="card">
+    <h2>一、数据概况</h2>
+    <div class="meta-grid">
+      <div class="meta-item"><div class="label">有效点位数</div><div class="value">135</div></div>
+      <div class="meta-item"><div class="label">自变量 (X)</div><div class="value">16 项</div></div>
+      <div class="meta-item"><div class="label">因变量 (Y)</div><div class="value">7 项</div></div>
+      <div class="meta-item"><div class="label">显著相关对 (p&lt;0.05)</div><div class="value">8 对</div></div>
+    </div>
+    <div class="var-grid" style="margin-top:18px;">
+      <div class="var-box">
+        <h3>自变量 X（空间属性）</h3>
+        <ul><li>节点空间长度(m)</li><li>界面退让距离(m)</li><li>有效停留空间面积(㎡)</li><li>功能混合度</li><li>人均消费水平(元/人)</li><li>消费型停留空间占比(%)</li><li>可承载停留人数(人)</li><li>界面整体状态</li><li>界面开放度</li><li>临街互动性</li><li>视觉丰富度</li><li>历史感知度</li><li>路面状态</li><li>遮荫率(%)</li><li>声环境舒适度</li><li>气味环境</li></ul>
+      </div>
+      <div class="var-box">
+        <h3>因变量 Y（行人行为）</h3>
+        <ul><li>行人样本数</li><li>行为集群数</li><li>停留密度</li><li>集聚比例</li><li>年龄混合度</li><li>居民指数</li><li>游客指数</li></ul>
+      </div>
+    </div>
+    
+  <p class="note">年龄混合度根据香农指数计算；居民指数/游客指数根据特定时段观测到的人群属性及其行为加权映射</p></div>
+
+  <!-- 热力图 -->
+  
+
+  <!-- 相关系数表 -->
+  <div class="card">
+    <h2>二、Spearman 相关系数 ρ（含显著性标记）</h2>
+    <div class="scroll-x"><table class="data-table">
+<thead><tr><th>自变量 X \ 因变量 Y</th><th>行人样本数</th><th>行为集群数</th><th>停留密度</th><th>集聚比例</th><th>年龄混合度</th><th>居民指数</th><th>游客指数</th></tr></thead>
+<tbody>
+<tr><td class="row-label">节点空间长度(m)</td><td style="background:rgba(220, 53, 69, 0.23228922114464154)">0.150</td><td style="background:rgba(220, 53, 69, 0.19581838732336007)">0.083</td><td style="background:rgba(13, 110, 253, 0.3395817843863345)">-0.345***</td><td style="background:rgba(13, 110, 253, 0.1772355174741534)">-0.050</td><td style="background:rgba(220, 53, 69, 0.18338672209124957)">0.061</td><td style="background:rgba(13, 110, 253, 0.1852592922145043)">-0.064</td><td style="background:rgba(220, 53, 69, 0.18188898552255453)">0.058</td></tr>
+<tr><td class="row-label">界面退让距离(m)</td><td style="background:rgba(13, 110, 253, 0.1629223818768243)">-0.023</td><td style="background:rgba(220, 53, 69, 0.1553174059995293)">0.010</td><td style="background:rgba(13, 110, 253, 0.2611789285376439)">-0.202*</td><td style="background:rgba(13, 110, 253, 0.17355815210228115)">-0.043</td><td style="background:rgba(220, 53, 69, 0.15471900381430798)">0.009</td><td style="background:rgba(220, 53, 69, 0.154211889662524)">0.008</td><td style="background:rgba(220, 53, 69, 0.16143753433495311)">0.021</td></tr>
+<tr><td class="row-label">有效停留空间面积(㎡)</td><td style="background:rgba(220, 53, 69, 0.2474305901257142)">0.177</td><td style="background:rgba(220, 53, 69, 0.23630830743462605)">0.157</td><td style="background:rgba(13, 110, 253, 0.3592357825754251)">-0.380***</td><td style="background:rgba(13, 110, 253, 0.15683058194331725)">-0.012</td><td style="background:rgba(220, 53, 69, 0.22066771235603394)">0.128</td><td style="background:rgba(220, 53, 69, 0.18959448908940552)">0.072</td><td style="background:rgba(220, 53, 69, 0.177393830089775)">0.050</td></tr>
+<tr><td class="row-label">功能混合度</td><td style="background:rgba(220, 53, 69, 0.20304625064565393)">0.096</td><td style="background:rgba(220, 53, 69, 0.15074756550673102)">0.001</td><td style="background:rgba(220, 53, 69, 0.1587308844622865)">0.016</td><td style="background:rgba(13, 110, 253, 0.1858242253242989)">-0.065</td><td style="background:rgba(220, 53, 69, 0.19775009756254447)">0.087</td><td style="background:rgba(220, 53, 69, 0.15132236897906545)">0.002</td><td style="background:rgba(13, 110, 253, 0.2689233835107968)">-0.216*</td></tr>
+<tr><td class="row-label">人均消费水平(元/人)</td><td style="background:rgba(220, 53, 69, 0.18355989777968734)">0.061</td><td style="background:rgba(220, 53, 69, 0.1773761649490411)">0.050</td><td style="background:rgba(13, 110, 253, 0.1764441392268059)">-0.048</td><td style="background:rgba(220, 53, 69, 0.18689418839877323)">0.067</td><td style="background:rgba(13, 110, 253, 0.16456179433676815)">-0.026</td><td style="background:rgba(13, 110, 253, 0.16230940027966403)">-0.022</td><td style="background:rgba(13, 110, 253, 0.15662895132394866)">-0.012</td></tr>
+<tr><td class="row-label">消费型停留空间占比(%)</td><td style="background:rgba(220, 53, 69, 0.2453761795435656)">0.173</td><td style="background:rgba(220, 53, 69, 0.18661171273474453)">0.067</td><td style="background:rgba(220, 53, 69, 0.19582738368274236)">0.083</td><td style="background:rgba(13, 110, 253, 0.255218971975049)">-0.191</td><td style="background:rgba(220, 53, 69, 0.2523520083737425)">0.186*</td><td style="background:rgba(220, 53, 69, 0.2922316732294934)">0.259**</td><td style="background:rgba(13, 110, 253, 0.2164279875217241)">-0.121</td></tr>
+<tr><td class="row-label">可承载停留人数(人)</td><td style="background:rgba(220, 53, 69, 0.25226213567181727)">0.186</td><td style="background:rgba(220, 53, 69, 0.23980570394125428)">0.163</td><td style="background:rgba(13, 110, 253, 0.22175466287989884)">-0.130</td><td style="background:rgba(13, 110, 253, 0.2255863034623813)">-0.137</td><td style="background:rgba(220, 53, 69, 0.20378487300132248)">0.098</td><td style="background:rgba(220, 53, 69, 0.17953585557016494)">0.054</td><td style="background:rgba(13, 110, 253, 0.1931502989959108)">-0.078</td></tr>
+<tr><td class="row-label">界面整体状态</td><td style="background:rgba(13, 110, 253, 0.18848406189656455)">-0.070</td><td style="background:rgba(13, 110, 253, 0.2125693056661637)">-0.114</td><td style="background:rgba(220, 53, 69, 0.1604578896091271)">0.019</td><td style="background:rgba(220, 53, 69, 0.18392778714251756)">0.062</td><td style="background:rgba(13, 110, 253, 0.21787071148457746)">-0.123</td><td style="background:rgba(13, 110, 253, 0.3529483053478967)">-0.369***</td><td style="background:rgba(220, 53, 69, 0.18933261316812475)">0.072</td></tr>
+<tr><td class="row-label">界面开放度</td><td style="background:rgba(220, 53, 69, 0.15827681177797895)">0.015</td><td style="background:rgba(13, 110, 253, 0.16589464009648872)">-0.029</td><td style="background:rgba(13, 110, 253, 0.20037631952938775)">-0.092</td><td style="background:rgba(13, 110, 253, 0.1578722984902306)">-0.014</td><td style="background:rgba(220, 53, 69, 0.23224934852824747)">0.150</td><td style="background:rgba(220, 53, 69, 0.19316082699973713)">0.078</td><td style="background:rgba(220, 53, 69, 0.24247218659083353)">0.168</td></tr>
+<tr><td class="row-label">临街互动性</td><td style="background:rgba(13, 110, 253, 0.15449148965639442)">-0.008</td><td style="background:rgba(13, 110, 253, 0.22949130491551278)">-0.145</td><td style="background:rgba(220, 53, 69, 0.16802012587217946)">0.033</td><td style="background:rgba(13, 110, 253, 0.2834755747346692)">-0.243*</td><td style="background:rgba(220, 53, 69, 0.23209479908506553)">0.149</td><td style="background:rgba(220, 53, 69, 0.18991395754496915)">0.073</td><td style="background:rgba(220, 53, 69, 0.2350509934592408)">0.155</td></tr>
+<tr><td class="row-label">视觉丰富度</td><td style="background:rgba(220, 53, 69, 0.16217441305417885)">0.022</td><td style="background:rgba(13, 110, 253, 0.1608445767969238)">-0.020</td><td style="background:rgba(220, 53, 69, 0.1889596799446434)">0.071</td><td style="background:rgba(220, 53, 69, 0.1762104272623145)">0.048</td><td style="background:rgba(13, 110, 253, 0.1649231302592224)">-0.027</td><td style="background:rgba(13, 110, 253, 0.20885892557146496)">-0.107</td><td style="background:rgba(220, 53, 69, 0.19802058918426335)">0.087</td></tr>
+<tr><td class="row-label">历史感知度</td><td style="background:rgba(13, 110, 253, 0.15726352989048742)">-0.013</td><td style="background:rgba(13, 110, 253, 0.1865118732712171)">-0.066</td><td style="background:rgba(220, 53, 69, 0.20903183020350258)">0.107</td><td style="background:rgba(13, 110, 253, 0.19867561757821903)">-0.089</td><td style="background:rgba(220, 53, 69, 0.16694958377740882)">0.031</td><td style="background:rgba(220, 53, 69, 0.16399910420233818)">0.025</td><td style="background:rgba(13, 110, 253, 0.19497703232757918)">-0.082</td></tr>
+<tr><td class="row-label">路面状态</td><td style="background:rgba(13, 110, 253, 0.24950298733991044)">-0.181</td><td style="background:rgba(13, 110, 253, 0.24532427701201281)">-0.173</td><td style="background:rgba(220, 53, 69, 0.15426560234755018)">0.008</td><td style="background:rgba(13, 110, 253, 0.16545593426269062)">-0.028</td><td style="background:rgba(13, 110, 253, 0.2180516063982652)">-0.124</td><td style="background:rgba(13, 110, 253, 0.2320649445559037)">-0.149</td><td style="background:rgba(13, 110, 253, 0.1867637691116124)">-0.067</td></tr>
+<tr><td class="row-label">遮荫率(%)</td><td style="background:rgba(13, 110, 253, 0.21891756319715058)">-0.125</td><td style="background:rgba(13, 110, 253, 0.20546206661989128)">-0.101</td><td style="background:rgba(13, 110, 253, 0.16842260398505243)">-0.033</td><td style="background:rgba(13, 110, 253, 0.22687172456724403)">-0.140</td><td style="background:rgba(220, 53, 69, 0.1814042131397356)">0.057</td><td style="background:rgba(220, 53, 69, 0.22272403846430444)">0.132</td><td style="background:rgba(13, 110, 253, 0.1990959329445073)">-0.089</td></tr>
+<tr><td class="row-label">声环境舒适度</td><td style="background:rgba(13, 110, 253, 0.1612576909790874)">-0.020</td><td style="background:rgba(220, 53, 69, 0.17739399154260288)">0.050</td><td style="background:rgba(13, 110, 253, 0.18867544417040205)">-0.070</td><td style="background:rgba(220, 53, 69, 0.1600358336727027)">0.018</td><td style="background:rgba(13, 110, 253, 0.21065871307519068)">-0.110</td><td style="background:rgba(13, 110, 253, 0.19778680342245403)">-0.087</td><td style="background:rgba(220, 53, 69, 0.18363191334902929)">0.061</td></tr>
+<tr><td class="row-label">气味环境</td><td style="background:rgba(220, 53, 69, 0.16215810759357474)">0.022</td><td style="background:rgba(220, 53, 69, 0.172826215175521)">0.042</td><td style="background:rgba(13, 110, 253, 0.16043891424277087)">-0.019</td><td style="background:rgba(220, 53, 69, 0.17113532917088034)">0.038</td><td style="background:rgba(13, 110, 253, 0.19846313408309785)">-0.088</td><td style="background:rgba(13, 110, 253, 0.16986340926749366)">-0.036</td><td style="background:rgba(13, 110, 253, 0.16179205946899633)">-0.021</td></tr>
+</tbody></table></div>
+    <div class="legend">
+      <span><span class="dot" style="background:rgba(220,53,69,0.6)"></span>正相关</span>
+      <span><span class="dot" style="background:rgba(13,110,253,0.6)"></span>负相关</span>
+      <span>* p &lt; 0.05</span>
+      <span>** p &lt; 0.01</span>
+      <span>*** p &lt; 0.001</span>
+    </div>
+  </div>
+
+  <!-- p值表 -->
+  <div class="card">
+    <h2>三、p 值矩阵</h2>
+    <div class="scroll-x"><table class="data-table">
+<thead><tr><th>自变量 X \ 因变量 Y</th><th>行人样本数</th><th>行为集群数</th><th>停留密度</th><th>集聚比例</th><th>年龄混合度</th><th>居民指数</th><th>游客指数</th></tr></thead>
+<tbody>
+<tr><td class="row-label">节点空间长度(m)</td><td class="">0.1222</td><td class="">0.3914</td><td class="p-sig">0.0001</td><td class="">0.6108</td><td class="">0.4910</td><td class="">0.5098</td><td class="">0.5512</td></tr>
+<tr><td class="row-label">界面退让距离(m)</td><td class="">0.8102</td><td class="">0.9213</td><td class="p-sig">0.0238</td><td class="">0.6613</td><td class="">0.9228</td><td class="">0.9376</td><td class="">0.8316</td></tr>
+<tr><td class="row-label">有效停留空间面积(㎡)</td><td class="">0.0679</td><td class="">0.1065</td><td class="p-sig">0.0000</td><td class="">0.8990</td><td class="">0.1452</td><td class="">0.4612</td><td class="">0.6104</td></tr>
+<tr><td class="row-label">功能混合度</td><td class="">0.3162</td><td class="">0.9888</td><td class="">0.8605</td><td class="">0.4990</td><td class="">0.3204</td><td class="">0.9801</td><td class="p-sig">0.0233</td></tr>
+<tr><td class="row-label">人均消费水平(元/人)</td><td class="">0.5383</td><td class="">0.6158</td><td class="">0.6036</td><td class="">0.4987</td><td class="">0.7685</td><td class="">0.8216</td><td class="">0.9033</td></tr>
+<tr><td class="row-label">消费型停留空间占比(%)</td><td class="">0.0769</td><td class="">0.4999</td><td class="">0.3656</td><td class="">0.0506</td><td class="p-sig">0.0362</td><td class="p-sig">0.0077</td><td class="">0.2197</td></tr>
+<tr><td class="row-label">可承载停留人数(人)</td><td class="">0.0564</td><td class="">0.0944</td><td class="">0.1521</td><td class="">0.1601</td><td class="">0.2702</td><td class="">0.5846</td><td class="">0.4241</td></tr>
+<tr><td class="row-label">界面整体状态</td><td class="">0.4676</td><td class="">0.2367</td><td class="">0.8333</td><td class="">0.5220</td><td class="">0.1555</td><td class="p-sig">0.0001</td><td class="">0.4578</td></tr>
+<tr><td class="row-label">界面开放度</td><td class="">0.8760</td><td class="">0.7644</td><td class="">0.3097</td><td class="">0.8820</td><td class="">0.0846</td><td class="">0.4151</td><td class="">0.0791</td></tr>
+<tr><td class="row-label">临街互动性</td><td class="">0.9325</td><td class="">0.1320</td><td class="">0.7168</td><td class="p-sig">0.0106</td><td class="">0.0852</td><td class="">0.4512</td><td class="">0.1067</td></tr>
+<tr><td class="row-label">视觉丰富度</td><td class="">0.8185</td><td class="">0.8380</td><td class="">0.4343</td><td class="">0.6210</td><td class="">0.7565</td><td class="">0.2658</td><td class="">0.3644</td></tr>
+<tr><td class="row-label">历史感知度</td><td class="">0.8911</td><td class="">0.4908</td><td class="">0.2354</td><td class="">0.3579</td><td class="">0.7247</td><td class="">0.7918</td><td class="">0.3957</td></tr>
+<tr><td class="row-label">路面状态</td><td class="">0.0586</td><td class="">0.0702</td><td class="">0.9319</td><td class="">0.7707</td><td class="">0.1559</td><td class="">0.1198</td><td class="">0.4878</td></tr>
+<tr><td class="row-label">遮荫率(%)</td><td class="">0.1942</td><td class="">0.2968</td><td class="">0.7130</td><td class="">0.1472</td><td class="">0.5188</td><td class="">0.1705</td><td class="">0.3560</td></tr>
+<tr><td class="row-label">声环境舒适度</td><td class="">0.8327</td><td class="">0.6070</td><td class="">0.4396</td><td class="">0.8506</td><td class="">0.2098</td><td class="">0.3690</td><td class="">0.5276</td></tr>
+<tr><td class="row-label">气味环境</td><td class="">0.8195</td><td class="">0.6683</td><td class="">0.8349</td><td class="">0.6916</td><td class="">0.3169</td><td class="">0.7093</td><td class="">0.8249</td></tr>
+</tbody></table></div>
+    <p class="note">红色加粗表示 p &lt; 0.05，达到统计显著。</p>
+  </div>
+
+  <!-- 显著相关对 -->
+  <div class="card">
+    <h2>四、显著相关对汇总（p &lt; 0.05，按 p 值升序）</h2>
+    <div class="scroll-x"><table class="data-table">
+<thead><tr><th>自变量X</th><th>因变量Y</th><th>Spearman_ρ</th><th>p值</th><th>显著性</th><th>n</th></tr></thead>
+<tbody>
+<tr><td>有效停留空间面积(㎡)</td><td>停留密度</td><td>-0.38</td><td>0.0</td><td>***</td><td>125</td></tr>
+<tr><td>节点空间长度(m)</td><td>停留密度</td><td>-0.345</td><td>0.0001</td><td>***</td><td>125</td></tr>
+<tr><td>界面整体状态</td><td>居民指数</td><td>-0.369</td><td>0.0001</td><td>***</td><td>110</td></tr>
+<tr><td>消费型停留空间占比(%)</td><td>居民指数</td><td>0.259</td><td>0.0077</td><td>**</td><td>105</td></tr>
+<tr><td>临街互动性</td><td>集聚比例</td><td>-0.243</td><td>0.0106</td><td>*</td><td>110</td></tr>
+<tr><td>功能混合度</td><td>游客指数</td><td>-0.216</td><td>0.0233</td><td>*</td><td>110</td></tr>
+<tr><td>界面退让距离(m)</td><td>停留密度</td><td>-0.202</td><td>0.0238</td><td>*</td><td>125</td></tr>
+<tr><td>消费型停留空间占比(%)</td><td>年龄混合度</td><td>0.186</td><td>0.0362</td><td>*</td><td>127</td></tr>
+</tbody></table></div>
+  </div>
+
+  
+
+</div>
+
+<div class="card">
+<title>Spearman相关性分析结论</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: "Microsoft YaHei", SimSun, serif;
+            max-width: 1080px;
+            margin:32px auto;
+            padding:0 20px;
+            font-size:15px;
+            line-height:1.75;
+            color:#223344;
+            background-color:#ffffff;
+        }
+        .card{
+            border:1px solid #e2e8f0;
+            border-radius:10px;
+            padding:24px;
+            background:#f8fafc;
+        }
+        .card > h1{
+            font-size:20px;
+            margin-top:0;
+            margin-bottom:14px;
+            color:#1a365d;
+        }
+        .intro-text{
+            margin-bottom:20px;
+            color:#334155;
+        }
+        /*折叠面板样式*/
+        .collapse-item{
+            border:1px solid #cbd5e1;
+            border-radius:8px;
+            margin-bottom:12px;
+            background:#ffffff;
+        }
+        .collapse-header{
+            padding:12px 16px;
+            cursor:pointer;
+            font-weight:bold;
+            font-size:16px;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            user-select:none;
+        }
+        .collapse-header:hover{
+            background:#edf2f9;
+        }
+        .arrow{
+            transition:transform 0.25s ease;
+        }
+        .arrow.open{
+            transform:rotate(180deg);
+        }
+        .collapse-content{
+            padding:0 16px;
+            max-height:0;
+            overflow:hidden;
+            transition:max-height 0.35s ease;
+        }
+        .collapse-content.open{
+            max-height:1200px;
+            padding:12px 16px 16px 16px;
+        }
+        .note{
+            background:#eef4fa;
+            border-left:4px solid #6495cb;
+            padding:14px 16px;
+            margin-top:18px;
+            border-radius:4px;
+        }
+    </style>
+
+
+<div class="card">
+    <h1>五、Spearman相关性分析结论（衡复风貌区街道空间‑行人行为关联）</h1>
+    <div class="intro-text">
+        <p></p>
+    </div>
+
+    <!-- 板块1 -->
+    <div class="collapse-item">
+        <div class="collapse-header">
+            <span>（一）空间尺度：空间规模对停留行为存在“稀释效应”</span>
+            <span class="arrow open">▼</span>
+        </div>
+        <div class="collapse-content open">
+            <p><strong>节点空间长度、有效停留空间面积与停留密度呈显著负相关</strong>。
+空间尺度越大，单位面积内的行人停留密度反而越低。说明单纯扩大物理空间面积，并不能直接提升点位的聚集效率；过大的开放空间会摊薄人流，出现空间稀释现象。小尺度的街道节点反而更容易促成高密度停留行为。界面退让距离同样与停留密度显著负相关，更大的建筑退界会拉开建筑与人的距离，削弱街道对行人的聚拢效果。</p>
+        </div>
+    </div>
+
+    <!-- 板块2 -->
+    <div class="collapse-item">
+        <div class="collapse-header">
+            <span>（二）功能与消费属性：消费占比重塑人群结构</span>
+            <span class="arrow open">▼</span>
+        </div>
+        <div class="collapse-content open">
+            <p><strong>消费型停留空间占比与居民指数呈显著正相关，同时与年龄混合度正相关。</strong>点位消费类空间占比越高，居民指数越高，同时点位人群年龄结构更加多元。说明商业消费空间并非单纯吸引游客，合理的消费业态可以同时服务本地居民，促进不同年龄群体共同使用街道公共空间。但消费占比提升会带来集聚比例下降，消费空间分散行人活动，降低人群大规模聚集的概率。</p>
+        </div>
+    </div>
+
+    <!-- 板块3 -->
+    <div class="collapse-item">
+        <div class="collapse-header">
+            <span>（三）界面环境品质：界面状态深刻影响本地居民使用意愿</span>
+            <span class="arrow open">▼</span>
+        </div>
+        <div class="collapse-content open">
+            <p><strong>界面整体状态与居民指数呈显著负相关。</strong>界面维护越精致、风貌修缮程度越高的点位，居民指数反而更低。推测高度商业化、精致化更新后的街道界面，更适配游客游览需求，一定程度弱化本地居民的日常使用偏好；而保留原生街巷质感的界面，更受本地居民青睐。</p>
+            <p>临街互动性与集聚比例显著负相关，高互动的临街界面会消解大规模人群集群，更多促成零散、小规模的个体停留。</p>
+        </div>
+    </div>
+
+    <!-- 板块4 -->
+    <div class="collapse-item">
+        <div class="collapse-header">
+            <span>（四）风貌历史维度：功能混合度抑制游客导向活动</span>
+            <span class="arrow open">▼</span>
+        </div>
+        <div class="collapse-content open">
+            <p>功能混合度与游客指数呈显著负相关。
+功能混合程度越高的点位，游客指数越低。高度混合的本土生活型街区，以本地日常活动为主，对外来游客的吸引力相对有限；游客更倾向前往功能相对单一、文旅属性突出的点位。</p>
+        </div>
+    </div>
+
+    <!-- 板块5 -->
+    <div class="collapse-item">
+        <div class="collapse-header">
+            <span>（五）其余环境变量</span>
+            <span class="arrow open">▼</span>
+        </div>
+        <div class="collapse-content open">
+            <p>遮荫率、声环境舒适度、视觉丰富度、历史感知度、路面状态、气味环境、人均消费水平、可承载停留人数等指标，在本次点位样本中，<strong>未表现出统计显著的相关关系</strong>。
+这并不代表要素没有作用，有可能是样本区间内变量差异较小，或是受点位样本量限制，其影响没有被统计学检验捕捉，后续可以结合实地定性观察进一步补充解释。</p>
+        </div>
+    </div>
+
+    <!-- 板块6 -->
+    <div class="collapse-item">
+        <div class="collapse-header">
+            <span>（六）规划启示</span>
+            <span class="arrow open">▼</span>
+        </div>
+        <div class="collapse-content open">
+            <p>1. 追求街道停留活力，不必一味追求大尺度开放空间，应当重视小尺度节点的营造，避免空间稀释；适度控制界面退让，拉近建筑与街道的关系，强化街道向心性。</p>
+            <p>2. 消费业态可以作为激活本地居民参与街道活动的工具，并非只服务游客；合理配置消费空间，有助于实现年龄混合的多元人群使用。</p>
+            <p>3. 风貌更新需要兼顾游客价值与本地居民日常诉求，过度精致化的界面更新，有可能挤压本地居民的街道使用场景。</p>
+            <p>4. 高功能混合的生活街巷，承担本地日常活动功能，对游客吸引力有限，应当区分“服务本地”与“服务文旅”两类街道的差异化营造目标。</p>
+        </div>
+    </div>
+
+    <div class="note">
+        <strong>补充说明：</strong>本分析仅揭示<strong>统计相关性，不等于因果关系</strong>，变量之间的内在作用机制仍需要结合实地调研、案例比对进一步阐释。
+    </div>
+</div>
+
+<script>
+//折叠交互逻辑
+const headers = document.querySelectorAll(".collapse-header");
+headers.forEach(header=>{
+    header.addEventListener("click",function(){
+        const content = this.nextElementSibling;
+        const arrow = this.querySelector(".arrow");
+        content.classList.toggle("open");
+        arrow.classList.toggle("open");
+    })
+})
+</script></div></body></html>
