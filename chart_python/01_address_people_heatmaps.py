@@ -1,17 +1,10 @@
-"""01 人员热力图
-修改下方 HTML / JAVASCRIPT 后运行本文件，即同步更新对应网页。
-数据仍读取项目中的最新数据文件；不要修改 SOURCE_SCRIPT。
-"""
+"""可编辑图表：修改 HTML / JAVASCRIPT 后运行。"""
 from _export import export_chart
-
 ROUTE = 'address_people_heatmaps.html'
 SOURCE_SCRIPT = 'studies.js'
-
 HTML = r'''<!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>人员热力图｜衡复风貌区</title><link rel="stylesheet" href="studies.css"><script src="echarts.min.js"></script><script src="survey-data.js"></script></head>
 <body data-study="1" data-number="1" data-title="人员热力图"><header><a href="../visualizations.html" aria-label="返回图表目录">←</a><h1>01 人员热力图</h1><span class="meta"></span></header><nav role="tablist" aria-label="切换分析图表"></nav><p class="note"></p><main id="workspace" aria-label="数据图表"></main><script src="studies.js"></script></body></html>'''
-
-# 绘图代码：可修改 subtitle、轴名称、series、grid、symbolSize 等设置。
 JAVASCRIPT = r'''/* All study inputs come from the 0906 worksheet. Missing observations stay missing. */
 const D=window.SURVEY, WHITE='#f5f5f2', POINT='#858583', ALPHA=1, LINE_ALPHA=.2;
 const titles=['人员热力图','街道空间评分因素权重分析','节点功能混合度','空间活力度分析概述','有效空间分析','舒适度分析','不配得性Ⅰ：界面评价/行人选择','不配得性Ⅰ：区位资源/行人选择'];
@@ -47,13 +40,13 @@ function heat(i){
     range:peopleRange||[0,max],calculable:true,realtime:true,precision:0,
     orient:'horizontal',left:'center',top:8,itemWidth:16,itemHeight:260,
     text:['人数上限','人数下限'],textStyle:{color:'#ccc'},
-    inRange:{color:['#444','#f5f5f2'],opacity:1},
+    inRange:{color:['rgba(245,245,242,0.04)','#f5f5f2'],opacity:1},
     outOfRange:{color:['#444','#f5f5f2'],opacity:0}};
   const slots=D.nodes.map((n,j)=>[j%columns,Math.floor(j/columns),0,n.address,n.short,n.street]);
   const cells=D.nodes.map((n,j)=>[j%columns,Math.floor(j/columns),n[key]??0,n.address,n.short,n.street]);
   o.series=[
     {name:'地址位置',type:'heatmap',silent:true,data:slots,
-      itemStyle:{color:'#151515',borderColor:'#333',borderWidth:1},
+      itemStyle:{color:'#101010',borderColor:'#151515',borderWidth:1},
       label:{show:false},emphasis:{disabled:true}},
     {name:D.headers[key],type:'heatmap',data:cells,
       itemStyle:{opacity:1,borderColor:'#090909',borderWidth:2},

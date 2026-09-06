@@ -30,7 +30,7 @@ function stacked(i){
   const c=chart(),o=base();o.xAxis={...axis('人数构成占比'),min:0,max:100,axisLabel:{color:'#bbb',formatter:'{value}%'}};
   o.yAxis={...axis(),type:'category',data:groups.map(g=>`${g.name} · n=${g.n}`),inverse:true,splitLine:{show:false}};
   o.series=order.map((j,k)=>({name:labels[j],type:'bar',stack:'composition',barMaxWidth:65,
-    data:groups.map(g=>100*share(g[key])[j]),itemStyle:{color:shades[k],opacity:1},
+    data:groups.map(g=>100*share(g[key])[j]),itemStyle:{color:shades[k],opacity:key==='identities'&&labels[j]==='游客倾向'?.3:1},
     label:{show:true,color:k<2?'#111':'#fff',formatter:p=>p.value>=5?p.value.toFixed(1)+'%':''},
     emphasis:{focus:'none',itemStyle:{borderColor:'#fff',borderWidth:2}},
     ...(k===0?{markLine:{silent:true,symbol:'none',lineStyle:{color:'#fff',opacity:.65,type:'dashed',width:1},

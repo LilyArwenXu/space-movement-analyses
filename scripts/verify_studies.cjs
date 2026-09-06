@@ -49,6 +49,17 @@ for(const page of [1,3,4,5,6,7,8]){
     }
     count++;} };
   check();
+  if(page===4){
+    const reference=vm.runInContext('REFERENCE',context);
+    assert.equal(reference[0].length,17);assert.equal(reference[1].length,17);assert.equal(reference[2].length,9);
+    assert(reference[0].every(r=>r.length===8));assert(reference[1].every(r=>r.length===8));
+    assert.equal(reference[0][1][3],'-0.345***');assert.equal(reference[0][8][6],'-0.369***');
+    elements.nav.children[5].click();
+    assert(elements['#workspace'].children[0].innerHTML.includes('居民指数'));
+    assert(elements['#workspace'].children[0].innerHTML.includes('<table>'));
+    assert(!elements['#workspace'].children[0].innerHTML.includes('<img'));
+    assert(!elements['#workspace'].children[0].innerHTML.includes('rgba('));
+  }
   for(const b of elements.nav.children.slice(1)){b.click();check();}
   if([5,6,8].includes(page)){vm.runInContext("highlight(D.streets[0]);highlight(null)",context);vm.runInContext("if(Math.abs(regression([[1,3],[2,5],[3,7]]).slope-2)>1e-10)throw Error('regression slope');if(regression([[1,3],[1,5]])!==null)throw Error('constant x');if(regression([[1,3],[2,3]]).r2!==null)throw Error('constant y');",context);}
   if(page===8)assert.equal(created.filter(c=>!c.isDisposed()).length,2);

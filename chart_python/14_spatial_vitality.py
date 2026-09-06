@@ -1,17 +1,10 @@
-"""14 空间活力度分析概述
-修改下方 HTML / JAVASCRIPT 后运行本文件，即同步更新对应网页。
-数据仍读取项目中的最新数据文件；不要修改 SOURCE_SCRIPT。
-"""
+"""可编辑图表：修改 HTML / JAVASCRIPT 后运行。"""
 from _export import export_chart
-
 ROUTE = 'spatial_vitality.html'
 SOURCE_SCRIPT = 'studies.js'
-
 HTML = r'''<!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>空间活力度分析概述｜衡复风貌区</title><link rel="stylesheet" href="studies.css"><script src="echarts.min.js"></script><script src="survey-data.js"></script></head>
 <body data-study="4" data-number="14" data-title="空间活力度分析概述"><header><a href="../visualizations.html" aria-label="返回图表目录">←</a><h1>14 空间活力度分析概述</h1><span class="meta"></span></header><nav role="tablist" aria-label="切换分析图表"></nav><p class="note"></p><main id="workspace" aria-label="数据图表"></main><script src="studies.js"></script></body></html>'''
-
-# 绘图代码：可修改 subtitle、轴名称、series、grid、symbolSize 等设置。
 JAVASCRIPT = r'''/* All study inputs come from the 0906 worksheet. Missing observations stay missing. */
 const D=window.SURVEY, WHITE='#f5f5f2', POINT='#858583', ALPHA=1, LINE_ALPHA=.2;
 const titles=['人员热力图','街道空间评分因素权重分析','节点功能混合度','空间活力度分析概述','有效空间分析','舒适度分析','不配得性Ⅰ：界面评价/行人选择','不配得性Ⅰ：区位资源/行人选择'];
@@ -67,27 +60,24 @@ function heat(i){
   note.textContent='拖动滑块筛选人数，观测缺失按0人处理。';
 }
 function correlationMatrix(){
-  const c=chart(),o=base(),fields=D.matrixFields;
-  o.grid={left:165,right:28,top:65,bottom:150};
-  const labels=fields.map(k=>D.headers[k]);
-  o.xAxis={...axis(),type:'category',data:labels,axisLabel:{color:'#bbb',rotate:50,fontSize:11,interval:0},splitLine:{show:false}};
-  o.yAxis={...axis(),type:'category',data:labels,inverse:true,axisLabel:{color:'#bbb',fontSize:11,interval:0},splitLine:{show:false}};
-  o.visualMap={type:'continuous',dimension:2,min:-1,max:1,calculable:true,
-    orient:'horizontal',top:5,left:'center',itemWidth:14,itemHeight:220,
-    precision:2,text:['正相关  +1','负相关  −1'],textStyle:{color:'#ccc'},
-    inRange:{color:['#555','#aaa','#f5f5f2']},outOfRange:{color:'#1b1b1b',opacity:.15}};
-  o.series=[{type:'heatmap',data:D.matrixCorrelations.filter(r=>r.rho!=null).map(r=>[fields.indexOf(r.x),fields.indexOf(r.y),r.rho,r]),
-    itemStyle:{opacity:1,borderColor:'#090909',borderWidth:1},
-    label:{show:true,color:'#080808',fontSize:10,formatter:p=>Number(p.data[2]).toFixed(2)},
-    emphasis:{itemStyle:{borderColor:'#fff',borderWidth:2}}}];
-  o.tooltip.formatter=p=>`${esc(D.headers[p.data[3].x])} / ${esc(D.headers[p.data[3].y])}<br>ρ=${fmt(p.data[2])}${star(p.data[3].p)} · p=${p.data[3].p.toPrecision(3)} · n=${p.data[3].n}`;
-  c.setOption(o);
-  note.textContent+=' 三角矩阵展示全部可用空间与行为指标的两两相关性，对角线为 1；居民指数、游客指数缺失，不纳入矩阵。';
+  const el=document.createElement('section');el.className='report reference-matrix';workspace.append(el);
+  el.innerHTML=referenceTable(REFERENCE[0])+'<p class="matrix-legend">正负号表示相关方向　　* p &lt; 0.05　 ** p &lt; 0.01　 *** p &lt; 0.001</p>';
 }
+
 function bars(){const c=chart(),o=base();o.grid={left:70,right:25,top:30,bottom:115};o.xAxis={...axis('完整地址节点'),type:'category',data:D.nodes.map(n=>n.short),axisLabel:{color:'#aaa',rotate:50,fontSize:10,interval:'auto'}};o.yAxis=axis('功能混合度');o.dataZoom=[{type:'inside'},{type:'slider',bottom:8,height:18,borderColor:'#555',fillerColor:'#ffffff22',textStyle:{color:'#aaa'}}];o.series=[{type:'bar',data:D.nodes.map(n=>n.O),itemStyle:{color:POINT,opacity:ALPHA},emphasis:{itemStyle:{color:'#fff',opacity:1}}}];o.tooltip.formatter=p=>`${esc(D.nodes[p.dataIndex].address)}<br>功能混合度：${fmt(p.value)}<br>记录数：${D.nodes[p.dataIndex].records}`;c.setOption(o);note.textContent=`${D.nodes.length} 个唯一完整地址，同一街道相邻；重复地址的功能混合度取有效值均值。拖动底部滑块可放大节点。`;}
 function single(){const c=chart(80+D.streets.length*110),o=base();delete o.xAxis;delete o.yAxis;delete o.grid;o.singleAxis=[];o.series=[];o.graphic=[];const max=Math.max(...D.streets.map(s=>D.rows.filter(r=>r.street===s).length));D.streets.forEach((s,i)=>{const rows=D.rows.filter(r=>r.street===s),top=70+i*110;o.singleAxis.push({type:'value',min:-max/2,max:max/2,left:'20%',right:'13%',top,height:0,axisLabel:{show:false},axisTick:{show:false},splitLine:{show:false},axisLine:{lineStyle:{color:'#444'}}});o.graphic.push({type:'text',left:'7%',top:top-6,style:{text:s,fill:'#ddd',font:'12px SimSun'}});['AH','T'].forEach(key=>o.series.push({name:s,type:'scatter',coordinateSystem:'singleAxis',singleAxisIndex:i,data:rows.flatMap((r,j)=>Number.isFinite(r[key])?[[j-(rows.length-1)/2,r[key],r.address,key]]:[]),symbolSize:v=>key==='AH'?Math.max(Math.sqrt(v[1])*12,8):Math.max(v[1]*4,2),itemStyle:{color:key==='AH'?POINT:'transparent',opacity:ALPHA,borderColor:POINT,borderWidth:key==='AH'?0:1},emphasis:{itemStyle:{opacity:1}}}));});o.tooltip.formatter=p=>`${esc(p.data[2])}<br>${esc(D.headers[p.data[3]])}：${p.data[1]}`;c.setOption(o);note.textContent='实心圆大小表示行人样本数，空心圆大小表示界面整体状态评分；各街道颜色与透明度一致。上下滚动查看各街道，缺失指标不绘制。';}
 const star=p=>p==null?'':p<.001?'***':p<.01?'**':p<.05?'*':'';
-function report(i){note.textContent='逐对排除缺失值。* p<0.05，** p<0.01，*** p<0.001（未做多重检验校正）；相关性不表示因果。';if(i===5){correlationMatrix();return;}const el=document.createElement('section');el.className='report';workspace.append(el);const sig=D.correlations.filter(r=>r.p!==null&&r.p<.05).sort((a,b)=>a.p-b.p);if(i===0){el.innerHTML=`<div class="summary"><article>有效地址记录<strong>${D.rows.length}</strong></article><article>完整地址节点<strong>${D.nodes.length}</strong></article><article>行人观测记录<strong>${D.rows.filter(r=>'AH' in r).length}</strong></article></div><h2>空间属性与行人行为</h2><p>${D.xs.map(k=>esc(D.headers[k])).join('、')}</p><p>${D.ys.map(k=>esc(D.headers[k])).join('、')}</p><h2>数据口径</h2><p>相关性以原始有效地址记录为单位；节点柱状图以唯一完整地址为单位。无行人观测记录中的派生零值不作为有效行为观测。居民指数、游客指数在本次工作表中均为空，未参与计算。</p>`;}else if(i===1||i===2){el.innerHTML='<table><thead><tr><th>空间属性 / 行人行为</th>'+D.ys.map(k=>'<th>'+esc(D.headers[k])+'</th>').join('')+'</tr></thead><tbody>'+D.xs.map(x=>'<tr><td>'+esc(D.headers[x])+'</td>'+D.ys.map(y=>{const r=D.correlations.find(v=>v.x===x&&v.y===y);return `<td title="有效配对 n=${r.n}">${fmt(i===1?r.rho:r.p)}${i===1?star(r.p):''}</td>`;}).join('')+'</tr>').join('')+'</tbody></table>';}else if(i===3){el.innerHTML='<table><thead><tr><th>空间属性</th><th>行人行为</th><th>ρ</th><th>p</th><th>n</th></tr></thead><tbody>'+sig.map(r=>`<tr><td>${esc(D.headers[r.x])}</td><td>${esc(D.headers[r.y])}</td><td>${fmt(r.rho)}</td><td>${r.p.toPrecision(3)}${star(r.p)}</td><td>${r.n}</td></tr>`).join('')+'</tbody></table>';}else{el.innerHTML='<h2>本次全量数据的相关性结论</h2><p>共 '+sig.length+' 对指标达到未经多重检验校正的 p&lt;0.05；以下为按 p 值排序的前十项。</p>'+sig.slice(0,10).map(r=>`<p>${esc(D.headers[r.x])}与${esc(D.headers[r.y])}呈${r.rho>0?'正':'负'}相关：ρ=${fmt(r.rho)}，p=${r.p.toPrecision(3)}，n=${r.n}。</p>`).join('')+'<p>居民指数和游客指数缺失，旧报告涉及这两项的结论不沿用。结果描述样本中的关联，不能据此推断空间因素造成行为变化。</p>';}}
+const REFERENCE=[[["自变量 X \\ 因变量 Y", "行人样本数", "行为集群数", "停留密度", "集聚比例", "年龄混合度", "居民指数", "游客指数"], ["节点空间长度(m)", "0.150", "0.083", "-0.345***", "-0.050", "0.061", "-0.064", "0.058"], ["界面退让距离(m)", "-0.023", "0.010", "-0.202*", "-0.043", "0.009", "0.008", "0.021"], ["有效停留空间面积(㎡)", "0.177", "0.157", "-0.380***", "-0.012", "0.128", "0.072", "0.050"], ["功能混合度", "0.096", "0.001", "0.016", "-0.065", "0.087", "0.002", "-0.216*"], ["人均消费水平(元/人)", "0.061", "0.050", "-0.048", "0.067", "-0.026", "-0.022", "-0.012"], ["消费型停留空间占比(%)", "0.173", "0.067", "0.083", "-0.191", "0.186*", "0.259**", "-0.121"], ["可承载停留人数(人)", "0.186", "0.163", "-0.130", "-0.137", "0.098", "0.054", "-0.078"], ["界面整体状态", "-0.070", "-0.114", "0.019", "0.062", "-0.123", "-0.369***", "0.072"], ["界面开放度", "0.015", "-0.029", "-0.092", "-0.014", "0.150", "0.078", "0.168"], ["临街互动性", "-0.008", "-0.145", "0.033", "-0.243*", "0.149", "0.073", "0.155"], ["视觉丰富度", "0.022", "-0.020", "0.071", "0.048", "-0.027", "-0.107", "0.087"], ["历史感知度", "-0.013", "-0.066", "0.107", "-0.089", "0.031", "0.025", "-0.082"], ["路面状态", "-0.181", "-0.173", "0.008", "-0.028", "-0.124", "-0.149", "-0.067"], ["遮荫率(%)", "-0.125", "-0.101", "-0.033", "-0.140", "0.057", "0.132", "-0.089"], ["声环境舒适度", "-0.020", "0.050", "-0.070", "0.018", "-0.110", "-0.087", "0.061"], ["气味环境", "0.022", "0.042", "-0.019", "0.038", "-0.088", "-0.036", "-0.021"]], [["自变量 X \\ 因变量 Y", "行人样本数", "行为集群数", "停留密度", "集聚比例", "年龄混合度", "居民指数", "游客指数"], ["节点空间长度(m)", "0.1222", "0.3914", "0.0001", "0.6108", "0.4910", "0.5098", "0.5512"], ["界面退让距离(m)", "0.8102", "0.9213", "0.0238", "0.6613", "0.9228", "0.9376", "0.8316"], ["有效停留空间面积(㎡)", "0.0679", "0.1065", "0.0000", "0.8990", "0.1452", "0.4612", "0.6104"], ["功能混合度", "0.3162", "0.9888", "0.8605", "0.4990", "0.3204", "0.9801", "0.0233"], ["人均消费水平(元/人)", "0.5383", "0.6158", "0.6036", "0.4987", "0.7685", "0.8216", "0.9033"], ["消费型停留空间占比(%)", "0.0769", "0.4999", "0.3656", "0.0506", "0.0362", "0.0077", "0.2197"], ["可承载停留人数(人)", "0.0564", "0.0944", "0.1521", "0.1601", "0.2702", "0.5846", "0.4241"], ["界面整体状态", "0.4676", "0.2367", "0.8333", "0.5220", "0.1555", "0.0001", "0.4578"], ["界面开放度", "0.8760", "0.7644", "0.3097", "0.8820", "0.0846", "0.4151", "0.0791"], ["临街互动性", "0.9325", "0.1320", "0.7168", "0.0106", "0.0852", "0.4512", "0.1067"], ["视觉丰富度", "0.8185", "0.8380", "0.4343", "0.6210", "0.7565", "0.2658", "0.3644"], ["历史感知度", "0.8911", "0.4908", "0.2354", "0.3579", "0.7247", "0.7918", "0.3957"], ["路面状态", "0.0586", "0.0702", "0.9319", "0.7707", "0.1559", "0.1198", "0.4878"], ["遮荫率(%)", "0.1942", "0.2968", "0.7130", "0.1472", "0.5188", "0.1705", "0.3560"], ["声环境舒适度", "0.8327", "0.6070", "0.4396", "0.8506", "0.2098", "0.3690", "0.5276"], ["气味环境", "0.8195", "0.6683", "0.8349", "0.6916", "0.3169", "0.7093", "0.8249"]], [["自变量X", "因变量Y", "Spearman_ρ", "p值", "显著性", "n"], ["有效停留空间面积(㎡)", "停留密度", "-0.38", "0.0", "***", "125"], ["节点空间长度(m)", "停留密度", "-0.345", "0.0001", "***", "125"], ["界面整体状态", "居民指数", "-0.369", "0.0001", "***", "110"], ["消费型停留空间占比(%)", "居民指数", "0.259", "0.0077", "**", "105"], ["临街互动性", "集聚比例", "-0.243", "0.0106", "*", "110"], ["功能混合度", "游客指数", "-0.216", "0.0233", "*", "110"], ["界面退让距离(m)", "停留密度", "-0.202", "0.0238", "*", "125"], ["消费型停留空间占比(%)", "年龄混合度", "0.186", "0.0362", "*", "127"]]];
+function referenceTable(rows){return '<table><thead><tr>'+rows[0].map(t=>'<th scope="col">'+esc(t)+'</th>').join('')+'</tr></thead><tbody>'+rows.slice(1).map(row=>'<tr>'+row.map((v,j)=>j===0?'<th scope="row">'+esc(v)+'</th>':'<td>'+esc(v)+'</td>').join('')+'</tr>').join('')+'</tbody></table>';}
+function report(i){
+ note.textContent='* p<0.05，** p<0.01，*** p<0.001；相关性不表示因果。';
+ if(i===5){correlationMatrix();return;}
+ const el=document.createElement('section');el.className='report';workspace.append(el);
+ if(i>=1&&i<=3){el.innerHTML=referenceTable(REFERENCE[i-1]);return;}
+ if(i===0){el.innerHTML='<h2>空间属性与行人行为</h2><p>16项空间属性 × 7项行人行为指标，共112对关联。</p><p>显著相关对：'+(REFERENCE[2].length-1)+' 对。</p><p>'+REFERENCE[0][0].slice(1).map(esc).join('、')+'</p>';return;}
+ el.innerHTML='<h2>显著关联概述</h2>'+REFERENCE[2].slice(1).map(r=>'<p>'+esc(r[0])+'与'+esc(r[1])+'呈'+(parseFloat(r[2])>0?'正':'负')+'相关：ρ='+esc(r[2])+'，p='+esc(r[3])+'，n='+esc(r[5])+'。</p>').join('')+'<p>关联结果不用于推断因果关系。</p>';
+}
+
 if(page===1)select(['观察人数','光顾人数','打卡人数','社交人数','饮食人数','休憩人数'],heat);
 if(page===3)bars();
 if(page===4)select(['数据概况','Spearman相关系数','p值矩阵','显著相关对','分析结论','Spearman图表'],report);

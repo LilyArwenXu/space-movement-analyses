@@ -6,3 +6,5 @@ body[data-study="12"] #workspace,body[data-study="13"] #workspace{display:block;
 body[data-study="11"] nav{flex-wrap:nowrap;overflow-x:auto;scrollbar-color:#666 #111}body[data-study="11"] nav button{flex-shrink:0;white-space:nowrap}
 
 .note,.report,.plot,nav button{font-family:"Times New Roman",SimSun,"Songti SC",serif}.meta{white-space:nowrap}body[data-study="6"] .plot{flex:1 1 0}@media(max-width:700px){header{flex-wrap:wrap}.meta{display:block;font-size:10px}body[data-study="6"] #workspace{display:block;overflow:auto}body[data-study="6"] .plot{height:420px}}
+
+.reference-matrix{background:#090909;color:#ddd}.reference-matrix table{font-size:14px;width:100%;height:calc(100% - 40px);font-variant-numeric:tabular-nums}.reference-matrix thead th{background:#181818;color:#f5f5f2;position:sticky;top:0;font-weight:500}.reference-matrix th,.reference-matrix td{border:1px solid #383838;padding:10px 14px;text-align:center}.reference-matrix th[scope="row"]{background:#111;text-align:left;font-weight:400;color:#ccc}.reference-matrix tbody tr:hover td{background:#191919}.matrix-legend{color:#aaa;margin:12px 0;font-size:12px}

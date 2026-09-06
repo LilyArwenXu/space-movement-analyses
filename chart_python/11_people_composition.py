@@ -1,17 +1,10 @@
-"""11 不配得性Ⅱ：街道人群构成
-修改下方 HTML / JAVASCRIPT 后运行本文件，即同步更新对应网页。
-数据仍读取项目中的最新数据文件；不要修改 SOURCE_SCRIPT。
-"""
+"""可编辑图表：修改 HTML / JAVASCRIPT 后运行。"""
 from _export import export_chart
-
 ROUTE = 'people_composition.html'
 SOURCE_SCRIPT = 'people-studies.js'
-
 HTML = r'''<!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>不配得性Ⅱ：街道人群构成｜衡复风貌区</title><link rel="stylesheet" href="studies.css"><script src="echarts.min.js"></script><script src="people-data.js"></script></head>
 <body data-study="9" data-number="11" data-title="不配得性Ⅱ：街道人群构成"><header><a href="../visualizations.html" aria-label="返回图表目录">←</a><h1>11 不配得性Ⅱ：街道人群构成</h1><span class="meta"></span></header><nav role="tablist" aria-label="切换分析图表"></nav><p class="note"></p><main id="workspace" aria-label="数据图表"></main><script src="people-studies.js"></script></body></html>'''
-
-# 绘图代码：可修改 subtitle、轴名称、series、grid、symbolSize 等设置。
 JAVASCRIPT = r'''/* 0905 pedestrian studies. Aggregate payload and explicit statistical denominators. */
 const P=window.PEOPLE, page=Number(document.body.dataset.study);
 const titles={9:'不配得性Ⅱ：街道人群构成',10:'五维混合度对比',11:'行为集中度：洛伦兹曲线',12:'点位年龄构成',13:'不配得性Ⅰ：点位混合度与置信区间',14:'人群、行为与空间关联',15:'不配得性Ⅱ：经济门槛与阶层排他',16:'不配得性Ⅱ：在地记忆的悬置'};
@@ -41,7 +34,7 @@ function stacked(i){
   const c=chart(),o=base();o.xAxis={...axis('人数构成占比'),min:0,max:100,axisLabel:{color:'#bbb',formatter:'{value}%'}};
   o.yAxis={...axis(),type:'category',data:groups.map(g=>`${g.name} · n=${g.n}`),inverse:true,splitLine:{show:false}};
   o.series=order.map((j,k)=>({name:labels[j],type:'bar',stack:'composition',barMaxWidth:65,
-    data:groups.map(g=>100*share(g[key])[j]),itemStyle:{color:shades[k],opacity:1},
+    data:groups.map(g=>100*share(g[key])[j]),itemStyle:{color:shades[k],opacity:key==='identities'&&labels[j]==='游客倾向'?.3:1},
     label:{show:true,color:k<2?'#111':'#fff',formatter:p=>p.value>=5?p.value.toFixed(1)+'%':''},
     emphasis:{focus:'none',itemStyle:{borderColor:'#fff',borderWidth:2}},
     ...(k===0?{markLine:{silent:true,symbol:'none',lineStyle:{color:'#fff',opacity:.65,type:'dashed',width:1},

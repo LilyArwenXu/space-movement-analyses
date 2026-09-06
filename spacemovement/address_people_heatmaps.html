@@ -36,13 +36,13 @@ function heat(i){
     range:peopleRange||[0,max],calculable:true,realtime:true,precision:0,
     orient:'horizontal',left:'center',top:8,itemWidth:16,itemHeight:260,
     text:['人数上限','人数下限'],textStyle:{color:'#ccc'},
-    inRange:{color:['#444','#f5f5f2'],opacity:1},
+    inRange:{color:['rgba(245,245,242,0.04)','#f5f5f2'],opacity:1},
     outOfRange:{color:['#444','#f5f5f2'],opacity:0}};
   const slots=D.nodes.map((n,j)=>[j%columns,Math.floor(j/columns),0,n.address,n.short,n.street]);
   const cells=D.nodes.map((n,j)=>[j%columns,Math.floor(j/columns),n[key]??0,n.address,n.short,n.street]);
   o.series=[
     {name:'地址位置',type:'heatmap',silent:true,data:slots,
-      itemStyle:{color:'#151515',borderColor:'#333',borderWidth:1},
+      itemStyle:{color:'#101010',borderColor:'#151515',borderWidth:1},
       label:{show:false},emphasis:{disabled:true}},
     {name:D.headers[key],type:'heatmap',data:cells,
       itemStyle:{opacity:1,borderColor:'#090909',borderWidth:2},
