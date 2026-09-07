@@ -5,7 +5,8 @@ CATALOG=[
     (3,'people_composition.html','街道人群构成','composition'),
     (4,'local_memory_sankey.html','在地记忆的悬置','memory'),
     (5,'node_space.html','节点空间分析','space'),
-    (6,'people_diversity_radar.html','五维混合度对比','diversity'),
-    (7,'spatial_vitality.html','空间活力度相关性分析','correlations'),
-    (8,'vitality_mixing.html','不配得性Ⅰ：活力度-混合度','mismatch'),
+    (6,'spatial_vitality.html','相关性分析','correlations'),
+    (7,'quality_vitality.html','不配得性Ⅰ：缺乏活力的场地','qualityVitality'),
+    (8,'quality_mixing.html','不配得性Ⅱ：包容性的形成与消解','qualityMix'),
+    (9,'vitality_mixing.html','不配得性Ⅲ：活力度-混合度','mismatch'),
 ]

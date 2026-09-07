@@ -14,7 +14,8 @@ def avg(values):
 def load_sheet(prefix,fallback):
     with zipfile.ZipFile(SOURCE) as z:
         names=[s.attrib['name'] for s in ET.fromstring(z.read('xl/workbook.xml')).find('m:sheets',NS)]
-    name=next((n for n in names if n==prefix),fallback)
+    dated=[(int(m.group(1)),n) for n in names if (m:=re.fullmatch(re.escape(prefix)+r'[（(](\d{4})[）)]',n))]
+    name=prefix if prefix in names else max(dated)[1] if dated else fallback
     return read_source(name)
 def clean(v):
     if isinstance(v,float) and not math.isfinite(v): return None
@@ -24,6 +25,9 @@ def tokens(value):return [s.strip() for s in re.split('[；;、\n]',str(value or
 def build():
     space_sheet,raw=load_sheet('全量总表','全量总表0906')
     people_sheet,praw=load_sheet('行人信息总表','行人信息总表0905')
+    original_raw,original_praw=raw,praw
+    from source_adapter import adapt
+    raw,praw=adapt(raw,praw)
     headers=raw[2]
     source_rows=[r for r in raw[3:] if r.get('B') and r.get('C')]
     assert len({r['B'] for r in source_rows})==len(source_rows)
@@ -124,7 +128,9 @@ def build():
           'headers':headers,'points':points,'all':all_group,'admins':admins,'behaviorLabels':BEHAVIORS,
           'norms':norms,'fields':fields,'ys':ys,'correlations':correlations,'weights':weights,
           'memory':memory,'pdfPages':pdf_pages,
-          'tables':{'space':table(raw),'people':table(praw)},'mapMeta':location['metadata']['base_map']}
+          'tables':{'space':table(original_raw),'people':table(original_praw)},'mapMeta':location['metadata']['base_map']}
+    from analysis_revision import revise
+    data=revise(data)
     (assets/'inclusive-data.js').write_text('window.INCLUSIVE='+json.dumps(data,ensure_ascii=False,allow_nan=False)+';\n',encoding='utf-8')
     extracted=[p for p in points if p['quadrant']]
     with (ROOT/'data_extract.csv').open('w',encoding='utf-8-sig',newline='') as f:

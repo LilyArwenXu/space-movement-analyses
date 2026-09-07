@@ -1,6 +1,8 @@
-# 当前八个白底图表的 Python 编辑文件
+# 当前九个白底图表的 Python 编辑文件
 
-修改编号 01–08 文件内的 `JAVASCRIPT` 绘图代码后，运行对应 Python 文件即可更新网页、`docs` 和发布包。每份代码独立；日后刷新数据不会覆盖这里的修改。图表用 ECharts/HTML/SVG 渲染，Python 负责生成页面。
+修改当前文件内的 `JAVASCRIPT` 绘图代码后，运行对应 Python 文件即可更新网页、`docs` 和发布包。每份代码独立；日后刷新数据不会覆盖这里的修改。图表用 ECharts/HTML/SVG 渲染，Python 负责生成页面。
+
+当前入口：01_address_people_heatmaps.py、02_street_interface_weights.py、03_people_composition.py、04_local_memory_sankey.py、05_node_space.py、06_spatial_vitality.py、07_quality_vitality.py、08_quality_mixing.py、09_vitality_mixing.py。其余旧编号文件保留作历史备份，不是当前目录入口。相关性、编码、品质评分与活力度校准位于 `scripts/analysis_revision.py`。
 
 ```powershell
 python 01_address_people_heatmaps.py
