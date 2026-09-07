@@ -7,7 +7,6 @@ CATALOG=[
     (11,'behavior_lorenz.html','行为集中度：洛伦兹曲线','people'),
     (5,'effective_space.html','有效空间分析','survey'),
     (6,'comfort.html','舒适度分析','survey'),
-    (14,'people_space_correlations.html','人群、行为与空间关联','people'),
     (8,'scatter_location.html','不配得性Ⅰ：区位资源/行人选择','survey'),
     (7,'scatter_single_axis.html','不配得性Ⅰ：界面评价/行为选择','survey'),
     (13,'point_diversity_ci.html','不配得性Ⅰ：点位混合度与置信区间','people'),

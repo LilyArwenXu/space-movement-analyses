@@ -10,7 +10,10 @@ def export_chart(route, html, javascript, source_script, sync=True):
     # Resolve display numbers at export time so editable snapshots cannot restore old numbers.
     sys.path.insert(0,str(ROOT/'scripts'))
     from catalog import CATALOG
-    number=next(i for i,(_,filename,_,_) in enumerate(CATALOG,1) if filename==route)
+    number=next((i for i,(_,filename,_,_) in enumerate(CATALOG,1) if filename==route),None)
+    if number is None:
+        # An archived chart keeps its saved number when explicitly exported.
+        number=int(re.search(r'data-number="(\d+)"',html).group(1))
     if re.search(r'<body\b[^>]*\bdata-number=',html):
         html=re.sub(r'data-number="[^"]*"',f'data-number="{number}"',html,count=1)
     else:
@@ -38,6 +41,11 @@ def export_chart(route, html, javascript, source_script, sync=True):
 
 def apply_all():
     import runpy
+    sys.path.insert(0,str(ROOT/'scripts'))
+    from catalog import CATALOG
+    active_routes={route for _,route,_,_ in CATALOG}
     for path in sorted(Path(__file__).parent.glob('[0-9][0-9]_*.py')):
         config=runpy.run_path(str(path))
+        if config['ROUTE'] not in active_routes:
+            continue
         export_chart(config['ROUTE'],config['HTML'],config['JAVASCRIPT'],config['SOURCE_SCRIPT'],sync=False)
