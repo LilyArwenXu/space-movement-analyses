@@ -7,6 +7,15 @@ ROOT=Path(__file__).resolve().parents[1]
 
 def export_chart(route, html, javascript, source_script, sync=True):
     target=ROOT/'spacemovement'/route
+    # Resolve display numbers at export time so editable snapshots cannot restore old numbers.
+    sys.path.insert(0,str(ROOT/'scripts'))
+    from catalog import CATALOG
+    number=next(i for i,(_,filename,_,_) in enumerate(CATALOG,1) if filename==route)
+    if re.search(r'<body\b[^>]*\bdata-number=',html):
+        html=re.sub(r'data-number="[^"]*"',f'data-number="{number}"',html,count=1)
+    else:
+        html=html.replace('<body',f'<body data-number="{number}"',1)
+    html=re.sub(r'(<h1\b[^>]*>)\d+\s+',lambda m:m[1]+f'{number:02d} ',html,count=1)
     if source_script:
         html=html.replace(f'<script src="{source_script}"></script>', '<script>\n'+javascript.replace('</script>', '<\\/script>')+'\n</script>')
     else:

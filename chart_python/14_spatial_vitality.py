@@ -61,7 +61,12 @@ function heat(i){
 }
 function correlationMatrix(){
   const el=document.createElement('section');el.className='report reference-matrix';workspace.append(el);
-  el.innerHTML=referenceTable(REFERENCE[0])+'<p class="matrix-legend">正负号表示相关方向　　* p &lt; 0.05　 ** p &lt; 0.01　 *** p &lt; 0.001</p>';
+  const rows=REFERENCE[0],maximum=Math.max(...rows.slice(1).flatMap(row=>row.slice(1).map(v=>Math.abs(parseFloat(v)))));
+  el.innerHTML='<table><thead><tr>'+rows[0].map(t=>'<th scope="col">'+esc(t)+'</th>').join('')+'</tr></thead><tbody>'+rows.slice(1).map(row=>'<tr>'+row.map((v,j)=>{
+    if(j===0)return '<th scope="row">'+esc(v)+'</th>';
+    const value=parseFloat(v),strength=Math.sqrt(Math.abs(value)/maximum),diameter=40+32*strength,alpha=.4+.6*strength;
+    return `<td class="correlation-cell"><span class="correlation-circle ${value<0?'negative':'positive'}" style="--circle-size:${diameter.toFixed(2)}px;--circle-alpha:${alpha.toFixed(3)}"><span>${esc(v)}</span></span></td>`;
+  }).join('')+'</tr>').join('')+'</tbody></table><p class="matrix-legend">○ 负相关　● 正相关　圆越大，相关系数的绝对值越大。　* p &lt; 0.05　 ** p &lt; 0.01　 *** p &lt; 0.001</p>';
 }
 
 function bars(){const c=chart(),o=base();o.grid={left:70,right:25,top:30,bottom:115};o.xAxis={...axis('完整地址节点'),type:'category',data:D.nodes.map(n=>n.short),axisLabel:{color:'#aaa',rotate:50,fontSize:10,interval:'auto'}};o.yAxis=axis('功能混合度');o.dataZoom=[{type:'inside'},{type:'slider',bottom:8,height:18,borderColor:'#555',fillerColor:'#ffffff22',textStyle:{color:'#aaa'}}];o.series=[{type:'bar',data:D.nodes.map(n=>n.O),itemStyle:{color:POINT,opacity:ALPHA},emphasis:{itemStyle:{color:'#fff',opacity:1}}}];o.tooltip.formatter=p=>`${esc(D.nodes[p.dataIndex].address)}<br>功能混合度：${fmt(p.value)}<br>记录数：${D.nodes[p.dataIndex].records}`;c.setOption(o);note.textContent=`${D.nodes.length} 个唯一完整地址，同一街道相邻；重复地址的功能混合度取有效值均值。拖动底部滑块可放大节点。`;}

@@ -54,7 +54,7 @@ def verify(folder):
     assert (folder/'index.html').is_file()
     directory=(folder/'visualizations.html').read_text(encoding='utf-8')
     routes=re.findall(r'href="(spacemovement/[^"]+\.html)"',directory)
-    assert len(routes)==len(set(routes))==14
+    assert len(routes)==len(set(routes))==15
     print(f'Verified {count} local HTML/CSS resource links, exact filename case, and all {len(routes)} chart pages.')
 
 if __name__=='__main__':prepare()
