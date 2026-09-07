@@ -54,7 +54,10 @@ for(const page of [1,3,4,5,6,7,8]){
     assert.equal(reference[0].length,17);assert.equal(reference[1].length,17);assert.equal(reference[2].length,9);
     assert(reference[0].every(r=>r.length===8));assert(reference[1].every(r=>r.length===8));
     assert.equal(reference[0][1][3],'-0.345***');assert.equal(reference[0][8][6],'-0.369***');
-    elements.nav.children[5].click();
+    assert.equal(elements.nav.children.length,4);
+    assert(!elements.nav.children.some(b=>b.textContent==='p值矩阵'));
+    elements.nav.children[1].click();
+    assert.equal((elements['#workspace'].children[0].innerHTML.match(/<table>/g)||[]).length,2);
     assert(elements['#workspace'].children[0].innerHTML.includes('居民指数'));
     assert(elements['#workspace'].children[0].innerHTML.includes('<table>'));
     assert(!elements['#workspace'].children[0].innerHTML.includes('<img'));

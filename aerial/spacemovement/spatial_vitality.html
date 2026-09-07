@@ -56,13 +56,14 @@ function heat(i){
   note.textContent='拖动滑块筛选人数，观测缺失按0人处理。';
 }
 function correlationMatrix(){
-  const el=document.createElement('section');el.className='report reference-matrix';workspace.append(el);
+  const el=document.createElement('section');el.className='report reference-matrix combined-correlations';workspace.append(el);
   const rows=REFERENCE[0],maximum=Math.max(...rows.slice(1).flatMap(row=>row.slice(1).map(v=>Math.abs(parseFloat(v)))));
   el.innerHTML='<table><thead><tr>'+rows[0].map(t=>'<th scope="col">'+esc(t)+'</th>').join('')+'</tr></thead><tbody>'+rows.slice(1).map(row=>'<tr>'+row.map((v,j)=>{
     if(j===0)return '<th scope="row">'+esc(v)+'</th>';
     const value=parseFloat(v),strength=Math.sqrt(Math.abs(value)/maximum),diameter=40+32*strength,alpha=.4+.6*strength;
     return `<td class="correlation-cell"><span class="correlation-circle ${value<0?'negative':'positive'}" style="--circle-size:${diameter.toFixed(2)}px;--circle-alpha:${alpha.toFixed(3)}"><span>${esc(v)}</span></span></td>`;
   }).join('')+'</tr>').join('')+'</tbody></table><p class="matrix-legend">○ 负相关　● 正相关　圆越大，相关系数的绝对值越大。　* p &lt; 0.05　 ** p &lt; 0.01　 *** p &lt; 0.001</p>';
+  el.innerHTML='<h2>Spearman图表</h2>'+el.innerHTML+'<h2 class="coefficient-heading">Spearman相关系数</h2>'+referenceTable(rows);
 }
 
 function bars(){const c=chart(),o=base();o.grid={left:70,right:25,top:30,bottom:115};o.xAxis={...axis('完整地址节点'),type:'category',data:D.nodes.map(n=>n.short),axisLabel:{color:'#aaa',rotate:50,fontSize:10,interval:'auto'}};o.yAxis=axis('功能混合度');o.dataZoom=[{type:'inside'},{type:'slider',bottom:8,height:18,borderColor:'#555',fillerColor:'#ffffff22',textStyle:{color:'#aaa'}}];o.series=[{type:'bar',data:D.nodes.map(n=>n.O),itemStyle:{color:POINT,opacity:ALPHA},emphasis:{itemStyle:{color:'#fff',opacity:1}}}];o.tooltip.formatter=p=>`${esc(D.nodes[p.dataIndex].address)}<br>功能混合度：${fmt(p.value)}<br>记录数：${D.nodes[p.dataIndex].records}`;c.setOption(o);note.textContent=`${D.nodes.length} 个唯一完整地址，同一街道相邻；重复地址的功能混合度取有效值均值。拖动底部滑块可放大节点。`;}
@@ -72,16 +73,16 @@ const REFERENCE=[[["自变量 X \\ 因变量 Y", "行人样本数", "行为集�
 function referenceTable(rows){return '<table><thead><tr>'+rows[0].map(t=>'<th scope="col">'+esc(t)+'</th>').join('')+'</tr></thead><tbody>'+rows.slice(1).map(row=>'<tr>'+row.map((v,j)=>j===0?'<th scope="row">'+esc(v)+'</th>':'<td>'+esc(v)+'</td>').join('')+'</tr>').join('')+'</tbody></table>';}
 function report(i){
  note.textContent='* p<0.05，** p<0.01，*** p<0.001；相关性不表示因果。';
- if(i===5){correlationMatrix();return;}
+ if(i===1){correlationMatrix();return;}
  const el=document.createElement('section');el.className='report';workspace.append(el);
- if(i>=1&&i<=3){el.innerHTML=referenceTable(REFERENCE[i-1]);return;}
+ if(i===2){el.innerHTML=referenceTable(REFERENCE[2]);return;}
  if(i===0){el.innerHTML='<h2>空间属性与行人行为</h2><p>16项空间属性 × 7项行人行为指标，共112对关联。</p><p>显著相关对：'+(REFERENCE[2].length-1)+' 对。</p><p>'+REFERENCE[0][0].slice(1).map(esc).join('、')+'</p>';return;}
  el.innerHTML='<h2>显著关联概述</h2>'+REFERENCE[2].slice(1).map(r=>'<p>'+esc(r[0])+'与'+esc(r[1])+'呈'+(parseFloat(r[2])>0?'正':'负')+'相关：ρ='+esc(r[2])+'，p='+esc(r[3])+'，n='+esc(r[5])+'。</p>').join('')+'<p>关联结果不用于推断因果关系。</p>';
 }
 
 if(page===1)select(['观察人数','光顾人数','打卡人数','社交人数','饮食人数','休憩人数'],heat);
 if(page===3)bars();
-if(page===4)select(['数据概况','Spearman相关系数','p值矩阵','显著相关对','分析结论','Spearman图表'],report);
+if(page===4)select(['数据概况','Spearman相关系数','显著相关对','分析结论'],report);
 if(page===5)select(['空间有效性分析','空间承载力分析','消费空间占比分析'],i=>{scatterNote();scatter('K',['M','S','R'][i],['空间有效性分析','空间承载力分析','消费空间占比分析'][i]);});
 if(page===6){scatterNote();['AE','AF','AG'].forEach((key,i)=>scatter('T',key,['遮荫率','声环境舒适度','气味环境'][i]));}
 if(page===7)single();
