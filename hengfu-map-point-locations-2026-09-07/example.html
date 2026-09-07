@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>衡复历史街区点位叠加示例</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #18312f;
+      --muted: #6b7f7c;
+      --panel: rgba(255, 255, 255, 0.94);
+      --accent: #d64b3c;
+      --accent-dark: #973328;
+      --line: #dce8e6;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+      color: var(--ink);
+      background: #edf3f1;
+    }
+    header {
+      display: grid;
+      gap: 12px;
+      padding: 18px clamp(16px, 3vw, 36px);
+      background: #174e4b;
+      color: #fff;
+    }
+    h1 { margin: 0; font-size: clamp(19px, 2.4vw, 30px); }
+    header p { margin: 0; color: #dcebe8; }
+    .toolbar {
+      display: grid;
+      grid-template-columns: minmax(180px, 1fr) minmax(160px, 260px) auto;
+      gap: 10px;
+    }
+    input, select, button {
+      min-height: 40px;
+      border: 1px solid #b9cfcb;
+      border-radius: 9px;
+      padding: 8px 11px;
+      font: inherit;
+    }
+    .count {
+      display: grid;
+      place-items: center;
+      padding: 0 14px;
+      border-radius: 9px;
+      color: #174e4b;
+      background: #dff0ec;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    main { padding: clamp(12px, 2vw, 24px); }
+    .map-shell {
+      position: relative;
+      width: min(100%, 1380px);
+      margin: 0 auto;
+      aspect-ratio: 6144 / 4340;
+      overflow: hidden;
+      border: 1px solid #b8cbc8;
+      border-radius: 14px;
+      background: #fff;
+      box-shadow: 0 14px 38px rgba(28, 68, 64, 0.14);
+    }
+    .map-shell > img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      user-select: none;
+    }
+    .marker {
+      position: absolute;
+      width: clamp(8px, 1vw, 13px);
+      min-height: 0;
+      aspect-ratio: 1;
+      padding: 0;
+      border: 2px solid #fff;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 1px 6px rgba(65, 20, 16, 0.55);
+      transform: translate(-50%, -50%);
+      cursor: pointer;
+      transition: transform 150ms ease, background 150ms ease;
+    }
+    .marker:hover, .marker:focus-visible {
+      z-index: 3;
+      background: var(--accent-dark);
+      transform: translate(-50%, -50%) scale(1.7);
+      outline: none;
+    }
+    .marker.selected {
+      z-index: 4;
+      background: #1d7b72;
+      transform: translate(-50%, -50%) scale(2);
+    }
+    .marker.hidden { display: none; }
+    .detail {
+      position: absolute;
+      left: 14px;
+      bottom: 14px;
+      z-index: 6;
+      width: min(430px, calc(100% - 28px));
+      padding: 13px 15px;
+      border: 1px solid rgba(255,255,255,.8);
+      border-radius: 11px;
+      background: var(--panel);
+      box-shadow: 0 8px 24px rgba(15, 55, 51, 0.18);
+      backdrop-filter: blur(8px);
+    }
+    .detail strong { display: block; font-size: 16px; }
+    .detail span { display: block; margin-top: 4px; color: var(--muted); font-size: 13px; }
+    footer {
+      padding: 12px 24px 24px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 13px;
+    }
+    @media (max-width: 700px) {
+      .toolbar { grid-template-columns: 1fr; }
+      .count { min-height: 40px; }
+      .detail { font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>衡复历史街区点位叠加示例</h1>
+    <p>135 个点位按底图百分比坐标定位；点击红点查看名称与完整地址。</p>
+    <div class="toolbar">
+      <input id="search" type="search" placeholder="搜索点位名称或地址">
+      <select id="road" aria-label="按道路筛选">
+        <option value="">全部道路</option>
+      </select>
+      <div class="count" id="count">载入中…</div>
+    </div>
+  </header>
+
+  <main>
+    <div class="map-shell" id="map">
+      <img src="hengfu-base-map.jpg" alt="衡复历史街区底图">
+      <div class="detail" id="detail" aria-live="polite">
+        <strong>请选择一个点位</strong>
+        <span>点位坐标来自当前调研网站。</span>
+      </div>
+    </div>
+  </main>
+
+  <footer>坐标为配套底图百分比，并非经纬度。</footer>
+
+  <script src="points.js"></script>
+  <script>
+    const data = window.HENGFU_POINT_DATA;
+    const map = document.getElementById("map");
+    const detail = document.getElementById("detail");
+    const search = document.getElementById("search");
+    const roadSelect = document.getElementById("road");
+    const count = document.getElementById("count");
+    const markers = [];
+
+    const roads = [...new Set(data.points.map(point => point.road))].sort((a, b) =>
+      a.localeCompare(b, "zh-CN", { numeric: true })
+    );
+    for (const road of roads) {
+      const option = document.createElement("option");
+      option.value = road;
+      option.textContent = road;
+      roadSelect.append(option);
+    }
+
+    for (const point of data.points) {
+      const marker = document.createElement("button");
+      marker.type = "button";
+      marker.className = "marker";
+      marker.style.left = point.x_percent + "%";
+      marker.style.top = point.y_percent + "%";
+      marker.title = point.name + "｜" + point.full_address;
+      marker.setAttribute("aria-label", "查看" + point.name + "，" + point.full_address);
+      marker.dataset.search = (point.name + " " + point.full_address).toLowerCase();
+      marker.dataset.road = point.road;
+      marker.addEventListener("click", () => {
+        document.querySelector(".marker.selected")?.classList.remove("selected");
+        marker.classList.add("selected");
+        detail.innerHTML = "";
+        const title = document.createElement("strong");
+        const address = document.createElement("span");
+        const coordinate = document.createElement("span");
+        title.textContent = point.name;
+        address.textContent = point.full_address;
+        coordinate.textContent = "点位ID：" + point.point_id + "｜坐标：" +
+          point.x_percent.toFixed(4) + "%, " + point.y_percent.toFixed(4) + "%";
+        detail.append(title, address, coordinate);
+      });
+      map.insertBefore(marker, detail);
+      markers.push(marker);
+    }
+
+    function applyFilter() {
+      const keyword = search.value.trim().toLowerCase();
+      const road = roadSelect.value;
+      let visible = 0;
+      markers.forEach(marker => {
+        const show = (!keyword || marker.dataset.search.includes(keyword)) &&
+          (!road || marker.dataset.road === road);
+        marker.classList.toggle("hidden", !show);
+        if (show) visible += 1;
+      });
+      count.textContent = "显示 " + visible + " / " + markers.length;
+    }
+
+    search.addEventListener("input", applyFilter);
+    roadSelect.addEventListener("change", applyFilter);
+    applyFilter();
+  </script>
+</body>
+</html>
+

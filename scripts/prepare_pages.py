@@ -5,6 +5,7 @@ from urllib.parse import urlsplit, unquote
 import re
 import shutil
 import zipfile
+from sync_static import copy_static
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -12,10 +13,10 @@ def prepare():
     source=ROOT/'dist'
     target=ROOT/'docs'
     target.mkdir(exist_ok=True)
-    for name in ['index.html','visualizations.html','behavior-analysis.html','LICENSE.txt']:
-        shutil.copy2(source/name,target/name)
+    for name in ['index.html','visualizations.html','behavior-analysis.html','data-collection.html','LICENSE.txt']:
+        copy_static(source/name,target/name)
     for name in ['assets','spacemovement']:
-        shutil.copytree(source/name,target/name,dirs_exist_ok=True,
+        shutil.copytree(source/name,target/name,dirs_exist_ok=True,copy_function=copy_static,
                         ignore=shutil.ignore_patterns('sass','*.xlsx','*.docx','*.py','__pycache__'))
     (target/'.nojekyll').write_text('',encoding='utf-8')
     verify(target)

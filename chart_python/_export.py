@@ -7,6 +7,8 @@ ROOT=Path(__file__).resolve().parents[1]
 
 def export_chart(route, html, javascript, source_script, sync=True):
     target=ROOT/'spacemovement'/route
+    if target.exists() and 'data-page=' in target.read_text(encoding='utf-8'):
+        raise ValueError('该页面已升级为白底新版，请修改 chart_python/current 中对应文件；旧版备份保留在原位置。')
     # Resolve display numbers at export time so editable snapshots cannot restore old numbers.
     sys.path.insert(0,str(ROOT/'scripts'))
     from catalog import CATALOG

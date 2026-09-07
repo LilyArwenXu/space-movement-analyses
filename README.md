@@ -1,4 +1,6 @@
-# 衡复风貌区空间与行为研究
+# Inclusive Vitality
+
+当前封面有调研网页、数据采集、类型划分（暂空）、宏观行为分析、微观行为分析五个入口。宏观目录为八个白底图表，数据采集内含目录PDF及两张源表。运行 `python scripts/build_site.py` 更新全站，同时重建根目录的 `data_extract.csv`；统计公式见 [METHODS.md](METHODS.md)，当前可编辑Python文件在 `chart_python/current`。
 
 ## GitHub Pages 发布
 
@@ -23,10 +25,10 @@ https://lilyarwenxu.github.io/space-movement-analyses/
 | 目录或文件 | 用途 |
 | --- | --- |
 | `docs/index.html` | 正式发布首页 |
-| `docs/visualizations.html` | 十四个入口的风琴目录 |
+| `docs/visualizations.html` | 八个入口的风琴目录 |
 | `docs/behavior-analysis.html` | 行为分析页面 |
 | `docs/assets/` | 样式、背景图片与字体 |
-| `docs/spacemovement/` | 十四个图表页面、图表库与生成后的数据 |
+| `docs/spacemovement/` | 八个当前图表页面、保留的历史图表与图表库 |
 | `docs/.nojekyll` | 直接按静态文件发布 |
 | `index.html` | 根目录兼容入口，跳转到 `docs/index.html` |
 | `aerial/` | 网站页面源文件，后续样式修改在这里进行 |

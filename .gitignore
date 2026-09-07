@@ -2,3 +2,4 @@
 scripts/__pycache__/
 .site-build/
 chart_python/__pycache__/
+chart_python/current/__pycache__/
