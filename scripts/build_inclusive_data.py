@@ -23,8 +23,8 @@ def clean(v):
 def tokens(value):return [s.strip() for s in re.split('[；;、\n]',str(value or '')) if s.strip()]
 
 def build():
-    space_sheet,raw=load_sheet('全量总表','全量总表0906')
-    people_sheet,praw=load_sheet('行人信息总表','行人信息总表0905')
+    space_sheet,raw=read_source('全量总表（0907）')
+    people_sheet,praw=read_source('行人信息总表（0907）')
     original_raw,original_praw=raw,praw
     from source_adapter import adapt
     raw,praw=adapt(raw,praw)
@@ -130,7 +130,13 @@ def build():
           'memory':memory,'pdfPages':pdf_pages,
           'tables':{'space':table(original_raw),'people':table(original_praw)},'mapMeta':location['metadata']['base_map']}
     from analysis_revision import revise
+    _,mean_rows=read_source('点位均值')
+    mean_lookup={r.get('A'):(r.get('B'),r.get('C')) for r in mean_rows[1:]}
+    for p in points:
+        p['metrics']['resident'],p['metrics']['visitor']=mean_lookup.get(p['address'],(None,None))
     data=revise(data)
+    from september_update import enrich
+    enrich(data)
     (assets/'inclusive-data.js').write_text('window.INCLUSIVE='+json.dumps(data,ensure_ascii=False,allow_nan=False)+';\n',encoding='utf-8')
     extracted=[p for p in points if p['quadrant']]
     with (ROOT/'data_extract.csv').open('w',encoding='utf-8-sig',newline='') as f:

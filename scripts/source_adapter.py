@@ -18,8 +18,8 @@ def adapt(raw,praw):
         row={k:r.get(v) for k,v in mapping.items()}
         row.update(A=r['A'],B=pos['point_id'],C=r['B'],H='；'.join(str(r[k]) for k in ['F','G','H'] if r.get(k)),facilitySource=r.get('K'))
         output.append(row)
-    # Old sheet is used only as a stable identity lookup for duplicate addresses.
-    _,old=read_source('行人信息总表（0905）');oldbyseq={r['A']:r for r in old[1:] if r.get('A')}
+    # Repeated addresses are separate observation blocks in current-sheet order.
+    blocks={};previous={}
     pm=dict(zip('A D E G H I J K L M N O P Q R S T U V W X Y AB AC AD AE'.split(), 'A B C D E F G H I J K L M N O P Q R S T U V W X Y Z'.split()))
     people=[{k:praw[0].get(v) for k,v in pm.items()}]
     for r in praw[1:]:
@@ -27,7 +27,11 @@ def adapt(raw,praw):
         matches=byaddress.get(r['B'],[])
         if len(matches)==1:pid=matches[0]['point_id']
         else:
-            prior=oldbyseq.get(r['A']);assert prior and prior['D']==r['B'] and prior['E']==r['C'],('Ambiguous node',r['A'])
-            pid=prior['C']
+            address=r['B']
+            if address not in blocks:blocks[address]=0
+            elif r['C']<=previous[address]:blocks[address]+=1
+            previous[address]=r['C']
+            assert blocks[address]<len(matches),('Ambiguous current-sheet block',address)
+            pid=matches[blocks[address]]['point_id']
         row={k:r.get(v) for k,v in pm.items()};row.update(B='ped-'+str(r['A']),C=pid);people.append(row)
     return output,people

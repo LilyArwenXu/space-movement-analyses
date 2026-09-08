@@ -23,6 +23,8 @@ def build(refresh=True):
                +'JAVASCRIPT = r\'\'\''+js+'\'\'\'\n\n'
                +"if __name__=='__main__':\n    from _export import export_chart\n    export_chart()\n",encoding='utf-8')
         js=runpy.run_path(str(editor))['JAVASCRIPT']
+        from september_update import renderer
+        js=renderer(js)
         script_name=f'chart-{number:02d}.js'
         (ROOT/'aerial/assets/js'/script_name).write_text(js,encoding='utf-8')
         html=page(number,route,title,kind).replace('src="../assets/js/inclusive.js"',f'src="../assets/js/{script_name}"')
@@ -47,6 +49,8 @@ def build(refresh=True):
         if path.name in active:continue
         text=path.read_text(encoding='utf-8')
         if 'legacy-light.css' not in text and 'data-page=' not in text:path.write_text(text.replace('</head>','<link rel="stylesheet" href="../assets/css/legacy-light.css"></head>'),encoding='utf-8')
+    from september_update import pages
+    pages()
     shutil.copytree(ROOT/'aerial',ROOT/'dist',dirs_exist_ok=True,copy_function=copy_static)
     from prepare_pages import prepare
     prepare()
