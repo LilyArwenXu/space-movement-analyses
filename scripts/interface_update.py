@@ -30,7 +30,8 @@ def category_page():
     return '<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>类型划分</title><link rel="stylesheet" href="assets/css/inclusive.css"></head><body><header class="topbar"><a href="index.html">←</a><h1>类型划分</h1></header><main class="classification"><table aria-label="街道空间要素分类表"><colgroup>'+''.join('<col>' for _ in range(7))+'</colgroup><tbody>'+''.join(rows)+'</tbody></table></main></body></html>'
 
 def update_renderer(js):
-    js=js.replace("FONT='Times New Roman, SimSun, Songti SC, serif'","FONT='FZLanTingHei, Arial, sans-serif'")
+    js=re.sub(r"const FONT='[^']*'", "const FONT='SimSun, Songti SC, serif'", js)
+    js=js.replace("font:'16px Microsoft YaHei'", "font:'16px '+FONT")
     js=js.replace("font:'12px SimSun'","font:'12px '+FONT").replace("font:'11px SimSun'","font:'11px '+FONT").replace("font:'14px SimSun'","font:'14px '+FONT").replace("font:'16px SimSun'","font:'16px '+FONT")
     for start,end in [('function informationScatter(', 'function mixingInformation('),('function informationExplorer(', 'function scatter(')]:
         a=js.index(start);b=js.index(end,a);part=js[a:b]

@@ -2,7 +2,7 @@
 'use strict';
 const D=window.INCLUSIVE, PAGE=document.body.dataset.page;
 const W=document.querySelector('.workspace'),NAV=document.querySelector('.tabs'),NOTE=document.querySelector('.readme');
-const FONT='FZLanTingHei, Arial, sans-serif', INK='#292929', PALETTE=['#607E95','#A8C3D6','#B8AEA6','#E2D0BC','#F3EEE8','#D59BA8','#A45668'];
+const FONT='SimSun, Songti SC, serif', INK='#292929', PALETTE=['#607E95','#A8C3D6','#B8AEA6','#E2D0BC','#F3EEE8','#D59BA8','#A45668'];
 let charts=[];
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const finite=Number.isFinite, fmt=(v,n=3)=>finite(v)?v.toFixed(n):'—';
@@ -238,7 +238,7 @@ function caseStudy(kind){
    o.series=dimensions.map(([key,label],j)=>({id:'case-metric-'+key,name:label+'（'+units[key]+'）',type:'scatter',
     data:groupPoints.filter(p=>finite(getx(p))&&finite(gety(p,key))).sort((a,b)=>Number(a.caseIndex===i)-Number(b.caseIndex===i)).map(p=>({value:[getx(p),gety(p,key),p.caseAddress,p.id,p.caseIndex],symbolSize:p.caseIndex===i?17:10,itemStyle:{opacity:p.caseIndex===i?1:.3,borderWidth:0}})),
     itemStyle:{color:PALETTE[j%PALETTE.length],borderWidth:0},emphasis:{scale:1.4,itemStyle:{opacity:1,borderWidth:0},label:{show:false}},label:{show:false}}));
-   if(!o.series.some(s=>s.data.length))o.graphic=[{type:'text',left:'center',top:'middle',style:{text:'本组案例均缺少“'+xlabel+'”，无法绘制该横轴下的散点',font:'16px Microsoft YaHei',fill:'#686868'}}];
+   if(!o.series.some(s=>s.data.length))o.graphic=[{type:'text',left:'center',top:'middle',style:{text:'本组案例均缺少“'+xlabel+'”，无法绘制该横轴下的散点',font:'16px '+FONT,fill:'#686868'}}];
    o.tooltip.formatter=p=>{const value=p.data.value||p.data;return esc(value[2])+'<br>'+esc(xlabel)+'：'+fmt(value[0])+'<br>'+esc(p.seriesName)+'：'+fmt(value[1]);};
    c.setOption(o,{notMerge:true});
    const missing=dimensions.filter(([key])=>!analysis.points.some(p=>finite(getx(p))&&finite(gety(p,key)))).map(d=>d[1]);
@@ -292,4 +292,4 @@ async function exportDOMChart(node){
 }
 function attachDOMDownloads(){document.querySelectorAll('.map-stage,.covariance').forEach(node=>{if(node.querySelector('.dom-chart-download'))return;const button=document.createElement('button');button.className='dom-chart-download';button.title='下载 PNG';button.setAttribute('aria-label','下载图表 PNG');button.textContent='⇩';button.onclick=async event=>{event.stopPropagation();button.disabled=true;try{await exportDOMChart(node);}catch(error){button.title='下载失败，请重试';console.error(error);}finally{button.disabled=false;}};node.append(button);});}
 if(typeof MutationObserver!=='undefined'){new MutationObserver(attachDOMDownloads).observe(W,{childList:true,subtree:true});attachDOMDownloads();}
-if(document.fonts)document.fonts.load('16px FZLanTingHei').then(()=>charts.forEach(c=>{if(!c.isDisposed())c.resize();}));
+if(document.fonts)document.fonts.load('16px SimSun').then(()=>charts.forEach(c=>{if(!c.isDisposed())c.resize();}));

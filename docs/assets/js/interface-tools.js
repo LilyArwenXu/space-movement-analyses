@@ -27,4 +27,4 @@ async function exportDOMChart(node){
 }
 function attachDOMDownloads(){document.querySelectorAll('.map-stage,.covariance').forEach(node=>{if(node.querySelector('.dom-chart-download'))return;const button=document.createElement('button');button.className='dom-chart-download';button.title='下载 PNG';button.setAttribute('aria-label','下载图表 PNG');button.textContent='⇩';button.onclick=async event=>{event.stopPropagation();button.disabled=true;try{await exportDOMChart(node);}catch(error){button.title='下载失败，请重试';console.error(error);}finally{button.disabled=false;}};node.append(button);});}
 if(typeof MutationObserver!=='undefined'){new MutationObserver(attachDOMDownloads).observe(W,{childList:true,subtree:true});attachDOMDownloads();}
-if(document.fonts)document.fonts.load('16px FZLanTingHei').then(()=>charts.forEach(c=>{if(!c.isDisposed())c.resize();}));
+if(document.fonts)document.fonts.load('16px SimSun').then(()=>charts.forEach(c=>{if(!c.isDisposed())c.resize();}));
