@@ -2,7 +2,7 @@
 'use strict';
 const D=window.INCLUSIVE, PAGE=document.body.dataset.page;
 const W=document.querySelector('.workspace'),NAV=document.querySelector('.tabs'),NOTE=document.querySelector('.readme');
-const FONT='Times New Roman, SimSun, Songti SC, serif', INK='#292929', PALETTE=['#607E95','#A8C3D6','#B8AEA6','#E2D0BC','#F3EEE8','#D59BA8','#A45668'];
+const FONT='FZLanTingHei, Arial, sans-serif', INK='#292929', PALETTE=['#607E95','#A8C3D6','#B8AEA6','#E2D0BC','#F3EEE8','#D59BA8','#A45668'];
 let charts=[];
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const finite=Number.isFinite, fmt=(v,n=3)=>finite(v)?v.toFixed(n):'—';
@@ -16,14 +16,14 @@ function reset(){document.body.classList.remove('case-analysis');charts.forEach(
 function tabs(parent,labels,render){parent.replaceChildren();labels.forEach((s,i)=>{const b=el('button','',parent);b.textContent=s;b.setAttribute('role','tab');b.onclick=()=>{parent.querySelectorAll('button').forEach(v=>v.setAttribute('aria-selected',String(v===b)));render(i);};if(!i)b.click();});}
 function mainTabs(labels,render){tabs(NAV,labels,i=>{reset();render(i);});}
 function note(text){NOTE.textContent=text;}
-function chart(parent=W,height=520){const n=el('div','plot',parent);n.style.height=height+'px';const c=echarts.init(n,null,{renderer:'canvas'});charts.push(c);return c;}
+function chart(parent=W,height=520){const n=el('div','plot',parent);n.style.height=height+'px';const c=echarts.init(n,null,{renderer:'canvas'});charts.push(c);enableChartDownload(c,n);return c;}
 function base(){return {animation:false,backgroundColor:'#fff',color:PALETTE,textStyle:{color:INK,fontFamily:FONT,fontSize:15},title:{textStyle:{color:INK,fontFamily:FONT,fontSize:17,fontWeight:400}},tooltip:{confine:true,backgroundColor:'#fff',borderColor:'#A8C3D6',textStyle:{color:INK,fontFamily:FONT}},grid:{left:75,right:35,top:65,bottom:90,containLabel:true},legend:{top:38,left:20,right:20,type:'scroll',textStyle:{color:'#4B4B4B',fontFamily:FONT}},xAxis:axis(),yAxis:axis()};}
 function axis(name=''){return {type:'value',name,nameLocation:'middle',nameGap:40,nameTextStyle:{color:'#4B4B4B',fontFamily:FONT},axisLabel:{color:'#4B4B4B',fontFamily:FONT},axisLine:{show:true,lineStyle:{color:'#A8C3D6'}},splitLine:{lineStyle:{color:'#B8AEA6'}}};}
 function regression(a){if(a.length<2)return null;const mx=mean(a.map(p=>p[0])),my=mean(a.map(p=>p[1]));let xx=0,xy=0,yy=0;a.forEach(([x,y])=>{xx+=(x-mx)**2;xy+=(x-mx)*(y-my);yy+=(y-my)**2;});if(!xx)return null;return {b:xy/xx,a:my-xy/xx*mx,r2:yy?xy*xy/xx/yy:null,n:a.length,min:Math.min(...a.map(p=>p[0])),max:Math.max(...a.map(p=>p[0]))};}
 function highlight(road){charts.forEach(c=>(c.getOption().series||[]).forEach((s,i)=>c.dispatchAction({type:s.name===road?'highlight':'downplay',seriesIndex:i})));}
 function scatter(parent,xkey,ykey,title){const c=chart(parent),o=base(),series=[],all=[];delete o.legend;o.title={text:title,left:'center',textStyle:{fontFamily:FONT,fontSize:16,color:INK}};o.xAxis=axis(D.headers[xkey]);o.yAxis=axis(D.headers[ykey]);
  [...new Set(D.points.map(p=>p.road))].forEach(road=>{const data=D.points.filter(p=>p.road===road&&finite(p.values[xkey])&&finite(p.values[ykey])).map(p=>[p.values[xkey],p.values[ykey],p.address]);all.push(...data);if(data.length)series.push({name:road,type:'scatter',data,symbolSize:8,itemStyle:{color:'#A8C3D6',opacity:1},emphasis:{itemStyle:{color:'#292929'},scale:1.4}});});
- const f=regression(all);if(f){series.push({name:'回归线',type:'line',data:[[f.min,f.a+f.b*f.min],[f.max,f.a+f.b*f.max]],symbol:'none',silent:true,lineStyle:{color:'#292929',opacity:.18,type:f.r2>=.5?'solid':'dashed'}});o.graphic=[{type:'text',right:18,bottom:8,style:{text:`y=${fmt(f.b)}x+${fmt(f.a)}\nR²=${fmt(f.r2)} · n=${f.n}`,fill:'#4B4B4B',font:'12px SimSun',lineHeight:17,textAlign:'right'}}];}
+ const f=regression(all);if(f){series.push({name:'回归线',type:'line',data:[[f.min,f.a+f.b*f.min],[f.max,f.a+f.b*f.max]],symbol:'none',silent:true,lineStyle:{color:'#292929',opacity:.18,type:f.r2>=.5?'solid':'dashed'}});o.graphic=[{type:'text',right:18,bottom:8,style:{text:`y=${fmt(f.b)}x+${fmt(f.a)}\nR²=${fmt(f.r2)} · n=${f.n}`,fill:'#4B4B4B',font:'12px '+FONT,lineHeight:17,textAlign:'right'}}];}
  o.series=series;o.tooltip.formatter=p=>p.seriesType==='scatter'?`${esc(p.data[2])}<br>${esc(D.headers[xkey])}：${fmt(p.data[0])}<br>${esc(D.headers[ykey])}：${fmt(p.data[1])}`:'';c.setOption(o);c.on('mouseover',p=>{if(p.seriesType==='scatter')highlight(p.seriesName)});c.on('globalout',()=>highlight(null));}
 
 function mapView(mode){note(mode===0?'选择活动查看原点位人数；圈越大人数越多，悬停时同一道路同时变实。\n圆半径 r=3+22×√(该点人数/当前指标最大人数)；按底图宽高的百分比定位。\n活动人数读取总表对应人数列；缺失观测仅在此地图按0显示。':'灰色表示人数少，橙色表示人数多；色块叠加展示人群在底图上的集中区域。\n权重 w=该点行人样本数/全域最大行人样本数。\n热度 h(x,y)=Σ[w_i×exp(−距离²/(2×σ²))]，σ=底图宽度的1.8%；热度按全图最大值归一化，缺失人数仅在此地图按0处理。');
@@ -105,15 +105,16 @@ function vitalityInformation(){
  c.setOption({tooltip:{formatter:p=>{const i=(p.data.value||p.data)[0];return esc(D.points[i].address)+'<br>'+labels.map((name,j)=>esc(name)+'：'+fmt(values[j][i])).join('<br>')}}});
 }
 function informationScatter(parent,kind){
+ const points=rankedInformationPoints(kind);
  const quality=kind==='quality',mix=kind==='mix',keys=quality?D.qualityFields:mix?['ageMix','activityMix','identityMix','postureMix','socialMix']:['sample','clusters','density','gather','resident','visitor'],labels=[...keys.map(k=>quality?D.headers[k]:D.ys[k]),'综合评分'];
  const c=chart(parent,Math.max(440,Math.min(650,window.innerHeight*.68))),o=base();delete o.legend;
- o.grid={left:150,right:25,top:25,bottom:50};o.xAxis={type:'category',data:D.points.map(p=>p.name),axisLabel:{show:false},axisTick:{show:false},name:'所有点位（按总表顺序）',nameLocation:'middle',nameGap:28};
+ o.grid={left:150,right:25,top:25,bottom:50};o.xAxis={type:'category',data:points.map(p=>p.name),axisLabel:{show:false},axisTick:{show:false},name:'所有点位（按综合评分从低到高）',nameLocation:'middle',nameGap:28};
  o.yAxis={type:'category',data:labels,inverse:true,axisLabel:{color:'#4B4B4B',fontFamily:FONT,fontSize:14,interval:0},axisTick:{show:false},splitLine:{show:true,lineStyle:{color:'#F3EEE8'}}};
- const values=keys.map(k=>D.points.map(p=>(quality?p.values:p.metrics)[k]));values.push(D.points.map(p=>p[quality?'quality':mix?'mixScore':'vitality']));
+ const values=keys.map(k=>points.map(p=>(quality?p.values:p.metrics)[k]));values.push(points.map(p=>p[quality?'quality':mix?'mixScore':'vitality']));
  const ranges=values.map(a=>{const v=a.filter(finite);return [Math.min(...v),Math.max(...v)]});
  o.series=labels.map((name,j)=>({id:'info-'+j,name,type:'scatter',data:values[j].map((v,i)=>[i,j,v]),symbolSize:v=>{if(!finite(v[2]))return 0;const [lo,hi]=ranges[j];return 5+9*Math.sqrt(hi>lo?(v[2]-lo)/(hi-lo):.5)},itemStyle:{color:PALETTE[j%7],opacity:.5},emphasis:{scale:1.5,itemStyle:{opacity:1}},blur:{itemStyle:{opacity:.5}}}));
  o.series.push({id:'focus-ring',type:'scatter',silent:true,data:[],symbolSize:27,itemStyle:{color:'transparent',borderColor:PALETTE[6],borderWidth:2,opacity:1},z:10});
- o.tooltip.formatter=p=>{const i=p.data[0],node=D.points[i];return esc(node.address)+'<br>'+labels.map((name,j)=>esc(name)+'：'+fmt(values[j][i])).join('<br>')};c.setOption(o);
+ o.tooltip.formatter=p=>{const i=p.data[0],node=points[i];return esc(node.address)+'<br>'+labels.map((name,j)=>esc(name)+'：'+fmt(values[j][i])).join('<br>')};c.setOption(o);
  c.on('mouseover',p=>{if(p.seriesIndex>=labels.length)return;const i=p.data[0];c.dispatchAction({type:'downplay'});labels.forEach((_,j)=>c.dispatchAction({type:'highlight',seriesIndex:j,dataIndex:i}));c.setOption({series:[{id:'focus-ring',data:finite(values.at(-1)[i])?[[i,labels.length-1]]:[]}]});});
  c.on('globalout',()=>{c.dispatchAction({type:'downplay'});c.setOption({series:[{id:'focus-ring',data:[]}]});});
  el('p','caption',parent).textContent='每列为一个节点，圆点大小表示该行指标的相对大小，颜色区分指标；悬停同一节点联动，综合评分加外圈。缺失值不绘制。\n点半径按该行指标的最小最大值标准化后平方根缩放，原始数值见悬停信息。';
@@ -161,11 +162,12 @@ function mismatch(i){document.body.classList.add('screen-analysis');if(!i){note(
 
 function vitalityInformation(){informationExplorer(W,'vitality');}
 function informationExplorer(parent,kind){
+ const points=rankedInformationPoints(kind);
  const quality=kind==='quality',mix=kind==='mix',keys=quality?D.qualityFields:mix?['ageMix','activityMix','identityMix','postureMix','socialMix']:['sample','clusters','density','gather','resident','visitor'];
  const labels=[...keys.map(k=>quality?D.headers[k]:D.ys[k]),'综合评分'],count=labels.length,last=count-1;
  const nav=el('div','subtabs',parent),host=el('div','',parent),c=informationScatter(host,kind),original=c.getOption();
- const controls=el('div','metric-controls',host),caption=host.querySelector('.caption');
- const values=keys.map(k=>D.points.map(p=>(quality?p.values:p.metrics)[k]));values.push(D.points.map(p=>p[quality?'quality':mix?'mixScore':'vitality']));
+ const controls=el('div','metric-controls axis-controls',host),caption=host.querySelector('.caption');
+ const values=keys.map(k=>points.map(p=>(quality?p.values:p.metrics)[k]));values.push(points.map(p=>p[quality?'quality':mix?'mixScore':'vitality']));
  const fits=values.map(v=>fittedRegression(v.map((y,x)=>[x,y]))),state=labels.map(()=>({visible:true,line:false,band:false}));let mode=0,selected=-1,phase=0,timer=null,generation=0;
  function cancelReveal(){generation++;if(timer!==null)clearTimeout(timer);timer=null;}
  function reveal(j){const f=fits[j];if(!f)return;const token=generation;let frame=0;
@@ -177,25 +179,25 @@ function informationExplorer(parent,kind){
  }
  c.off('mouseover');c.off('globalout');
  labels.forEach((label,j)=>{const card=el('div','metric-control',controls);card.style.borderTopColor=PALETTE[j%PALETTE.length];
-  const main=el('button','metric-toggle',card);main.textContent=label;main.setAttribute('aria-pressed','false');main.onclick=()=>{cancelReveal();phase=selected===j?(phase+1)%3:1;selected=phase?j:-1;state.forEach((s,k)=>{s.visible=selected<0||k===selected;s.line=false;s.band=false;});controls.querySelectorAll('button').forEach((b,k)=>b.setAttribute('aria-pressed',String(k===selected)));render();if(phase===1)reveal(j);};
+  const main=el('button','metric-toggle',card);main.textContent='';main.title=label;main.setAttribute('aria-label',label);main.style.background=PALETTE[j%PALETTE.length];main.setAttribute('aria-pressed','false');main.onclick=()=>{cancelReveal();phase=selected===j?(phase+1)%3:1;selected=phase?j:-1;state.forEach((s,k)=>{s.visible=selected<0||k===selected;s.line=false;s.band=false;});controls.querySelectorAll('button').forEach((b,k)=>b.setAttribute('aria-pressed',String(k===selected)));render();if(phase===1)reveal(j);};
  });
  function render(){const compact=window.innerWidth<700,step=compact?23:42,leftCount=Math.ceil(count/2);
   const axes=mode?labels.map((label,j)=>{const valid=values[j].filter(finite);return {id:'metric-'+j,type:'value',min:valid.length?Math.min(...valid):0,max:valid.length?Math.max(...valid):1,show:state[j].visible,position:j<leftCount?'left':'right',offset:(j<leftCount?j:j-leftCount)*step,name:String(j+1),nameLocation:'end',nameTextStyle:{color:PALETTE[j%PALETTE.length],fontFamily:FONT},axisLine:{show:true,lineStyle:{color:PALETTE[j%PALETTE.length]}},axisLabel:{fontSize:compact?12:14,color:'#4B4B4B',formatter:v=>Number(v.toPrecision(3)).toString()},splitLine:{show:false}}}):original.yAxis;
-  const series=labels.map((name,j)=>({id:'info-'+j,type:'scatter',name,yAxisIndex:mode?j:0,data:values[j].map((v,k)=>({id:String(D.points[k].id),value:[k,mode?v:j,v]})),symbolSize:v=>!finite(v[2])||mode&&!state[j].visible?0:mode?(j===last?10:7):original.series[j].symbolSize(v),itemStyle:{color:PALETTE[j%PALETTE.length],opacity:.5},emphasis:{scale:1.5,itemStyle:{opacity:1}}}));
+  const series=labels.map((name,j)=>({id:'info-'+j,type:'scatter',name,yAxisIndex:mode?j:0,data:values[j].map((v,k)=>({id:String(points[k].id),value:[k,mode?v:j,v]})),symbolSize:v=>!finite(v[2])||mode&&!state[j].visible?0:mode?(j===last?10:7):original.series[j].symbolSize(v),itemStyle:{color:PALETTE[j%PALETTE.length],opacity:.5},emphasis:{scale:1.5,itemStyle:{opacity:1}}}));
   labels.forEach((_,j)=>{const f=fits[j],enabled=mode&&state[j].visible,fit=regressionSeries(f,1.96,true);
    series.push({...fit[0],id:'info-line-'+j,type:'line',silent:true,yAxisIndex:mode?j:0,data:enabled&&state[j].line&&f?fit[0].data:[],lineStyle:{color:PALETTE[j%PALETTE.length],width:2,type:f&&f.r2>=.5?'solid':'dashed'}});
    series.push({...fit[1],id:'info-band-'+j,type:'custom',silent:true,clip:true,yAxisIndex:mode?j:0,data:enabled&&state[j].band&&f?[0]:[],renderItem:f?(params,api)=>({type:'polygon',shape:{points:[...f.points.map(p=>api.coord([p[0],p[1]+1.96*p[2]])),...f.points.slice().reverse().map(p=>api.coord([p[0],p[1]-1.96*p[2]]))]},style:{fill:PALETTE[j%PALETTE.length],opacity:.14}}):()=>null});
   });
   series.push({id:'focus-ring',type:'scatter',silent:true,yAxisIndex:mode?last:0,data:[],symbolSize:27,itemStyle:{color:'transparent',borderColor:PALETTE[last%PALETTE.length],borderWidth:2,opacity:1},z:10});
-  c.setOption({animation:true,animationDurationUpdate:850,animationEasingUpdate:'cubicInOut',grid:{left:mode?step*(leftCount-1)+42:150,right:mode?step*(count-leftCount-1)+42:25,top:40,bottom:50},xAxis:mode?{type:'value',min:0,max:D.points.length-1,data:[],axisLabel:{show:false},axisTick:{show:false},name:'所有点位（按总表顺序）',nameLocation:'middle',nameGap:34}:original.xAxis,yAxis:axes,series},{replaceMerge:'yAxis'});
-  controls.hidden=!mode;
-  const text=(mode?count+'组散点叠加，各自独立纵轴从小到大；轴号依次对应：'+labels.join('、')+'。同一指标按钮依次点击：单项散点与回归动画 → 仅单项散点 → 全部指标。换点其他指标从第一步开始。不同指标的绝对高度不可直接比较。':'每列为一个点位，每行代表一个指标，点大小表示该行相对大小。')+'\n悬停联动同一点位，综合评分加外圈；切换视图时点位平滑移动。\n'+(quality?'界面品质：沿用不配得性Ⅰ的正向显著指标，各指标全域最小最大标准化后等权平均。':mix?MFORM:SFORM);
+  c.setOption({animation:true,animationDurationUpdate:850,animationEasingUpdate:'cubicInOut',grid:{left:mode?step*(leftCount-1)+42:150,right:mode?step*(count-leftCount-1)+42:25,top:40,bottom:82},xAxis:mode?{type:'value',min:0,max:points.length-1,data:[],axisLabel:{show:false},axisTick:{show:false},name:'所有点位（按综合评分从低到高）',nameLocation:'middle',nameGap:34}:original.xAxis,yAxis:axes,series},{replaceMerge:'yAxis'});
+  controls.hidden=!mode;positionAxisControls(controls,c,count);c.reflow=()=>positionAxisControls(controls,c,count);
+  const text=(mode?count+'组散点叠加，各自独立纵轴从小到大；轴号依次对应：'+labels.join('、')+'。同一指标按钮依次点击：单项散点与回归动画 → 仅单项散点 → 全部指标。换点其他指标从第一步开始。不同指标的绝对高度不可直接比较。':'每列为一个点位（按综合评分升序，缺失评分置后），每行代表一个指标，点大小表示该行相对大小。')+'\n悬停联动同一点位，综合评分加外圈；切换视图时点位平滑移动。\n'+(quality?'界面品质：沿用不配得性Ⅰ的正向显著指标，各指标全域最小最大标准化后等权平均。':mix?MFORM:SFORM);
   if(parent===W)note(text);else caption.textContent=text;
-  if(parent===W)caption.textContent='回归横轴为总表点位顺序，不代表时间或空间距离。OLS：ŷ=a+bx，b=Σ[(x−x̄)(y−ȳ)]/Σ(x−x̄)²，a=ȳ−bx̄。\n条带=ŷ±1.96×s√[1/n+(x−x̄)²/Σ(x−x̄)²]，s²=Σ(y−ŷ)²/(n−2)。R²≥0.5实线，其余虚线；不将顺序趋势解释为因果。';
+  if(parent===W)caption.textContent='回归横轴为综合评分排序，不代表时间或空间距离。OLS：ŷ=a+bx，b=Σ[(x−x̄)(y−ȳ)]/Σ(x−x̄)²，a=ȳ−bx̄。\n条带=ŷ±1.96×s√[1/n+(x−x̄)²/Σ(x−x̄)²]，s²=Σ(y−ŷ)²/(n−2)。R²≥0.5实线，其余虚线；不将顺序趋势解释为因果。';
  }
  tabs(nav,['校准展示','散点图'],i=>{cancelReveal();selected=-1;phase=0;state.forEach(s=>{s.visible=true;s.line=false;s.band=false;});controls.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed','false'));mode=i;render();});
- if(parent!==W)el('p','caption',host).textContent='OLS以总表点位顺序为横轴：ŷ=a+bx，b=Σ[(x−x̄)(y−ȳ)]/Σ(x−x̄)²，a=ȳ−bx̄。条带=ŷ±1.96×SE，SE=s√[1/n+(x−x̄)²/Σ(x−x̄)²]，s²=Σ(y−ŷ)²/(n−2)。顺序趋势不表示时间、距离或因果。';
- c.setOption({tooltip:{formatter:p=>{const i=(p.data.value||p.data)[0],node=D.points[i];return node?esc(node.address)+'<br>'+labels.filter((_,j)=>!mode||state[j].visible).map(name=>{const j=labels.indexOf(name);return esc(name)+'：'+fmt(values[j][i])}).join('<br>'):''}}});
+ if(parent!==W)el('p','caption',host).textContent='OLS以综合评分排序为横轴：ŷ=a+bx，b=Σ[(x−x̄)(y−ȳ)]/Σ(x−x̄)²，a=ȳ−bx̄。条带=ŷ±1.96×SE，SE=s√[1/n+(x−x̄)²/Σ(x−x̄)²]，s²=Σ(y−ŷ)²/(n−2)。顺序趋势不表示时间、距离或因果。';
+ c.setOption({tooltip:{formatter:p=>{const i=(p.data.value||p.data)[0],node=points[i];return node?esc(node.address)+'<br>'+labels.filter((_,j)=>!mode||state[j].visible).map(name=>{const j=labels.indexOf(name);return esc(name)+'：'+fmt(values[j][i])}).join('<br>'):''}}});
  c.on('mouseover',p=>{if(p.seriesIndex>=count)return;const i=(p.data.value||p.data)[0];c.dispatchAction({type:'downplay'});labels.forEach((_,j)=>{if(!mode||state[j].visible)c.dispatchAction({type:'highlight',seriesId:'info-'+j,dataIndex:i});});c.setOption({series:[{id:'focus-ring',data:finite(values[last][i])&&(!mode||state[last].visible)?[[i,mode?values[last][i]:last]]:[]}]});});
  c.on('globalout',()=>{c.dispatchAction({type:'downplay'});c.setOption({series:[{id:'focus-ring',data:[]}]});});
 }
@@ -205,7 +207,7 @@ function scatter(parent,xkey,ykey,title){
   if(data.length)series.push({id:'road-points-'+j,name:road,type:'scatter',data,symbolSize:8,itemStyle:{color:'#A8C3D6',opacity:.65},emphasis:{itemStyle:{color:'#607E95',opacity:1},scale:1.4}});
   const f=fittedRegression(data);if(f)series.push({id:'road-fit-'+j,name:road,type:'line',data:f.points.map(p=>p.slice(0,2)),showSymbol:false,silent:true,lineStyle:{color:'#929292',width:1,opacity:.4,type:f.r2>=.5?'solid':'dashed'},emphasis:{lineStyle:{color:'#666666',opacity:1,width:2.5}}});
  });
- const f=fittedRegression(all);if(f){series.push(...regressionSeries(f));o.graphic=[{type:'text',right:18,bottom:8,style:{text:`y=${fmt(f.slope)}x+${fmt(f.intercept)}\nR²=${fmt(f.r2)} · n=${f.n}`,fill:'#4B4B4B',font:'12px SimSun',lineHeight:17,textAlign:'right'}}];}
+ const f=fittedRegression(all);if(f){series.push(...regressionSeries(f));o.graphic=[{type:'text',right:18,bottom:8,style:{text:`y=${fmt(f.slope)}x+${fmt(f.intercept)}\nR²=${fmt(f.r2)} · n=${f.n}`,fill:'#4B4B4B',font:'12px '+FONT,lineHeight:17,textAlign:'right'}}];}
  o.series=series;o.tooltip.formatter=p=>p.seriesType==='scatter'?`${esc(p.data[2])}<br>${esc(D.headers[xkey])}：${fmt(p.data[0])}<br>${esc(D.headers[ykey])}：${fmt(p.data[1])}`:'';c.setOption(o);c.on('mouseover',p=>{if(p.seriesType==='scatter')highlight(p.seriesName)});c.on('globalout',()=>highlight(null));
 }
 
@@ -252,7 +254,7 @@ function mixingSection(){sectionTabs(['信息散点图','全域与所有街道',
 if(PAGE==='heat')mainTabs(['热力分布图','样本数'],i=>mapView(1-i));
 if(PAGE==='weights')mainTabs(['空间分析','界面品质信息表'],i=>{if(i)informationExplorer(W,'quality');else sectionTabs(['有效空间分析','舒适度分析'],space);});
 if(PAGE==='composition')mainTabs(['人群构成','混合度信息表'],i=>{if(i)mixingSection();else sectionTabs(['点位年龄构成','街道年龄构成','身份倾向'],j=>composition([1,0,2][j]));});
-if(PAGE==='memory')mainTabs(['在地记忆的假设','活力度信息表'],i=>{if(i)informationExplorer(W,'vitality');else sectionTabs(D.memory.map(g=>g.cohort+'群体'),memory);});
+if(PAGE==='memory')mainTabs(['活力度信息表','在地记忆的假设'],i=>{if(!i)informationExplorer(W,'vitality');else sectionTabs(D.memory.map(g=>g.cohort+'群体'),memory);});
 if(PAGE==='space')mainTabs(['有效空间分析','舒适度分析'],space);
 if(PAGE==='diversity')mixingSection();
 if(PAGE==='correlations')mainTabs(['Spearman相关性分析'],()=>covarianceMatrix());
@@ -260,3 +262,34 @@ if(PAGE==='qualityVitality'||PAGE==='qualityMix')mainTabs(['不配得性分析',
 if(PAGE==='mismatch')mainTabs(['筛选','不配得性分析','案例分析'],i=>i===2?caseStudy(PAGE):mismatch(i));
 
 let resizeTimer;window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>charts.forEach(c=>{c.resize();c.reflow?.()}),120)});
+
+function rankedInformationPoints(kind){const key=kind==='quality'?'quality':kind==='mix'?'mixScore':'vitality';return D.points.map((p,i)=>({p,i})).sort((a,b)=>{const x=a.p[key],y=b.p[key];return finite(x)&&finite(y)?x-y||a.i-b.i:finite(x)?-1:finite(y)?1:a.i-b.i;}).map(v=>v.p);}
+function positionAxisControls(controls,c,count){
+ const compact=window.innerWidth<700,step=compact?23:42,leftCount=Math.ceil(count/2),width=c.getWidth(),height=c.getHeight();
+ const left=step*(leftCount-1)+42,right=step*(count-leftCount-1)+42;
+ controls.style.top=(height-65)+'px';
+ Array.from(controls.children).forEach((card,j)=>{card.style.left=(j<leftCount?left-j*step:width-right+(j-leftCount)*step)+'px';});
+}
+function enableChartDownload(c,node){
+ const original=c.setOption.bind(c);
+ c.setOption=(option,...args)=>original({...option,toolbox:{show:true,right:4,bottom:3,itemSize:15,showTitle:true,iconStyle:{borderColor:'#999',borderWidth:1},emphasis:{iconStyle:{borderColor:'#333'}},feature:{saveAsImage:{type:'png',name:(document.title||'图表').split('｜')[0],title:'下载 PNG',pixelRatio:2,backgroundColor:'#fff',excludeComponents:['toolbox']}}}},...args);
+}
+function saveCanvasPNG(canvas,name){const link=document.createElement('a');link.download=name+'.png';link.href=canvas.toDataURL('image/png');link.click();}
+async function exportDOMChart(node){
+ const rect=node.getBoundingClientRect(),canvas=document.createElement('canvas');canvas.width=Math.ceil(rect.width*2);canvas.height=Math.ceil(rect.height*2);const ctx=canvas.getContext('2d');ctx.scale(2,2);ctx.fillStyle='#fff';ctx.fillRect(0,0,rect.width,rect.height);
+ if(node.classList.contains('map-stage')){
+  const base=node.querySelector('img');if(base){await base.decode();ctx.drawImage(base,0,0,rect.width,rect.height);}
+  const source=node.querySelector('svg'),clone=source.cloneNode(true),originals=[source,...source.querySelectorAll('*')],copies=[clone,...clone.querySelectorAll('*')];
+  originals.forEach((el,i)=>{const css=getComputedStyle(el);['fill','fill-opacity','stroke','stroke-width','stroke-opacity','opacity','font-size','font-family'].forEach(k=>copies[i].style.setProperty(k,css.getPropertyValue(k)));});
+  clone.setAttribute('width',rect.width);clone.setAttribute('height',rect.height);clone.setAttribute('xmlns','http://www.w3.org/2000/svg');
+  const blob=new Blob([new XMLSerializer().serializeToString(clone)],{type:'image/svg+xml;charset=utf-8'}),url=URL.createObjectURL(blob);
+  try{const image=new Image();image.src=url;await image.decode();ctx.drawImage(image,0,0,rect.width,rect.height);}finally{URL.revokeObjectURL(url);}
+ }else{
+  node.querySelectorAll('.cov-cell').forEach(cell=>{const r=cell.getBoundingClientRect();ctx.fillStyle=getComputedStyle(cell).backgroundColor;ctx.fillRect(r.left-rect.left,r.top-rect.top,r.width,r.height);});
+  node.querySelectorAll('.cov-row-label,.cov-col-label,.cov-detail').forEach(label=>{if(!label.getClientRects().length||label.closest('[hidden]'))return;const r=label.getBoundingClientRect(),css=getComputedStyle(label);ctx.fillStyle='rgba(255,255,255,.92)';ctx.fillRect(r.left-rect.left,r.top-rect.top,r.width,r.height);ctx.font=css.font;ctx.fillStyle=css.color;ctx.textBaseline='middle';ctx.fillText(label.textContent,r.left-rect.left+5,r.top-rect.top+r.height/2,r.width-10);});
+ }
+ saveCanvasPNG(canvas,(document.title||'图表').split('｜')[0]);
+}
+function attachDOMDownloads(){document.querySelectorAll('.map-stage,.covariance').forEach(node=>{if(node.querySelector('.dom-chart-download'))return;const button=document.createElement('button');button.className='dom-chart-download';button.title='下载 PNG';button.setAttribute('aria-label','下载图表 PNG');button.textContent='⇩';button.onclick=async event=>{event.stopPropagation();button.disabled=true;try{await exportDOMChart(node);}catch(error){button.title='下载失败，请重试';console.error(error);}finally{button.disabled=false;}};node.append(button);});}
+if(typeof MutationObserver!=='undefined'){new MutationObserver(attachDOMDownloads).observe(W,{childList:true,subtree:true});attachDOMDownloads();}
+if(document.fonts)document.fonts.load('16px FZLanTingHei').then(()=>charts.forEach(c=>{if(!c.isDisposed())c.resize();}));

@@ -10,7 +10,7 @@ function setup(page,width=1100){
  const elements={};['.workspace','.tabs','.readme','.meta'].forEach(k=>elements[k]=element());const body=element('body');body.dataset.page=page;
  const context={console,setTimeout:queue,clearTimeout:id=>timers.delete(id),requestAnimationFrame:f=>f(),window:{innerWidth:width,innerHeight:900,addEventListener(){},matchMedia(){return {matches:true}}},document:{body,querySelector:s=>elements[s]||body.querySelector(s),createElement:element,createElementNS:(_,s)=>element(s)},echarts:{init(el){const c=echarts.init(null,null,{renderer:'svg',ssr:true,width,height:parseInt(el.style.height)||500});const resize=c.resize.bind(c);c.resize=()=>resize({width,height:parseInt(el.style.height)||500});made.push(c);return c;}}};
  vm.createContext(context);vm.runInContext(fs.readFileSync('docs/assets/data/inclusive-data.js','utf8'),context);vm.runInContext(fs.readFileSync('docs/assets/js/chart-'+String(PAGES.indexOf(page)+1).padStart(2,'0')+'.js','utf8'),context);
- return {all,made,elements,context,advance(n){for(let i=0;i<n&&timers.size;i++){const [id,f]=timers.entries().next().value;timers.delete(id);f();}},check(){for(const c of made.filter(c=>!c.isDisposed())){const svg=c.renderToSVGString();assert(!svg.includes('NaN'),page+' invalid SVG');assert.equal(c.getOption().backgroundColor,'#fff');fs.writeFileSync(`.site-build/revision-${page}-${width}.svg`,svg);rendered++;}},dispose(){made.filter(c=>!c.isDisposed()).forEach(c=>c.dispose())}};
+ return {all,made,elements,context,advance(n){for(let i=0;i<n&&timers.size;i++){const [id,f]=timers.entries().next().value;timers.delete(id);f();}},check(){for(const c of made.filter(c=>!c.isDisposed())){const svg=c.renderToSVGString();assert(!svg.includes('NaN'),page+' invalid SVG');assert.equal(c.getOption().backgroundColor,'#fff');assert(c.getOption().toolbox[0].feature.saveAsImage);fs.writeFileSync(`.site-build/revision-${page}-${width}.svg`,svg);rendered++;}},dispose(){made.filter(c=>!c.isDisposed()).forEach(c=>c.dispose())}};
 }
 
 for(const page of PAGES.filter(p=>p!=='space')){
@@ -35,9 +35,9 @@ for(const page of PAGES.filter(p=>p!=='space')){
 console.log('Verified nested tabs, all 11 isolated cases and every case x-axis tab; '+rendered+' SVG chart renders.');
 
 for(const [page,kind,count] of [['weights','quality',3],['memory','vitality',7],['composition','mix',6]]){
- const t=setup(page);t.elements['.tabs'].children[1].click();
+ const t=setup(page);t.elements['.tabs'].children[page==='memory'?0:1].click();
  const nav=t.elements['.workspace'].children.filter(n=>n.className==='subtabs').at(-1);nav.children[1].click();
- const c=t.made.filter(c=>!c.isDisposed()).at(-1),cards=t.all.filter(n=>n.className==='metric-control');assert.equal(cards.length,count);
+ const c=t.made.filter(c=>!c.isDisposed()).at(-1),cards=t.elements['.workspace'].querySelectorAll('.metric-control');assert.equal(cards.length,count);assert(cards.every(card=>card.children[0].textContent===''&&card.children[0].attrs['aria-label']));
  for(const card of cards){card.children[0].click();t.advance(50);assert.equal(c.getOption().yAxis.filter(a=>a.show).length,1);assert(c.getOption().series.some(s=>String(s.id).startsWith('info-line')&&s.data.length));card.children[0].click();card.children[0].click();}
  t.check();fs.copyFileSync('.site-build/revision-'+page+'-1100.svg','.site-build/information-'+kind+'.svg');t.dispose();
 }

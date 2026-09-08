@@ -13,6 +13,7 @@ def enrich(data):
         if key=='space':
             stop=next(column_index_from_string(k) for row in raw[:3] for k,v in row.items() if v=='进一步计算')
             cols=list(range(1,stop))
+            cols=[c for c in cols if str(raw[2].get(get_column_letter(c),'')).strip()!='D附属设施加权指数']
         else:cols=[column_index_from_string(k) for k,v in raw[0].items() if v and str(v).strip() not in ['辅助计算1','辅助计算2','居民指数','游客指数']]
         rows=[[r.get(get_column_letter(c)) for c in cols] for r in raw]
         while rows and all(v is None for v in rows[-1]):rows.pop()
@@ -79,7 +80,8 @@ def renderer(js):
     end=js.index('let resizeTimer',start)
     color=next(line.strip() for line in js.splitlines() if line.strip().startswith('function color(value)')).replace('function color(value)','function correlationColor(value)')
     js=js[:start]+color+'\n'+(ROOT/'aerial/assets/js/case-study.js').read_text(encoding='utf-8')+'\n'+(ROOT/'aerial/assets/js/september.js').read_text(encoding='utf-8')+'\n'+js[end:]
-    return js
+    from interface_update import update_renderer
+    return update_renderer(js)
 
 def pages():
     for folder in ['category-photos','examples']:shutil.copytree(ROOT/folder,ROOT/'aerial'/folder,dirs_exist_ok=True)
@@ -106,7 +108,8 @@ def pages():
     overview='<section class="svg-overview"><img src="category-photos/街道空间要素分类表_最新.svg" alt="街道空间要素分类表原始总览">'+''.join(spots)+'</section>'
     html=html.replace('<main class="category-layout">','<main class="category-layout">'+overview)
     html=html.replace('<table class="category-table">','<h2>分类图片索引</h2><table class="category-table">')
-    (ROOT/'aerial/categories.html').write_text(html,encoding='utf-8')
+    from interface_update import category_page
+    (ROOT/'aerial/categories.html').write_text(category_page(),encoding='utf-8')
     p=ROOT/'aerial/data-collection.html';p.write_text(p.read_text(encoding='utf-8').replace('街道节点总表','街道信息总表').replace('js/collection.js','js/collection-september.js'),encoding='utf-8')
     for path in [ROOT/'aerial/index.html',ROOT/'aerial/visualizations.html']:
         s=path.read_text(encoding='utf-8')
@@ -118,3 +121,5 @@ def pages():
     s=s.split('\nbody{font-size:17px}')[0]
     if '@import url("september.css");' not in s:s='@import url("september.css");\n'+s
     p.write_text(s+'\n'+marker+'\n'+(ROOT/'aerial/assets/css/september.css').read_text(encoding='utf-8'),encoding='utf-8')
+    from interface_update import update_pages
+    update_pages()
