@@ -137,9 +137,11 @@ def build():
     data=revise(data)
     from september_update import enrich
     enrich(data)
+    from final_revision import revise as final_revise
+    final_revise(data)
     (assets/'inclusive-data.js').write_text('window.INCLUSIVE='+json.dumps(data,ensure_ascii=False,allow_nan=False)+';\n',encoding='utf-8')
     extracted=[p for p in points if p['quadrant']]
-    with (ROOT/'data_extract.csv').open('w',encoding='utf-8-sig',newline='') as f:
+    with (ROOT/'.site-build/legacy-data-extract.csv').open('w',encoding='utf-8-sig',newline='') as f:
         writer=csv.writer(f);writer.writerow(['point_id','完整地址','组别','活力度','混合度','不配得性','样本量'])
         for p in extracted:writer.writerow([p['id'],p['address'],p['quadrant'],p['vitality'],p['mixScore'],p['mismatch'],p['n']])
     (ROOT/'.site-build/inclusive-audit.json').write_text(json.dumps({'points':len(points),'mapMatched':sum(bool(p['position']) for p in points),'records':len(records),'scored':sum(p['mismatch'] is not None for p in points),'extracted':len(extracted),'pdfPages':len(pdf_pages),'categoryFields':len(fields)-16},ensure_ascii=False),encoding='utf-8')

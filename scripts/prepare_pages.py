@@ -13,7 +13,7 @@ def prepare():
     source=ROOT/'dist'
     target=ROOT/'docs'
     target.mkdir(exist_ok=True)
-    for name in ['index.html','visualizations.html','behavior-analysis.html','data-collection.html','categories.html','LICENSE.txt']:
+    for name in ['index.html','visualizations.html','behavior-analysis.html','data-collection.html','categories.html','team.html','LICENSE.txt']:
         copy_static(source/name,target/name)
     for name in ['assets','spacemovement','category-photos','examples']:
         shutil.copytree(source/name,target/name,dirs_exist_ok=True,copy_function=copy_static,

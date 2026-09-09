@@ -10,6 +10,7 @@ def page(number,route,title,kind):
     return f'''<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>{title}｜Inclusive Vitality</title><link rel="stylesheet" href="../assets/css/inclusive.css"><script src="echarts.min.js"></script><script src="../assets/data/inclusive-data.js"></script></head><body data-page="{kind}" data-number="{number}"><header class="topbar"><a class="back" href="../visualizations.html" aria-label="返回宏观行为分析目录">←</a><h1>{number:02d} {title}</h1><span class="meta"></span></header><nav class="tabs" role="tablist" aria-label="切换图表"></nav><p class="readme"></p><main class="workspace"></main><script src="../assets/js/inclusive.js"></script></body></html>'''
 
 def build(refresh=True):
+    (ROOT/'.site-build').mkdir(exist_ok=True)
     data=build_dataset() if refresh else json.loads((ROOT/'aerial/assets/data/inclusive-data.js').read_text(encoding='utf-8').split('=',1)[1].strip().rstrip(';'))
     (ROOT/'aerial/assets/css/legacy-light.css').write_text('html{filter:invert(1) grayscale(1);background:#000;color-scheme:dark}body{min-height:100vh}iframe,embed,object{filter:grayscale(1)}',encoding='utf-8')
     active={r for _,r,_,_ in CATALOG}
@@ -25,6 +26,8 @@ def build(refresh=True):
         js=runpy.run_path(str(editor))['JAVASCRIPT']
         from september_update import renderer
         js=renderer(js)
+        from final_revision import renderer as final_renderer
+        js=final_renderer(js)
         script_name=f'chart-{number:02d}.js'
         (ROOT/'aerial/assets/js'/script_name).write_text(js,encoding='utf-8')
         html=page(number,route,title,kind).replace('src="../assets/js/inclusive.js"',f'src="../assets/js/{script_name}"')
@@ -51,6 +54,8 @@ def build(refresh=True):
         if 'legacy-light.css' not in text and 'data-page=' not in text:path.write_text(text.replace('</head>','<link rel="stylesheet" href="../assets/css/legacy-light.css"></head>'),encoding='utf-8')
     from september_update import pages
     pages()
+    from final_revision import pages as final_pages
+    final_pages()
     shutil.copytree(ROOT/'aerial',ROOT/'dist',dirs_exist_ok=True,copy_function=copy_static)
     from prepare_pages import prepare
     prepare()

@@ -8,8 +8,8 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const finite=Number.isFinite, fmt=(v,n=3)=>finite(v)?v.toFixed(n):'—';
 const sum=a=>a.reduce((s,v)=>s+(finite(v)?v:0),0),mean=a=>{a=a.filter(finite);return a.length?sum(a)/a.length:null;};
 const stars=p=>!finite(p)?'':p<.001?'***':p<.01?'**':p<.05?'*':'';
-const SFORM=`标准化值 z=(x−全域最小值)/(全域最大值−全域最小值)，常量指标记0。\n停留密度=行人样本数/有效停留空间面积。\n集聚比例=集聚人数/行人样本数。\n原始活力度 V₀=(z人数+z行为集群数+z停留密度+z集聚比例)/4；任一指标缺失则不评分。\n展示活力度 V=min(1,c×V₀)，当前 c=${D.vitalityCoefficient.toFixed(4)}。\nc取覆盖0–1所需系数与至少8个双高节点所需系数的较大值；这是展示校准，不是新增观测。`;
-const MFORM='第 d 维混合度 H_d=−Σ(p_k×ln p_k)/ln K_d，p_k=该类别频数/该维频数合计，0×ln0记0。\n五维类别数依次为：年龄混合度4、活动丰富度14、身份倾向混合度2、姿态丰富度2、社交状态混合度2。\n混合度综合评分 M=(H年龄+H活动+H身份倾向+H姿态+H社交状态)/5；任一维缺失则不评分。\n居民指数>游客指数记居民倾向，反之记游客倾向，相等或缺失不计入身份维；活动可多选。';
+const SFORM='各底层指标 z=(x−全域最小值)/(全域最大值−全域最小值)，常量记0；缺失则综合评分缺失。综合评分=Σ(w×z)，采用系数表征的指定权重，不额外缩放。';
+const MFORM='H_d=−Σ(p_k×ln p_k)/ln K_d；p_k=类别频数/该维频数合计，0×ln0记0。零合计或缺失不评分。M=0.149H年龄+0.141H活动+0.250H身份倾向+0.228H姿态+0.233H社交状态。权重按给定公式顺序使用，不二次归一化。';
 document.querySelector('.meta').textContent=`2026人因空间·${['composition','memory','diversity'].includes(PAGE)?D.recordCount:D.rows}RECORDS`;
 function el(tag,cls,parent=W){const n=document.createElement(tag);if(cls)n.className=cls;parent.append(n);return n;}
 function reset(){document.body.classList.remove('case-analysis');charts.forEach(c=>c.dispose());charts=[];W.replaceChildren();document.querySelector('.map-tooltip')?.remove();}
@@ -39,7 +39,7 @@ function mapView(mode){note(mode===0?'选择活动查看原点位人数；圈越
    values.forEach((v,i)=>{if(!v)return;const t=v/peak,f=t*4,j=Math.min(3,Math.floor(f));for(let k=0;k<3;k++)pixels.data[i*4+k]=colors[j][k]*(1-(f-j))+colors[j+1][k]*(f-j);pixels.data[i*4+3]=255*Math.min(.72,t*8);});ctx.putImageData(pixels,0,0);const image=document.createElementNS(NS,'image');image.setAttribute('href',canvas.toDataURL());image.setAttribute('width','1000');image.setAttribute('height','706.38');svg.append(image);
   }
   D.points.forEach(p=>{if(!p.position)return;const n=p.values[key]||0,g=document.createElementNS(NS,'g');g.classList.add('map-point');g.dataset.road=p.road;g.setAttribute('tabindex','0');g.setAttribute('aria-label',p.address+' '+n+'人');g.setAttribute('transform',`translate(${p.position.x_percent*10},${p.position.y_percent*7.0638})`);
-   const radius=mode?4:3+22*Math.sqrt(n/max);(mode?[1]:[1,.76,.5]).forEach((scale,i)=>{const c=document.createElementNS(NS,'circle');c.setAttribute('r',radius*scale);c.setAttribute('fill',mode?'#292929':'#A45668');c.setAttribute('fill-opacity',mode?'.04':n===0?'.04':String(.12+i*.08));c.setAttribute('stroke','#292929');c.setAttribute('stroke-opacity',mode?'0':'.13');g.append(c)});
+   const radius=mode?4:3+22*Math.sqrt(n/max);(mode?[1]:[1,.76,.5]).forEach((scale,i)=>{const c=document.createElementNS(NS,'circle');c.setAttribute('r',radius*scale);c.setAttribute('fill',mode?'#292929':(['#607E95','#A45668','#8C793E','#497F73','#806A96','#BD7546'][['AU','AV','AX','BA','AY','BB'].indexOf(selected)]||'#607E95'));c.setAttribute('fill-opacity',mode?'.04':n===0?'.04':String(.12+i*.08));c.setAttribute('stroke','#292929');c.setAttribute('stroke-opacity',mode?'0':'.13');g.append(c)});
    const activate=e=>{svg.querySelectorAll('.map-point').forEach(v=>v.classList.toggle('active',v.dataset.road===p.road));if(e.clientX!==undefined)hover(e,p,key);};g.addEventListener('pointerenter',activate);g.addEventListener('pointermove',e=>hover(e,p,key));g.addEventListener('focus',activate);const clear=()=>{svg.querySelectorAll('.active').forEach(v=>v.classList.remove('active'));tip.hidden=true};g.addEventListener('pointerleave',clear);g.addEventListener('blur',clear);svg.append(g);
   });
  }
@@ -50,7 +50,7 @@ function weights(){note('每行代表一条道路，六段长度表示各项评�
 function composition(i){const age=i!==2,key=age?'ages':'identities',labels=age?['幼年','青年','中年','老年']:['居民倾向','游客倾向'];let groups=i===1?D.points.filter(p=>p.n>=4).slice().sort((a,b)=>b.ages[3]/sum(b.ages)-a.ages[3]/sum(a.ages)):[D.all,...D.admins.slice().sort((a,b)=>b[key][age?1:0]/sum(b[key])-a[key][age?1:0]/sum(a[key]))];note('每行总长为该群体的有效构成，悬停查看人数；点位年龄构成按老年比例排序。\n类别比例=该类人数/该维有效人数×100%。\n居民指数>游客指数记居民倾向，反之记游客倾向；相等或缺失不计入身份构成。');const c=chart(W,Math.max(490,groups.length*28+120)),o=base();o.grid={left:i===1?240:140,right:35,top:70,bottom:40};o.xAxis={...axis('构成（%）'),max:100};o.yAxis={type:'category',data:groups.map(g=>g.name+' · n='+g.n),inverse:true,axisLabel:{interval:0,fontSize:14,fontFamily:FONT}};o.series=labels.map((name,j)=>({name,type:'bar',stack:'share',data:groups.map(g=>sum(g[key])?g[key][j]/sum(g[key])*100:null),itemStyle:{color:['#292929','#A8C3D6','#B8AEA6','#A45668'][j],opacity:!age&&j===1?.35:1},label:{show:true,color:j===0?'#fff':'#292929',formatter:p=>p.value>=8?fmt(p.value,1)+'%':''}}));o.tooltip.trigger='axis';c.setOption(o);}
 function memory(i){note('连线宽度表示该年龄群体的观测条数；左侧是活动推演的原初功能，右侧是点位当前功能。\n映射按饮食→餐饮/饮品、光顾→零售、工作→生产/办公、打卡→文化展示优先匹配，其余归为生活服务。\n每条记录只进入一个映射，连线人数=对应映射的记录条数。\n这是代际偏好假设，非历史用途实测，也不把年龄层直接换算为具体年份。');const g=D.memory[i],c=chart(W,Math.max(550,Math.min(850,window.innerHeight*.8))),o=base();delete o.xAxis;delete o.yAxis;delete o.grid;delete o.legend;const left=[...new Set(g.links.map(v=>v.source))],right=[...new Set(g.links.map(v=>v.target))];
  const layout=()=>{const narrow=c.getWidth()<650;return {series:[{type:'sankey',left:narrow?8:'19%',right:narrow?8:'23%',top:35,bottom:25,nodeWidth:12,nodeGap:16,draggable:false,data:[...left.map(name=>({name:'假设：'+name,depth:0})),...right.map(name=>({name:'当前：'+name,depth:1}))],links:g.links.map(v=>({source:'假设：'+v.source,target:'当前：'+v.target,value:v.value})),itemStyle:{color:'#292929',borderWidth:0},lineStyle:{color:'#292929',opacity:.16},label:{color:'#292929',fontFamily:FONT,fontSize:narrow?10:12,width:narrow?120:180,overflow:'break',formatter:p=>p.name.replace(/^(假设：|当前：)/,'')},levels:[{depth:0,label:{position:narrow?'right':'left'}},{depth:1,label:{position:narrow?'left':'right'}}],emphasis:{focus:'adjacency',lineStyle:{opacity:.5}}}]};};o.tooltip.formatter=p=>p.dataType==='edge'?`${esc(p.data.source)} → ${esc(p.data.target)}<br>${p.data.value}条观测`:esc(p.name);c.setOption({...o,...layout()});c.reflow=()=>c.setOption(layout());}
-function space(i){note('每个点代表一个节点，悬停同步突出同一道路；灰色短线为各道路回归，悬停同路点位时一起高亮；整体回归为深粉色实线（R²≥0.5）或浅粉色虚线（R²<0.5），道路回归也按同一标准区分实虚线；有效点少于3或横轴恒定不拟合。右下角显示回归方程、R²和有效点位数。\n斜率 b=Σ[(x−x̄)(y−ȳ)]/Σ(x−x̄)²。\n截距 a=ȳ−b×x̄，预测值 ŷ=a+bx。\nR²=1−Σ(y−ŷ)²/Σ(y−ȳ)²；分母为0时不定义，缺失值逐对排除。\n节点空间长度、有效面积、承载人数、消费空间占比及各舒适度指标直接采用总表记录。');if(i===0){const sub=el('div','subtabs'),host=el('div','single-space-chart');const options=[['M','空间有效性分析'],['S','空间承载力分析'],['R','消费空间占比分析']];tabs(sub,options.map(v=>v[1]),j=>{charts.forEach(c=>c.dispose());charts=[];host.replaceChildren();scatter(host,'K',options[j][0],options[j][1]);});}else{const grid=el('div','chart-grid');[['AE','遮荫率'],['AF','声环境舒适度'],['AG','气味环境']].forEach(([y,t])=>scatter(grid,'T',y,t));}}
+function space(i){note('每个点代表一个节点，悬停同步突出同一道路；灰色短线为各道路回归，悬停同路点位时一起高亮；整体回归为深粉色实线（R²≥0.5）或浅粉色虚线（R²<0.5），道路回归也按同一标准区分实虚线；有效点少于3或横轴恒定不拟合。右下角显示回归方程、R²和有效点位数。\n斜率 b=Σ[(x−x̄)(y−ȳ)]/Σ(x−x̄)²。\n截距 a=ȳ−b×x̄，预测值 ŷ=a+bx。\nR²=1−Σ(y−ŷ)²/Σ(y−ȳ)²；分母为0时不定义，缺失值逐对排除。\n节点空间长度、有效面积、承载人数、消费空间占比及各舒适度指标直接采用总表记录。');if(i===0){const sub=el('div','subtabs'),host=el('div','single-space-chart');const options=[['M','空间有效性分析'],['S','空间承载力分析'],['R','消费空间占比分析']];tabs(sub,options.map(v=>v[1]),j=>{charts.forEach(c=>c.dispose());charts=[];host.replaceChildren();scatter(host,'K',options[j][0],options[j][1]);});}else{const grid=el('div','chart-grid');[['AE','遮荫率'],['AF','声环境舒适度'],['AG','气味环境']].forEach(([y,t])=>scatter(grid,'AH',y,t));}}
 
 function radar(parent,groups,title,height=530){const c=chart(parent,height),o=base();delete o.xAxis;delete o.yAxis;delete o.grid;const dims=['年龄混合度','活动丰富度','身份倾向混合度','姿态丰富度','社交状态混合度'];o.title={text:title,left:'center',top:0,textStyle:{fontSize:16,fontFamily:FONT}};o.legend.top=30;o.radar={center:['50%','57%'],radius:'59%',indicator:dims.map(name=>({name,max:1})),axisName:{color:'#292929',fontFamily:FONT},splitArea:{show:false},axisLine:{lineStyle:{color:'#B8AEA6'}},splitLine:{lineStyle:{color:'#B8AEA6'}}};o.series=groups.filter(g=>g.mix.every(finite)).map((g,j)=>({name:g.name,type:'radar',symbol:['circle','rect','triangle','diamond'][j%4],symbolSize:5,lineStyle:{color:PALETTE[j%7],opacity:j?.7:1,type:j?'solid':'dashed',width:j?1:2},itemStyle:{color:PALETTE[j%7]},data:[{name:g.name,value:g.mix}],emphasis:{lineStyle:{width:3,opacity:1}}}));o.tooltip.formatter=p=>esc(p.name)+'<br>'+dims.map((v,j)=>v+'：'+fmt(p.value[j])).join('<br>');c.setOption(o);return c;}
 function scorePlot(parent,points,key,title){const compact=key==='mixScore',valid=points.filter(p=>finite(p[key])),container=el('div',compact?'score-wrap score-fit':'score-wrap',parent),c=chart(container,480),o=base();delete o.legend;o.title={text:title,left:'center',textStyle:{fontFamily:FONT,fontSize:16}};o.grid={left:60,right:24,top:80,bottom:compact?45:120,containLabel:true};o.xAxis={...axis(),type:'category',data:valid.map(p=>p.name),axisTick:{show:!compact},axisLabel:{show:!compact,rotate:45,interval:0,fontSize:13,fontFamily:FONT}};o.yAxis={...axis('综合评分'),min:0,max:1};o.series=[{type:'scatter',symbolSize:7,data:valid.map(p=>p[key]),itemStyle:{color:'#4B4B4B',opacity:1},label:{show:true,position:'top',color:'#292929',fontFamily:FONT,fontSize:13,formatter:p=>fmt(p.value,2)}}];o.tooltip.formatter=p=>esc(valid[p.dataIndex].address)+'<br>评分：'+fmt(p.value)+'<br>行人样本 n='+valid[p.dataIndex].n;c.setOption(o);return c;}
@@ -91,7 +91,7 @@ function linkedNodeCharts(){const active=charts.slice();active.forEach(c=>{c.set
  c.on('globalout',()=>active.forEach(other=>other.dispatchAction({type:'downplay'})));});}
 function vitalityInformation(){
  const nav=el('div','subtabs'),host=el('div'),c=informationScatter(host,'vitality'),original=c.getOption();host.querySelector('.caption').textContent='颜色区分指标；悬停显示原始数值及点位名称。校准展示以点大小编码该指标的相对大小，散点图以各自独立纵轴编码原始数值。';
- const keys=['sample','clusters','density','gather','resident','visitor'],labels=[...keys.map(k=>quality?D.headers[k]:D.ys[k]),'综合评分'],values=keys.map(k=>D.points.map(p=>(quality?p.values:p.metrics)[k]));values.push(D.points.map(p=>p.vitality));let mode=0;
+ const keys=['sample','clusters','density','gather'],labels=[...keys.map(k=>quality?D.headers[k]:D.ys[k]),'综合评分'],values=keys.map(k=>D.points.map(p=>(quality?p.qualityNormalized:kind==='vitality'?p.vitalityNormalized:p.metrics)[k]));values.push(D.points.map(p=>p.vitality));let mode=0;
  c.off('mouseover');c.off('globalout');
  tabs(nav,['校准展示','散点图'],i=>{mode=i;const compact=window.innerWidth<700,step=compact?24:42;
  const axes=i?labels.map((name,j)=>({id:'metric-'+j,type:'value',min:'dataMin',max:'dataMax',position:j<4?'left':'right',offset:(j<4?j:j-4)*step,name:String(j+1),nameLocation:'end',nameTextStyle:{color:PALETTE[j%PALETTE.length],fontFamily:FONT},axisLine:{show:true,lineStyle:{color:PALETTE[j%PALETTE.length]}},axisLabel:{fontSize:compact?12:14,color:'#4B4B4B',formatter:v=>Number(v.toPrecision(3)).toString()},splitLine:{show:false}})):original.yAxis;
@@ -106,11 +106,11 @@ function vitalityInformation(){
 }
 function informationScatter(parent,kind){
  const points=rankedInformationPoints(kind);
- const quality=kind==='quality',mix=kind==='mix',keys=quality?D.qualityFields:mix?['ageMix','activityMix','identityMix','postureMix','socialMix']:['sample','clusters','density','gather','resident','visitor'],labels=[...keys.map(k=>quality?D.headers[k]:D.ys[k]),'综合评分'];
+ const quality=kind==='quality',mix=kind==='mix',keys=quality?D.qualityFields:mix?['ageMix','activityMix','identityMix','postureMix','socialMix']:['sample','clusters','density','gather'],labels=[...keys.map(k=>quality?D.headers[k]:D.ys[k]),'综合评分'];
  const c=chart(parent,Math.max(440,Math.min(650,window.innerHeight*.68))),o=base();delete o.legend;
  o.grid={left:150,right:25,top:25,bottom:50};o.xAxis={type:'category',data:points.map(p=>p.name),axisLabel:{show:false},axisTick:{show:false},name:'所有点位（按综合评分从低到高）',nameLocation:'middle',nameGap:28};
  o.yAxis={type:'category',data:labels,inverse:true,axisLabel:{color:'#4B4B4B',fontFamily:FONT,fontSize:14,interval:0},axisTick:{show:false},splitLine:{show:true,lineStyle:{color:'#F3EEE8'}}};
- const values=keys.map(k=>points.map(p=>(quality?p.values:p.metrics)[k]));values.push(points.map(p=>p[quality?'quality':mix?'mixScore':'vitality']));
+ const values=keys.map(k=>points.map(p=>(quality?p.qualityNormalized:kind==='vitality'?p.vitalityNormalized:p.metrics)[k]));values.push(points.map(p=>p[quality?'quality':mix?'mixScore':'vitality']));
  const ranges=values.map(a=>{const v=a.filter(finite);return [Math.min(...v),Math.max(...v)]});
  o.series=labels.map((name,j)=>({id:'info-'+j,name,type:'scatter',data:values[j].map((v,i)=>[i,j,v]),symbolSize:v=>{if(!finite(v[2]))return 0;const [lo,hi]=ranges[j];return 5+9*Math.sqrt(hi>lo?(v[2]-lo)/(hi-lo):.5)},itemStyle:{color:PALETTE[j%7],opacity:.5},emphasis:{scale:1.5,itemStyle:{opacity:1}},blur:{itemStyle:{opacity:.5}}}));
  o.series.push({id:'focus-ring',type:'scatter',silent:true,data:[],symbolSize:27,itemStyle:{color:'transparent',borderColor:PALETTE[6],borderWidth:2,opacity:1},z:10});
@@ -163,11 +163,11 @@ function mismatch(i){document.body.classList.add('screen-analysis');if(!i){note(
 function vitalityInformation(){informationExplorer(W,'vitality');}
 function informationExplorer(parent,kind){
  const points=rankedInformationPoints(kind);
- const quality=kind==='quality',mix=kind==='mix',keys=quality?D.qualityFields:mix?['ageMix','activityMix','identityMix','postureMix','socialMix']:['sample','clusters','density','gather','resident','visitor'];
+ const quality=kind==='quality',mix=kind==='mix',keys=quality?D.qualityFields:mix?['ageMix','activityMix','identityMix','postureMix','socialMix']:['sample','clusters','density','gather'];
  const labels=[...keys.map(k=>quality?D.headers[k]:D.ys[k]),'综合评分'],count=labels.length,last=count-1;
  const nav=el('div','subtabs',parent),host=el('div','',parent),c=informationScatter(host,kind),original=c.getOption();
  const controls=el('div','metric-controls axis-controls',host),caption=host.querySelector('.caption');
- const values=keys.map(k=>points.map(p=>(quality?p.values:p.metrics)[k]));values.push(points.map(p=>p[quality?'quality':mix?'mixScore':'vitality']));
+ const values=keys.map(k=>points.map(p=>(quality?p.qualityNormalized:kind==='vitality'?p.vitalityNormalized:p.metrics)[k]));values.push(points.map(p=>p[quality?'quality':mix?'mixScore':'vitality']));
  const fits=values.map(v=>fittedRegression(v.map((y,x)=>[x,y]))),state=labels.map(()=>({visible:true,line:false,band:false}));let mode=0,selected=-1,phase=0,timer=null,generation=0;
  function cancelReveal(){generation++;if(timer!==null)clearTimeout(timer);timer=null;}
  function reveal(j){const f=fits[j];if(!f)return;const token=generation;let frame=0;
@@ -191,7 +191,7 @@ function informationExplorer(parent,kind){
   series.push({id:'focus-ring',type:'scatter',silent:true,yAxisIndex:mode?last:0,data:[],symbolSize:27,itemStyle:{color:'transparent',borderColor:PALETTE[last%PALETTE.length],borderWidth:2,opacity:1},z:10});
   c.setOption({animation:true,animationDurationUpdate:850,animationEasingUpdate:'cubicInOut',grid:{left:mode?step*(leftCount-1)+42:150,right:mode?step*(count-leftCount-1)+42:25,top:40,bottom:82},xAxis:mode?{type:'value',min:0,max:points.length-1,data:[],axisLabel:{show:false},axisTick:{show:false},name:'所有点位（按综合评分从低到高）',nameLocation:'middle',nameGap:34}:original.xAxis,yAxis:axes,series},{replaceMerge:'yAxis'});
   controls.hidden=!mode;positionAxisControls(controls,c,count);c.reflow=()=>positionAxisControls(controls,c,count);
-  const text=(mode?count+'组散点叠加，各自独立纵轴从小到大；轴号依次对应：'+labels.join('、')+'。同一指标按钮依次点击：单项散点与回归动画 → 仅单项散点 → 全部指标。换点其他指标从第一步开始。不同指标的绝对高度不可直接比较。':'每列为一个点位（按综合评分升序，缺失评分置后），每行代表一个指标，点大小表示该行相对大小。')+'\n悬停联动同一点位，综合评分加外圈；切换视图时点位平滑移动。\n'+(quality?'界面品质：沿用不配得性Ⅰ的正向显著指标，各指标全域最小最大标准化后等权平均。':mix?MFORM:SFORM);
+  const text=(mode?count+'组散点叠加，各自独立纵轴从小到大；轴号依次对应：'+labels.join('、')+'。同一指标按钮依次点击：单项散点与回归动画 → 仅单项散点 → 全部指标。换点其他指标从第一步开始。不同指标的绝对高度不可直接比较。':'每列为一个点位（按综合评分升序，缺失评分置后），每行代表一个指标，点大小表示该行相对大小。')+'\n悬停联动同一点位，综合评分加外圈；切换视图时点位平滑移动。\n'+(quality?'界面品质：11项指标按全域最小最大值标准化后，依系数表征权重求和。':mix?MFORM:SFORM);
   if(parent===W)note(text);else caption.textContent=text;
   if(parent===W)caption.textContent='回归横轴为综合评分排序，不代表时间或空间距离。OLS：ŷ=a+bx，b=Σ[(x−x̄)(y−ȳ)]/Σ(x−x̄)²，a=ȳ−bx̄。\n条带=ŷ±1.96×s√[1/n+(x−x̄)²/Σ(x−x̄)²]，s²=Σ(y−ŷ)²/(n−2)。R²≥0.5实线，其余虚线；不将顺序趋势解释为因果。';
  }
@@ -251,15 +251,60 @@ function caseStudy(kind){
 // Shared nested navigation keeps the outer selection while reusing existing charts.
 function sectionTabs(labels,render){const nav=el('div','subtabs');tabs(nav,labels,i=>{charts.forEach(c=>c.dispose());charts=[];Array.from(W.children).forEach(n=>{if(n!==nav)n.remove();});document.body.classList.remove('screen-analysis');render(i);});}
 function mixingSection(){sectionTabs(['信息散点图','全域与所有街道',...D.admins.map(g=>g.name)],i=>{if(i===0){informationExplorer(W,'mix');return;}diversity(i-1);});}
+function coefficient(kind){
+ const letter={mix:'M',quality:'Q',vitality:'V'}[kind],box=el('section','coefficients'),img=el('img','coefficient-image',box);img.src='../assets/data/coefficients/'+letter+'.png';img.alt=letter+' 系数表征';
+ const defs=kind==='mix'?[['w1','年龄混合度',.149],['w2','活动丰富度',.141],['w3','姿态丰富度',.250],['w4','社交状态混合度',.228],['w5','身份倾向混合度',.233]]:D.scoreWeights[kind].map((d,i)=>[(kind==='quality'?'x':'y')+(i+1),d[1],d[2]]);
+ const table=el('table','coefficient-table',box);table.innerHTML='<thead><tr><th>指标</th><th>系数</th><th>权重</th></tr></thead><tbody>'+defs.map(d=>'<tr><td>'+d[1]+'</td><td>'+d[0]+'</td><td>'+d[2].toFixed(3)+'</td></tr>').join('')+'</tbody>';
+ note(kind==='mix'?MFORM+'\n权重说明保留给定w1–w5名称；综合评分按指定M公式的维度顺序代入。':SFORM+'\n'+D.scoreWeights[kind].map(d=>d[1]+' '+d[2].toFixed(3)).join('；'));
+}
+function dimensionBars(i){
+ const d=D.mixDimensions[i],points=D.points,c=chart(W,Math.max(650,points.length*28+140)),o=base();
+ o.animation=true;o.title={text:d.label,left:'center',textStyle:{fontFamily:FONT,fontSize:18}};o.legend={type:'scroll',top:35,textStyle:{fontFamily:FONT}};o.grid={left:220,right:125,top:90,bottom:50};
+ o.xAxis={...axis('类别权重 pₖ'),min:0,max:1,axisLabel:{formatter:v=>Math.round(v*100)+'%'}};o.yAxis={type:'category',inverse:true,data:points.map(p=>p.name+' · '+p.id),axisLabel:{interval:0,fontFamily:FONT,fontSize:12},axisTick:{show:false}};
+ o.series=d.labels.map((name,k)=>({name,type:'bar',stack:'frequency',barWidth:18,itemStyle:{color:['#607E95','#A45668','#8C793E','#497F73','#806A96','#BD7546','#A8C3D6','#D59BA8','#B7AB7A','#84B4A6','#B0A1C2','#D5AD8F','#59646C','#A59E93'][k]},data:points.map(p=>{const a=p.mixCounts[d.key],sum=a.reduce((s,v)=>s+(v||0),0);return finite(p.metrics[d.key])?a[k]/sum:null})}));
+ o.series.push({type:'scatter',name:d.label,symbolSize:0,silent:true,data:points.map((p,i)=>[1,i,p.metrics[d.key]]),label:{show:true,position:'right',distance:12,fontFamily:FONT,color:INK,formatter:p=>d.label.replace('混合度','H').replace('丰富度','H')+' = '+fmt(p.data[2])}});
+ o.tooltip.formatter=p=>{const node=points[p.dataIndex],a=node.mixCounts[d.key];return esc(node.address)+' · '+esc(node.id)+'<br>'+d.labels.map((n,k)=>esc(n)+'：'+fmt(a[k])).join('<br>')+'<br>'+d.label+'：'+fmt(node.metrics[d.key])};c.setOption(o);
+ note(d.label+'：纵轴为点位地址，横轴为类别频数占该维频数合计的权重。\nH_d=−Σ(p_k×ln p_k)/ln K_d；p_k=该类别频数/该维频数合计；K_d='+d.labels.length+'；0×ln0记0。全量总表缺失值或零合计不计算，右侧显示 —。\n'+(i===4?'身份倾向权重采用全量总表居民指数、游客指数的相对值。':'数据来自全量总表，不按行人记录重新推断。'));
+}
+function allPointRadar(parent){
+ const dims=D.mixDimensions,pts=D.points.filter(p=>dims.every(d=>finite(p.metrics[d.key]))),c=chart(parent,760),o=base();delete o.xAxis;delete o.yAxis;delete o.grid;
+ const color=i=>'hsl('+Math.round(i*137.508%360)+',43%,46%)';
+ o.animation=true;o.radar={indicator:dims.map(d=>({name:d.label,max:1})),center:['50%','54%'],radius:'57%',splitNumber:4,axisName:{fontFamily:FONT,color:INK},splitArea:{show:false}};
+ o.legend={type:'scroll',top:15,left:20,right:20,data:pts.map(p=>p.name+' · '+p.id),textStyle:{fontFamily:FONT},selector:[{type:'all',title:'全选'},{type:'inverse',title:'反选'}]};
+ o.series=pts.map((p,i)=>({type:'radar',name:p.name+' · '+p.id,data:[{name:p.name+' · '+p.id,value:dims.map(d=>p.metrics[d.key])}],symbolSize:4,lineStyle:{width:1,opacity:.28,color:new echarts.graphic.LinearGradient(0,0,1,1,[{offset:0,color:color(i)},{offset:1,color:color((i+1)%pts.length)}])},itemStyle:{color:color(i)},areaStyle:{opacity:0},emphasis:{focus:'series',lineStyle:{width:3,opacity:1},itemStyle:{opacity:1}},blur:{lineStyle:{opacity:.04},itemStyle:{opacity:.08}}}));
+ o.tooltip.formatter=p=>esc(pts[p.seriesIndex].address)+' · '+esc(pts[p.seriesIndex].id)+'<br>'+dims.map((d,i)=>d.label+'：'+fmt(p.value[i])).join('<br>');
+ c.setOption(o);c.on('click',p=>{c.dispatchAction({type:'downplay'});c.dispatchAction({type:'highlight',seriesIndex:p.seriesIndex});});
+ el('p','caption',parent).textContent='所有有效点位叠加在同一个五维雷达图。图例支持筛选；悬停或点击突出点位。连线由本点位颜色渐变到下一点位颜色（按总表顺序）。缺失任一维度的点位不绘制。';
+}
+function mixedTotal(){
+ informationExplorer(W,'mix');const nav=W.querySelector('.subtabs'),host=nav.nextElementSibling,button=el('button','',nav);button.textContent='雷达图';button.setAttribute('role','tab');button.setAttribute('aria-selected','false');let radarHost=null;
+ const original=[...nav.children].slice(0,2);original.forEach(b=>{const click=b.onclick;b.onclick=()=>{if(radarHost){radarHost.querySelectorAll('.plot').forEach(n=>echarts.getInstanceByDom(n)?.dispose());charts=charts.filter(c=>!c.isDisposed());radarHost.remove();}radarHost=null;host.hidden=false;click();charts.filter(c=>!c.isDisposed()).forEach(c=>c.resize());host.animate([{opacity:0},{opacity:1}],{duration:500})}});
+ button.onclick=()=>{nav.querySelectorAll('button').forEach(b=>b.setAttribute('aria-selected',String(b===button)));host.hidden=true;if(!radarHost){radarHost=el('div','radar-host');allPointRadar(radarHost);}radarHost.animate([{opacity:0,transform:'translateY(16px)'},{opacity:1,transform:'none'}],{duration:550});note(MFORM)};
+}
+function effectAnalysis(){note('横轴：行人样本数；纵轴分别为视觉丰富度、历史感知度、路面状态、界面开放度、临界互动性。沿用道路联动和OLS回归。');const grid=el('div','chart-grid');[['Y','视觉丰富度'],['Z','历史感知度'],['AA','路面状态'],['U','界面开放度'],['V','临界互动性']].forEach(([k,t])=>scatter(grid,'AH',k,t));}
+function matrixWithAxes(){
+ covarianceMatrix();const wrap=W.querySelector('.covariance'),ys=Object.keys(D.ys),grid=wrap.querySelector('.covariance-grid');
+ const top=el('div','matrix-column-labels',wrap);top.style.gridTemplateColumns='repeat('+ys.length+',1fr)';ys.forEach(k=>el('span','',top).textContent=D.ys[k]);
+ const left=el('div','matrix-row-labels',wrap);left.style.gridTemplateRows='repeat('+D.fields.length+',1fr)';D.fields.forEach(f=>el('span','',left).textContent=f.label);
+ [...grid.children].forEach((cell,i)=>{const f=D.fields[Math.floor(i/ys.length)],k=ys[i%ys.length],r=D.correlations.find(r=>r.x===f.key&&r.y===k);cell.textContent=fmt(r.rho,2)+stars(r.p);if(finite(r.p)&&r.p<.05)cell.classList.add('significant');});
+ el('p','caption').textContent='横坐标：'+ys.map(k=>D.ys[k]).join('、')+'。纵坐标：'+D.fields.map(f=>f.label).join('、')+'。黑色实线方框表示 p<0.05，保留 * / ** / ***。';
+}
+function mismatchView(i){
+ const config={qualityVitality:['quality','vitality','界面品质','活力度','界面品质的底层指标组合','活力度的底层指标'],qualityMix:['quality','mixScore','界面品质','混合度','界面品质的底层指标组合','混合度的底层指标'],mismatch:['vitality','mixScore','活力度','混合度','活力度的底层指标组合','混合度的底层指标']}[PAGE], [x,y,xlabel,ylabel,first,second]=config;
+ const labels=['高'+ylabel+'低'+xlabel,'高'+xlabel+'低'+ylabel];
+ if(i){sectionTabs(labels,j=>{const selected=D.points.filter(p=>p.mismatchGroups[PAGE]===labels[j]);el('h2','section-heading').textContent=labels[j]+'，研究'+(j?second:first)+'对不配得性的影响';el('p','caption').textContent='筛选点位 '+selected.length+' 个';const list=el('ul','selected-points');selected.forEach(p=>el('li','',list).textContent=p.address+' · '+p.id+' ｜ '+xlabel+' '+fmt(p[x])+' / '+ylabel+' '+fmt(p[y]));note('两类点位使用相同筛选规则和最终综合评分。后续分析图表暂不制作。');});return;}
+ const c=chart(W,610),o=base();delete o.legend;o.grid={left:75,right:55,top:45,bottom:65};
+ o.xAxis={...axis(xlabel),min:0,max:1,axisLine:{show:false},axisTick:{show:false},splitLine:{show:false}};o.yAxis={...axis(ylabel),min:0,max:1,axisLine:{show:false},axisTick:{show:false},splitLine:{show:false}};
+ const pts=D.points.filter(p=>finite(p[x])&&finite(p[y]));o.series=[{type:'scatter',id:'nodes',data:pts.map(p=>({value:[p[x],p[y],p.address,p.id],itemStyle:{color:p.mismatchGroups[PAGE]===labels[0]?'#607E95':p.mismatchGroups[PAGE]===labels[1]?'#A45668':'#B8AEA6',opacity:p.mismatchGroups[PAGE]?.85:.4}})),symbolSize:9,z:5,emphasis:{scale:1.6},markLine:{silent:true,symbol:'none',label:{show:false},lineStyle:{color:'#000',type:'solid',width:1.5},data:[{xAxis:.5},{yAxis:.5}]}}];
+ o.tooltip.formatter=p=>{const a=p.value;return esc(a[2])+' · '+esc(a[3])+'<br>'+xlabel+'：'+fmt(a[0])+'<br>'+ylabel+'：'+fmt(a[1])};c.setOption(o);
+ note('横轴：'+xlabel+'；纵轴：'+ylabel+'。黑色十字轴在0.5居中划分四象限；左上与右下两类点位纳入不配得性分析。\nQ、V、M与各总表综合评分完全一致，缺失评分不参与筛选。');el('p','caption').textContent=labels.map(label=>label+'：'+D.points.filter(p=>p.mismatchGroups[PAGE]===label).length+' 个点位').join('；');
+}
 if(PAGE==='heat')mainTabs(['热力分布图','样本数'],i=>mapView(1-i));
-if(PAGE==='weights')mainTabs(['空间分析','界面品质信息表'],i=>{if(i)informationExplorer(W,'quality');else sectionTabs(['有效空间分析','舒适度分析'],space);});
-if(PAGE==='composition')mainTabs(['人群构成','混合度信息表'],i=>{if(i)mixingSection();else sectionTabs(['点位年龄构成','街道年龄构成','身份倾向'],j=>composition([1,0,2][j]));});
-if(PAGE==='memory')mainTabs(['活力度信息表','在地记忆的假设'],i=>{if(!i)informationExplorer(W,'vitality');else sectionTabs(D.memory.map(g=>g.cohort+'群体'),memory);});
-if(PAGE==='space')mainTabs(['有效空间分析','舒适度分析'],space);
-if(PAGE==='diversity')mixingSection();
-if(PAGE==='correlations')mainTabs(['Spearman相关性分析'],()=>covarianceMatrix());
-if(PAGE==='qualityVitality'||PAGE==='qualityMix')mainTabs(['不配得性分析','案例分析'],i=>{if(i)caseStudy(PAGE);else qualityChart(PAGE);});
-if(PAGE==='mismatch')mainTabs(['筛选','不配得性分析','案例分析'],i=>i===2?caseStudy(PAGE):mismatch(i));
+if(PAGE==='weights')mainTabs(['空间分析','界面品质总表'],i=>{if(i)informationExplorer(W,'quality');else sectionTabs(['有效空间分析','舒适度分析','系数表征','效果分析'],j=>j<2?space(j):j===2?coefficient('quality'):effectAnalysis());});
+if(PAGE==='composition')mainTabs([...D.mixDimensions.map(d=>d.label),'系数表征','混合度总表'],i=>i<5?dimensionBars(i):i===5?coefficient('mix'):mixedTotal());
+if(PAGE==='memory')mainTabs(['系数表征','活力度总表'],i=>i?informationExplorer(W,'vitality'):coefficient('vitality'));
+if(PAGE==='correlations')mainTabs(['空间行为相关性分析'],matrixWithAxes);
+if(['qualityVitality','qualityMix','mismatch'].includes(PAGE))mainTabs(['筛选','不配得性分析'],mismatchView);
 
 let resizeTimer;window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>charts.forEach(c=>{c.resize();c.reflow?.()}),120)});
 
