@@ -1,0 +1,45 @@
+{
+  "files": [
+    {
+      "file": "008_构成分析_年龄混合度_年龄混合度.png",
+      "width": 5000,
+      "height": 12775,
+      "points": 135,
+      "font": "Microsoft YaHei Light (300)",
+      "textCount": 283
+    },
+    {
+      "file": "009_构成分析_活动丰富度_活动丰富度.png",
+      "width": 5000,
+      "height": 12775,
+      "points": 135,
+      "font": "Microsoft YaHei Light (300)",
+      "textCount": 293
+    },
+    {
+      "file": "010_构成分析_社交状态混合度_社交状态混合度.png",
+      "width": 5000,
+      "height": 12775,
+      "points": 135,
+      "font": "Microsoft YaHei Light (300)",
+      "textCount": 281
+    },
+    {
+      "file": "011_构成分析_姿态丰富度_姿态丰富度.png",
+      "width": 5000,
+      "height": 12775,
+      "points": 135,
+      "font": "Microsoft YaHei Light (300)",
+      "textCount": 281
+    },
+    {
+      "file": "012_构成分析_身份倾向混合度_身份倾向混合度.png",
+      "width": 5000,
+      "height": 12775,
+      "points": 135,
+      "font": "Microsoft YaHei Light (300)",
+      "textCount": 281
+    }
+  ],
+  "websiteUnchanged": true
+}
