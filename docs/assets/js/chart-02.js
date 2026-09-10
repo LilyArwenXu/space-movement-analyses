@@ -28,7 +28,8 @@ function chart(parent=W,height=520){const n=el('div','plot',parent);n.style.heig
   const darken=style=>{if(style&&['#72a9bc','#0071ee','#4d74a0','#607e95','#a8c3d6'].includes(String(style.color).toLowerCase())){style.color='#064b86';style.opacity=Math.max(.75,style.opacity??1);}};
   ([].concat(option.series||[])).forEach(s=>{
    if(s.type==='scatter'){darken(s.itemStyle);darken(s.emphasis?.itemStyle);(s.data||[]).forEach(p=>darken(p?.itemStyle));}
-   if(s.type==='line'&&(s.name==='回归线'||String(s.id||'').startsWith('road-fit-'))){s.lineStyle={...s.lineStyle,color:'#000',opacity:1};s.emphasis={...s.emphasis,lineStyle:{...s.emphasis?.lineStyle,color:'#000',opacity:1}};}
+   if(s.type==='line'&&s.name==='回归线'){s.lineStyle={...s.lineStyle,color:'#000',opacity:1};s.emphasis={...s.emphasis,lineStyle:{...s.emphasis?.lineStyle,color:'#000',opacity:1}};}
+   if(s.type==='line'&&String(s.id||'').startsWith('road-fit-')){s.lineStyle={...s.lineStyle,color:'#000',opacity:.72};s.emphasis={...s.emphasis,lineStyle:{...s.emphasis?.lineStyle,color:'#000',opacity:1}};}
   });
   return setOption(option,...args);
  };
@@ -294,13 +295,14 @@ function compositionColor(k,count){
 function coefficient(kind){
  const letter={mix:'M',quality:'Q',vitality:'V'}[kind],box=el('section','coefficients'),img=el('img','coefficient-image',box);img.src='../assets/data/coefficients/'+letter+'.png';img.alt=letter+' 系数表征';
  const defs=kind==='mix'?[['w1','年龄混合度',.149],['w2','活动丰富度',.141],['w3','姿态丰富度',.250],['w4','社交状态混合度',.228],['w5','身份倾向混合度',.233]]:D.scoreWeights[kind].map((d,i)=>[(kind==='quality'?'x':'y')+(i+1),d[1],d[2]]);
- el('section','critic-method',box).innerHTML="<h2>Critic权重算法</h2>\n<h3>1. 对比强度</h3><p class=\"formula\">S_j = √ [ (1/(n-1)) × Σ(x_ij - x̄_j)² ]</p>\n<p>x_ij 是第i个样本第j个指标的值，x̄_j 是第j个指标的均值。\nΣ是对i从1到n求和。</p>\n<p>标准差越大，说明这个指标越能区分不同样本，越重要。</p>\n<h3>2. 冲突性</h3><p class=\"formula\">R_j = Σ (1 - |r_jk|)</p>\n<p>其中 r_jk 是第j个指标和第k个指标的皮尔逊相关系数，|r_jk| 是取绝对值。\nΣ是对k从1到m求和。\n当k=j时，自己跟自己的相关系数是1，1减1等于0，所以自己那一项自动为0。</p>\n<p>R_j越大，说明这个指标跟别人越不相关，提供的信息越独特。</p>\n<h3>3. 综合信息量及权重</h3><p class=\"formula\">C_j = S_j × R_j</p><p class=\"formula\">w_j = C_j / ΣC_j</p>\n<p>其中ΣC_j是对所有指标的C_j求和。</p>";
+ NOTE.replaceChildren();NOTE.hidden=false;el('section','critic-method',NOTE).innerHTML="<h2>Critic权重算法</h2>\n<h3>1. 对比强度</h3><p class=\"formula\">S_j = √ [ (1/(n-1)) × Σ(x_ij - x̄_j)² ]</p>\n<p>x_ij 是第i个样本第j个指标的值，x̄_j 是第j个指标的均值。\nΣ是对i从1到n求和。</p>\n<p>标准差越大，说明这个指标越能区分不同样本，越重要。</p>\n<h3>2. 冲突性</h3><p class=\"formula\">R_j = Σ (1 - |r_jk|)</p>\n<p>其中 r_jk 是第j个指标和第k个指标的皮尔逊相关系数，|r_jk| 是取绝对值。\nΣ是对k从1到m求和。\n当k=j时，自己跟自己的相关系数是1，1减1等于0，所以自己那一项自动为0。</p>\n<p>R_j越大，说明这个指标跟别人越不相关，提供的信息越独特。</p>\n<h3>3. 综合信息量及权重</h3><p class=\"formula\">C_j = S_j × R_j</p><p class=\"formula\">w_j = C_j / ΣC_j</p>\n<p>其中ΣC_j是对所有指标的C_j求和。</p>";
  const lower=el('div','coefficient-tables',box),left=el('section','',lower),right=el('section','',lower);
  const table=el('table','coefficient-table',left);table.innerHTML='<thead><tr><th>指标</th><th>系数</th><th>权重</th></tr></thead><tbody>'+defs.map(d=>'<tr><td>'+d[1]+'</td><td>'+d[0]+'</td><td>'+d[2].toFixed(3)+'</td></tr>').join('')+'</tbody>';
  if(kind==='mix')el('p','coefficient-conclusion',left).textContent="进一步结合指标相关性与CRITIC权重分析可见，姿态丰富度与身份倾向混合度对街区综合混合度的贡献最为突出。\n其中活动丰富度与社交状态混合度呈现较强的相关性，说明行人的行为活动与社交行为存在明显的耦合关系。\n而年龄混合度权重相对较低，对整体混合度的解释力有限。\n由此可以推测，街道空间能否容纳多样化的身体姿态行为、能否吸引多元身份人群到访，是提升街区混合度的核心驱动要素。";
  const label={mix:'混合度',quality:'界面品质',vitality:'活力度'}[kind],key=kind==='mix'?'mixScore':kind;el('h2','section-heading',right).textContent=label+'总表';
  const wrap=el('div','score-table-wrap',right),scores=el('table','coefficient-table score-table',wrap);scores.innerHTML='<thead><tr><th>地址</th><th>'+label+'</th></tr></thead><tbody>'+D.points.map(p=>'<tr><td>'+esc(p.address)+'</td><td>'+fmt(p[key],6)+'</td></tr>').join('')+'</tbody>';
- note(kind==='mix'?"第d维混合度 H_d=−Σ(p_k×ln p_k)/ln K_d；p_k=类别频数/该维频数合计，0×ln0记0。\n零合计或缺失不评分。\n综合混合度 M=0.149H年龄+0.141H活动+0.250H身份倾向+0.228H姿态+0.233H社交状态。\n权重按给定公式顺序使用，不二次归一化。\n权重说明保留给定w1–w5名称；综合混合度（综合评分）按指定M公式的维度顺序代入。":SFORM+'\n'+D.scoreWeights[kind].map(d=>d[1]+' '+d[2].toFixed(3)).join('；'));
+ const caption=el('p','readme coefficient-caption',box);img.after(caption);
+ caption.textContent=kind==='mix'?String("第d维混合度 H_d=−Σ(p_k×ln p_k)/ln K_d；p_k=类别频数/该维频数合计，0×ln0记0。\n零合计或缺失不评分。\n综合混合度 M=0.149H年龄+0.141H活动+0.250H身份倾向+0.228H姿态+0.233H社交状态。\n权重按给定公式顺序使用，不二次归一化。\n权重说明保留给定w1–w5名称；综合混合度（综合评分）按指定M公式的维度顺序代入。").replace(/。\s*/g,'。\n').trim():kind==='quality'?"各底层指标 标准化值 z=(x−全域最小值)/(全域最大值−全域最小值)，常量记0；缺失则综合评分缺失。\n界面品质 Q=Σ(x×z)，采用系数表征的指定权重系数x。\n有效停留面积 0.068；可承载停留人数 0.078；消费型停留空间占比 0.167；遮荫率 0.112；声环境舒适度 0.069；气味环境 0.058；视觉丰富度 0.095；历史感知度 0.099；路面状态 0.077；界面开放度 0.094；临界互动性 0.084":"各底层指标 标准化值 z=(x−全域最小值)/(全域最大值−全域最小值)，常量记0；缺失则综合评分缺失。\n空间活力度V=Σ(y×z)，采用系数表征的指定权重系数y。\n人数 0.194；行人集群数 0.144；停留密度 0.205；聚集比例 0.456";
 }
 function dimensionBars(i){
  const d=D.mixDimensions[i],points=D.points,c=chart(W,Math.max(650,points.length*28+140)),o=base();
