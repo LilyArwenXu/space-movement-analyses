@@ -138,7 +138,7 @@ function informationScatter(parent,kind){
  const points=rankedInformationPoints(kind);
  const quality=kind==='quality',mix=kind==='mix',keys=quality?D.qualityFields:mix?['ageMix','activityMix','identityMix','postureMix','socialMix']:['sample','clusters','density','gather'],labels=[...keys.map(k=>quality?D.headers[k]:D.ys[k]),'综合评分'];
  const c=chart(parent,Math.max(440,Math.min(650,window.innerHeight*.68))),o=base();delete o.legend;
- o.grid={left:150,right:25,top:25,bottom:50};o.xAxis={type:'category',data:points.map(p=>p.name),axisLabel:{show:false},axisTick:{show:false},name:'所有点位（按综合评分从低到高）',nameLocation:'middle',nameGap:28};
+ o.grid={left:150,right:25,top:25,bottom:50};o.xAxis={type:'category',data:points.map(p=>p.name),axisLabel:{show:false},axisTick:{show:false},name:{quality:'所有点位（按界面品质从低到高）',mix:'所有点位（按综合混合度从低到高）',vitality:'所有点位（按空间活力度从低到高）'}[kind],nameLocation:'middle',nameGap:28};
  o.yAxis={type:'category',data:labels,inverse:true,axisLabel:{color:'#4B4B4B',fontFamily:FONT,fontSize:14,interval:0},axisTick:{show:false},splitLine:{show:true,lineStyle:{color:'#cd96be'}}};
  const values=keys.map(k=>points.map(p=>(quality?p.qualityNormalized:kind==='vitality'?p.vitalityNormalized:p.metrics)[k]));values.push(points.map(p=>p[quality?'quality':mix?'mixScore':'vitality']));
  const ranges=values.map(a=>{const v=a.filter(finite);return [Math.min(...v),Math.max(...v)]});
@@ -196,6 +196,7 @@ function informationExplorer(parent,kind){
  const quality=kind==='quality',mix=kind==='mix',keys=quality?D.qualityFields:mix?['ageMix','activityMix','identityMix','postureMix','socialMix']:['sample','clusters','density','gather'];
  const labels=[...keys.map(k=>quality?D.headers[k]:D.ys[k]),'综合评分'],count=labels.length,last=count-1;
  const nav=el('div','subtabs',parent),host=el('div','',parent),c=informationScatter(host,kind),original=c.getOption();
+ original.xAxis.forEach(axis=>axis.name={quality:'所有点位（按界面品质从低到高）',mix:'所有点位（按综合混合度从低到高）',vitality:'所有点位（按空间活力度从低到高）'}[kind]);
  const controls=el('div','metric-controls axis-controls',host),caption=host.querySelector('.caption');
  const values=keys.map(k=>points.map(p=>(quality?p.qualityNormalized:kind==='vitality'?p.vitalityNormalized:p.metrics)[k]));values.push(points.map(p=>p[quality?'quality':mix?'mixScore':'vitality']));
  const fits=values.map(v=>fittedRegression(v.map((y,x)=>[x,y]))),state=labels.map(()=>({visible:true,line:false,band:false}));let mode=0,selected=-1,phase=0,timer=null,generation=0;
@@ -209,7 +210,7 @@ function informationExplorer(parent,kind){
  }
  c.off('mouseover');c.off('globalout');
  labels.forEach((label,j)=>{const card=el('div','metric-control',controls);card.style.borderTopColor=PALETTE[j%PALETTE.length];
-  const main=el('button','metric-toggle',card);main.textContent='';main.title=label;main.setAttribute('aria-label',label);main.style.background=PALETTE[j%PALETTE.length];main.setAttribute('aria-pressed','false');main.onclick=()=>{cancelReveal();phase=selected===j?(phase+1)%3:1;selected=phase?j:-1;state.forEach((s,k)=>{s.visible=selected<0||k===selected;s.line=false;s.band=false;});controls.querySelectorAll('button').forEach((b,k)=>b.setAttribute('aria-pressed',String(k===selected)));render();if(phase===1)reveal(j);};
+  const main=el('button','metric-toggle',card);main.textContent='';main.title=label;main.setAttribute('aria-label',label);main.dataset.phase='0';main.setAttribute('aria-pressed','false');main.onclick=()=>{cancelReveal();phase=selected===j?(phase+1)%3:1;selected=phase?j:-1;state.forEach((s,k)=>{s.visible=selected<0||k===selected;s.line=false;s.band=false;});controls.querySelectorAll('button').forEach((b,k)=>{b.setAttribute('aria-pressed',String(k===selected));b.dataset.phase=String(k===selected?phase:0);});render();if(phase===1)reveal(j);};
  });
  function render(){const compact=window.innerWidth<700,step=compact?23:42,leftCount=Math.ceil(count/2);
   const axes=mode?labels.map((label,j)=>{const valid=values[j].filter(finite);return {id:'metric-'+j,type:'value',min:valid.length?Math.min(...valid):0,max:valid.length?Math.max(...valid):1,show:state[j].visible,position:j<leftCount?'left':'right',offset:(j<leftCount?j:j-leftCount)*step,name:String(j+1),nameLocation:'end',nameTextStyle:{color:PALETTE[j%PALETTE.length],fontFamily:FONT},axisLine:{show:true,lineStyle:{color:PALETTE[j%PALETTE.length]}},axisLabel:{fontSize:compact?12:14,color:'#4B4B4B',formatter:v=>Number(v.toPrecision(3)).toString()},splitLine:{show:false}}}):original.yAxis;
@@ -219,13 +220,13 @@ function informationExplorer(parent,kind){
    series.push({...fit[1],id:'info-band-'+j,type:'custom',silent:true,clip:true,yAxisIndex:mode?j:0,data:enabled&&state[j].band&&f?[0]:[],renderItem:f?(params,api)=>({type:'polygon',shape:{points:[...f.points.map(p=>api.coord([p[0],p[1]+1.96*p[2]])),...f.points.slice().reverse().map(p=>api.coord([p[0],p[1]-1.96*p[2]]))]},style:{fill:PALETTE[j%PALETTE.length],opacity:.14}}):()=>null});
   });
   series.push({id:'focus-ring',type:'scatter',silent:true,yAxisIndex:mode?last:0,data:[],symbolSize:27,itemStyle:{color:'transparent',borderColor:PALETTE[last%PALETTE.length],borderWidth:2,opacity:1},z:10});
-  c.setOption({animation:true,animationDurationUpdate:850,animationEasingUpdate:'cubicInOut',grid:{left:mode?step*(leftCount-1)+42:150,right:mode?step*(count-leftCount-1)+42:25,top:40,bottom:82},xAxis:mode?{type:'value',min:0,max:points.length-1,data:[],axisLabel:{show:false},axisTick:{show:false},name:'所有点位（按综合评分从低到高）',nameLocation:'middle',nameGap:34}:original.xAxis,yAxis:axes,series},{replaceMerge:'yAxis'});
+  c.setOption({animation:true,animationDurationUpdate:850,animationEasingUpdate:'cubicInOut',grid:{left:mode?step*(leftCount-1)+42:150,right:mode?step*(count-leftCount-1)+42:25,top:40,bottom:82},xAxis:mode?{type:'value',min:0,max:points.length-1,data:[],axisLabel:{show:false},axisTick:{show:false},name:{quality:'所有点位（按界面品质从低到高）',mix:'所有点位（按综合混合度从低到高）',vitality:'所有点位（按空间活力度从低到高）'}[kind],nameLocation:'middle',nameGap:34}:original.xAxis,yAxis:axes,series},{replaceMerge:'yAxis'});
   controls.hidden=!mode;positionAxisControls(controls,c,count);c.reflow=()=>positionAxisControls(controls,c,count);
   const text=(mode?count+'组散点叠加，各自独立纵轴从小到大；轴号依次对应：'+labels.join('、')+'。同一指标按钮依次点击：单项散点与回归动画 → 仅单项散点 → 全部指标。换点其他指标从第一步开始。不同指标的绝对高度不可直接比较。':'每列为一个点位（按综合评分升序，缺失评分置后），每行代表一个指标，点大小表示该行相对大小。')+'\n悬停联动同一点位，综合评分加外圈；切换视图时点位平滑移动。\n'+(quality?'界面品质：11项指标按全域最小最大值标准化后，依系数表征权重求和。':mix?MFORM:SFORM);
   if(parent===W)note(text);else caption.textContent=text;
   if(parent===W)caption.textContent='回归横轴为综合评分排序，不代表时间或空间距离。OLS：ŷ=a+bx，b=Σ[(x−x̄)(y−ȳ)]/Σ(x−x̄)²，a=ȳ−bx̄。\n条带=ŷ±1.96×s√[1/n+(x−x̄)²/Σ(x−x̄)²]，s²=Σ(y−ŷ)²/(n−2)。R²≥0.5实线，其余虚线；不将顺序趋势解释为因果。';
  }
- tabs(nav,['校准展示','散点图'],i=>{cancelReveal();selected=-1;phase=0;state.forEach(s=>{s.visible=true;s.line=false;s.band=false;});controls.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed','false'));mode=i;render();});
+ tabs(nav,['校准展示','散点图'],i=>{cancelReveal();selected=-1;phase=0;state.forEach(s=>{s.visible=true;s.line=false;s.band=false;});controls.querySelectorAll('button').forEach(b=>{b.setAttribute('aria-pressed','false');b.dataset.phase='0';});mode=i;render();});
  if(parent!==W)el('p','caption',host).textContent='OLS以综合评分排序为横轴：ŷ=a+bx，b=Σ[(x−x̄)(y−ȳ)]/Σ(x−x̄)²，a=ȳ−bx̄。条带=ŷ±1.96×SE，SE=s√[1/n+(x−x̄)²/Σ(x−x̄)²]，s²=Σ(y−ŷ)²/(n−2)。顺序趋势不表示时间、距离或因果。';
  c.setOption({tooltip:{formatter:p=>{const i=(p.data.value||p.data)[0],node=points[i];return node?esc(node.address)+'<br>'+labels.filter((_,j)=>!mode||state[j].visible).map(name=>{const j=labels.indexOf(name);return esc(name)+'：'+fmt(values[j][i])}).join('<br>'):''}}});
  c.on('mouseover',p=>{if(p.seriesIndex>=count)return;const i=(p.data.value||p.data)[0];c.dispatchAction({type:'downplay'});labels.forEach((_,j)=>{if(!mode||state[j].visible)c.dispatchAction({type:'highlight',seriesId:'info-'+j,dataIndex:i});});c.setOption({series:[{id:'focus-ring',data:finite(values[last][i])&&(!mode||state[last].visible)?[[i,mode?values[last][i]:last]]:[]}]});});
@@ -293,16 +294,18 @@ function compositionColor(k,count){
 function coefficient(kind){
  const letter={mix:'M',quality:'Q',vitality:'V'}[kind],box=el('section','coefficients'),img=el('img','coefficient-image',box);img.src='../assets/data/coefficients/'+letter+'.png';img.alt=letter+' 系数表征';
  const defs=kind==='mix'?[['w1','年龄混合度',.149],['w2','活动丰富度',.141],['w3','姿态丰富度',.250],['w4','社交状态混合度',.228],['w5','身份倾向混合度',.233]]:D.scoreWeights[kind].map((d,i)=>[(kind==='quality'?'x':'y')+(i+1),d[1],d[2]]);
+ el('section','critic-method',box).innerHTML="<h2>Critic权重算法</h2>\n<h3>1. 对比强度</h3><p class=\"formula\">S_j = √ [ (1/(n-1)) × Σ(x_ij - x̄_j)² ]</p>\n<p>x_ij 是第i个样本第j个指标的值，x̄_j 是第j个指标的均值。\nΣ是对i从1到n求和。</p>\n<p>标准差越大，说明这个指标越能区分不同样本，越重要。</p>\n<h3>2. 冲突性</h3><p class=\"formula\">R_j = Σ (1 - |r_jk|)</p>\n<p>其中 r_jk 是第j个指标和第k个指标的皮尔逊相关系数，|r_jk| 是取绝对值。\nΣ是对k从1到m求和。\n当k=j时，自己跟自己的相关系数是1，1减1等于0，所以自己那一项自动为0。</p>\n<p>R_j越大，说明这个指标跟别人越不相关，提供的信息越独特。</p>\n<h3>3. 综合信息量及权重</h3><p class=\"formula\">C_j = S_j × R_j</p><p class=\"formula\">w_j = C_j / ΣC_j</p>\n<p>其中ΣC_j是对所有指标的C_j求和。</p>";
  const lower=el('div','coefficient-tables',box),left=el('section','',lower),right=el('section','',lower);
  const table=el('table','coefficient-table',left);table.innerHTML='<thead><tr><th>指标</th><th>系数</th><th>权重</th></tr></thead><tbody>'+defs.map(d=>'<tr><td>'+d[1]+'</td><td>'+d[0]+'</td><td>'+d[2].toFixed(3)+'</td></tr>').join('')+'</tbody>';
+ if(kind==='mix')el('p','coefficient-conclusion',left).textContent="进一步结合指标相关性与CRITIC权重分析可见，姿态丰富度与身份倾向混合度对街区综合混合度的贡献最为突出。\n其中活动丰富度与社交状态混合度呈现较强的相关性，说明行人的行为活动与社交行为存在明显的耦合关系。\n而年龄混合度权重相对较低，对整体混合度的解释力有限。\n由此可以推测，街道空间能否容纳多样化的身体姿态行为、能否吸引多元身份人群到访，是提升街区混合度的核心驱动要素。";
  const label={mix:'混合度',quality:'界面品质',vitality:'活力度'}[kind],key=kind==='mix'?'mixScore':kind;el('h2','section-heading',right).textContent=label+'总表';
  const wrap=el('div','score-table-wrap',right),scores=el('table','coefficient-table score-table',wrap);scores.innerHTML='<thead><tr><th>地址</th><th>'+label+'</th></tr></thead><tbody>'+D.points.map(p=>'<tr><td>'+esc(p.address)+'</td><td>'+fmt(p[key],6)+'</td></tr>').join('')+'</tbody>';
- note(kind==='mix'?MFORM+'\n权重说明保留给定w1–w5名称；综合评分按指定M公式的维度顺序代入。':SFORM+'\n'+D.scoreWeights[kind].map(d=>d[1]+' '+d[2].toFixed(3)).join('；'));
+ note(kind==='mix'?"第d维混合度 H_d=−Σ(p_k×ln p_k)/ln K_d；p_k=类别频数/该维频数合计，0×ln0记0。\n零合计或缺失不评分。\n综合混合度 M=0.149H年龄+0.141H活动+0.250H身份倾向+0.228H姿态+0.233H社交状态。\n权重按给定公式顺序使用，不二次归一化。\n权重说明保留给定w1–w5名称；综合混合度（综合评分）按指定M公式的维度顺序代入。":SFORM+'\n'+D.scoreWeights[kind].map(d=>d[1]+' '+d[2].toFixed(3)).join('；'));
 }
 function dimensionBars(i){
  const d=D.mixDimensions[i],points=D.points,c=chart(W,Math.max(650,points.length*28+140)),o=base();
  o.animation=true;o.title={text:d.label,left:'center',textStyle:{fontFamily:FONT,fontSize:18}};o.legend={type:'scroll',top:35,textStyle:{fontFamily:FONT}};o.grid={left:220,right:125,top:90,bottom:50};
- o.xAxis={...axis('类别权重 pₖ'),min:0,max:1,axisLabel:{formatter:v=>Math.round(v*100)+'%'}};o.yAxis={type:'category',inverse:true,data:points.map(p=>p.name+' · '+p.id),axisLabel:{interval:0,fontFamily:FONT,fontSize:12},axisTick:{show:false}};
+ o.xAxis={...axis('类别权重 pₖ'),min:0,max:1,axisLabel:{formatter:v=>Math.round(v*100)+'%'}};o.yAxis={type:'category',inverse:true,data:points.map(p=>p.address),axisLabel:{interval:0,fontFamily:FONT,fontSize:12},axisTick:{show:false}};
  o.series=d.labels.map((name,k)=>({name,type:'bar',stack:'frequency',barWidth:18,itemStyle:{color:compositionColor(k,d.labels.length),borderColor:'#fff',borderWidth:.4,decal:k>=10?{symbol:'rect',dashArrayX:[1,3],dashArrayY:[2,5],color:'rgba(255,255,255,.5)'}:undefined},data:points.map(p=>{const a=p.mixCounts[d.key],sum=a.reduce((s,v)=>s+(v||0),0);return finite(p.metrics[d.key])?a[k]/sum:null})}));
  o.series.push({type:'scatter',name:d.label,symbolSize:0,silent:true,data:points.map((p,i)=>[1,i,p.metrics[d.key]]),label:{show:true,position:'right',distance:12,fontFamily:FONT,color:INK,formatter:p=>d.label.replace('混合度','H').replace('丰富度','H')+' = '+fmt(p.data[2])}});
  o.tooltip.formatter=p=>{const node=points[p.dataIndex],a=node.mixCounts[d.key];return esc(node.address)+' · '+esc(node.id)+'<br>'+d.labels.map((n,k)=>esc(n)+'：'+fmt(a[k])).join('<br>')+'<br>'+d.label+'：'+fmt(node.metrics[d.key])};c.setOption(o);
@@ -338,6 +341,7 @@ function matrixWithAxes(){
  'U:ageMix':'开放度高的街道界面可以适配不同年龄群体的使用，有利于实现多元年龄人群的共存。',
  'V:gather':'临街互动性越高，人群集聚比例越低，活动大多以独立形式发生。',
  'AA:activityMix':'二者呈负相关，路面状态越好，行人的活动丰富度越低。'};
+ Object.assign(texts,{"typeB3c:resident": "人行道围栏对人群流向有一定的引导作用。", "facility:density": "道路附属设施的增加一定程度上降低停留密度。", "K:density": "空间面积扩大并不等同于停留人数同比例增长，大尺度开放空间容易出现空间闲置，紧凑适度的空间尺度更利于形成高密度停留。\n三个因素中以有效停留空间面积负相关最显著，节点空间长度其次，界面退让距离影响稍弱。", "L:density": "空间面积扩大并不等同于停留人数同比例增长，大尺度开放空间容易出现空间闲置，紧凑适度的空间尺度更利于形成高密度停留。\n三个因素中以有效停留空间面积负相关最显著，节点空间长度其次，界面退让距离影响稍弱。", "M:density": "空间面积扩大并不等同于停留人数同比例增长，大尺度开放空间容易出现空间闲置，紧凑适度的空间尺度更利于形成高密度停留。\n三个因素中以有效停留空间面积负相关最显著，节点空间长度其次，界面退让距离影响稍弱。", "S:density": "紧凑适度的空间尺度更利于形成高密度停留。", "typeB3b:visitor": "一定数量的外摆构件能有效吸引游客到访。", "R:identityMix": "消费型停留空间占比越高，到访人群的身份倾向混合度越高，居民到访意愿较强。"});
  const tooltip=el('aside','correlation-explanation',wrap);tooltip.id='correlation-explanation';tooltip.setAttribute('role','tooltip');tooltip.hidden=true;
  [...grid.children].forEach((cell,i)=>{const f=D.fields[Math.floor(i/ys.length)],k=ys[i%ys.length],r=D.correlations.find(r=>r.x===f.key&&r.y===k);cell.textContent=fmt(r.rho,2)+stars(r.p);cell.dataset.pair=f.key+':'+k;const value=chartScale(r.rho),rgb=(value.match(/\d+/g)||[255,255,255]).map(Number);cell.style.setProperty('color',rgb[0]*.299+rgb[1]*.587+rgb[2]*.114<135?'#fff':'#111','important');if(finite(r.p)&&r.p<.05)cell.classList.add('significant');
   const text=texts[cell.dataset.pair];if(text){cell.setAttribute('aria-describedby',tooltip.id);const show=()=>{tooltip.textContent=f.label+' × '+D.ys[k]+'\n'+text;tooltip.hidden=false;const rect=cell.getBoundingClientRect();tooltip.style.left=Math.max(12,Math.min(rect.left,window.innerWidth-384))+'px';tooltip.style.top=Math.max(12,Math.min(rect.bottom+10,window.innerHeight-tooltip.offsetHeight-12))+'px';};cell.addEventListener('pointerenter',show);cell.addEventListener('focus',show);cell.addEventListener('pointerleave',()=>tooltip.hidden=true);cell.addEventListener('blur',()=>tooltip.hidden=true);}
@@ -373,12 +377,13 @@ function shapAnalysis(label){
 function mismatchView(i){
  const config={qualityVitality:['quality','vitality','界面品质','活力度','界面品质的底层指标组合','活力度的底层指标'],qualityMix:['quality','mixScore','界面品质','混合度','界面品质的底层指标组合','混合度的底层指标'],mismatch:['vitality','mixScore','活力度','混合度','活力度的底层指标组合','混合度的底层指标']}[PAGE], [x,y,xlabel,ylabel,first,second]=config;
  const labels=PAGE==='mismatch'?['高混合度低活力度','高活力度低混合度']:['高'+xlabel+'低'+ylabel,'高'+ylabel+'低'+xlabel],mx=D.scoreMeans[x],my=D.scoreMeans[y];
- if(i){sectionTabs(labels,j=>shapAnalysis(labels[j]));return;}
+ if(i){if(PAGE==='mismatch'){labels.forEach(label=>{const group=el('section','mismatch-combined shap-gallery');el('h2','',group).textContent=label;const row=el('div','mismatch-triptych',group);[1,2,3].forEach(number=>{const figure=el('figure','',row),img=el('img','',figure);img.src='../assets/data/shap/'+label+'/'+number+'.png';img.alt=label+' · 图'+number;});});note('');}else sectionTabs(labels,j=>shapAnalysis(labels[j]));return;}
  const c=chart(W,610),o=base();delete o.legend;o.grid={left:75,right:55,top:45,bottom:65};
  o.xAxis={...axis(xlabel),scale:true,axisLine:{show:false},axisTick:{show:false},splitLine:{show:false}};o.yAxis={...axis(ylabel),scale:true,axisLine:{show:false},axisTick:{show:false},splitLine:{show:false}};
  const pts=D.points.filter(p=>finite(p[x])&&finite(p[y]));o.series=[{type:'scatter',id:'nodes',data:pts.map(p=>({value:[p[x],p[y],p.address,p.id],itemStyle:{color:p.mismatchGroups[PAGE]===labels[0]?'#0071ee':p.mismatchGroups[PAGE]===labels[1]?'#c90097':'#9094c1',opacity:p.mismatchGroups[PAGE]?.85:.4}})),symbolSize:9,z:5,emphasis:{scale:1.6},markLine:{silent:true,symbol:'none',label:{show:true,position:'insideEndTop',formatter:p=>p.data.name,color:'#000',backgroundColor:'#fff',padding:3},lineStyle:{color:'#000',type:'solid',width:1.5},data:[{xAxis:mx,name:xlabel+'均值 '+fmt(mx,4)},{yAxis:my,name:ylabel+'均值 '+fmt(my,4)}]}}];
  o.tooltip.formatter=p=>{const a=p.value;return esc(a[2])+' · '+esc(a[3])+'<br>'+xlabel+'：'+fmt(a[0])+'<br>'+ylabel+'：'+fmt(a[1])};c.setOption(o);
  note('横轴：'+xlabel+'；纵轴：'+ylabel+'。按各指标全域有效评分的平均值划分四象限：'+xlabel+'均值='+fmt(mx,6)+'，'+ylabel+'均值='+fmt(my,6)+'。左上与右下两类点位纳入不配得性分析，等于均值归高组。\nQ、V、M与各总表综合评分完全一致，缺失评分不参与筛选。');el('p','caption').textContent=labels.map(label=>label+'：'+D.points.filter(p=>p.mismatchGroups[PAGE]===label).length+' 个点位').join('；');
+ if(PAGE==='mismatch')el('p','mismatch-conclusion').textContent="活力度与人群身份混合度呈显著正相关，混合度整体随活力度上升。\n散点分布显示，多数点位混合度取值略高于活力度，仅少数样本呈高活力度—低混合度的背离特征。\n据此推断，人群构成的多元化或先于街道活力的提升而发生；通过增强街道空间包容性、适配多元人群需求，可有效促进街道活力。";
 }
 if(PAGE==='heat')mainTabs(['热力分布图','样本数'],i=>mapView(1-i));
 if(PAGE==='weights')mainTabs(['空间分析','系数表征','界面品质总表'],i=>{if(i===2)informationExplorer(W,'quality');else if(i===1)coefficient('quality');else sectionTabs(['有效空间分析','舒适度分析','效果分析'],j=>j<2?space(j):effectAnalysis());});
@@ -398,10 +403,11 @@ function positionAxisControls(controls,c,count){
 }
 function enableChartDownload(c,node){
  const original=c.setOption.bind(c);
- c.setOption=(option,...args)=>original({...option,toolbox:{show:true,right:4,bottom:3,itemSize:15,showTitle:true,iconStyle:{borderColor:'#999',borderWidth:1},emphasis:{iconStyle:{borderColor:'#333'}},feature:{saveAsImage:{type:'png',name:(document.title||'图表').split('｜')[0],title:'下载 PNG',pixelRatio:2,backgroundColor:'#fff',excludeComponents:['toolbox']}}}},...args);
+ c.setOption=(option,...args)=>original({...option,toolbox:{show:true,right:4,bottom:3,itemSize:15,showTitle:true,iconStyle:{borderColor:'#999',borderWidth:1},emphasis:{iconStyle:{borderColor:'#333'}},feature:{mySaveAsImage:{show:true,title:'下载 PNG',icon:'path://M4,16 L4,21 L20,21 L20,16 M12,2 L12,16 M6,10 L12,16 L18,10',onclick:()=>window.exportAnnotatedChart(c,node)}}}},...args);
 }
 function saveCanvasPNG(canvas,name){const link=document.createElement('a');link.download=name+'.png';link.href=canvas.toDataURL('image/png');link.click();}
 async function exportDOMChart(node){
+ await document.fonts.load('300 16px FZLanTingHei');
  const rect=node.getBoundingClientRect(),canvas=document.createElement('canvas');canvas.width=Math.ceil(rect.width*2);canvas.height=Math.ceil(rect.height*2);const ctx=canvas.getContext('2d');ctx.scale(2,2);ctx.fillStyle='#fff';ctx.fillRect(0,0,rect.width,rect.height);
  if(node.classList.contains('map-stage')){
   const base=node.querySelector('img');if(base){await base.decode();ctx.drawImage(base,0,0,rect.width,rect.height);}
@@ -412,10 +418,12 @@ async function exportDOMChart(node){
   try{const image=new Image();image.src=url;await image.decode();ctx.drawImage(image,0,0,rect.width,rect.height);}finally{URL.revokeObjectURL(url);}
  }else{
   node.querySelectorAll('.cov-cell').forEach(cell=>{const r=cell.getBoundingClientRect();ctx.fillStyle=getComputedStyle(cell).backgroundColor;ctx.fillRect(r.left-rect.left,r.top-rect.top,r.width,r.height);});
-  node.querySelectorAll('.cov-row-label,.cov-col-label,.cov-detail').forEach(label=>{if(!label.getClientRects().length||label.closest('[hidden]'))return;const r=label.getBoundingClientRect(),css=getComputedStyle(label);ctx.fillStyle='rgba(255,255,255,.92)';ctx.fillRect(r.left-rect.left,r.top-rect.top,r.width,r.height);ctx.font=css.font;ctx.fillStyle=css.color;ctx.textBaseline='middle';ctx.fillText(label.textContent,r.left-rect.left+5,r.top-rect.top+r.height/2,r.width-10);});
+  node.querySelectorAll('.cov-row-label,.cov-col-label,.cov-detail').forEach(label=>{if(!label.getClientRects().length||label.closest('[hidden]'))return;const r=label.getBoundingClientRect(),css=getComputedStyle(label);ctx.fillStyle='rgba(255,255,255,.92)';ctx.fillRect(r.left-rect.left,r.top-rect.top,r.width,r.height);ctx.font='300 '+css.fontSize+' FZLanTingHei, SimHei, sans-serif';ctx.fillStyle=css.color;ctx.textBaseline='middle';ctx.fillText(label.textContent,r.left-rect.left+5,r.top-rect.top+r.height/2,r.width-10);});
  }
  saveCanvasPNG(canvas,(document.title||'图表').split('｜')[0]);
 }
 function attachDOMDownloads(){document.querySelectorAll('.map-stage,.covariance').forEach(node=>{if(node.querySelector('.dom-chart-download'))return;const button=document.createElement('button');button.className='dom-chart-download';button.title='下载 PNG';button.setAttribute('aria-label','下载图表 PNG');button.textContent='⇩';button.onclick=async event=>{event.stopPropagation();button.disabled=true;try{await exportDOMChart(node);}catch(error){button.title='下载失败，请重试';console.error(error);}finally{button.disabled=false;}};node.append(button);});}
 if(typeof MutationObserver!=='undefined'){new MutationObserver(attachDOMDownloads).observe(W,{childList:true,subtree:true});attachDOMDownloads();}
 if(document.fonts)document.fonts.load('16px SimSun').then(()=>charts.forEach(c=>{if(!c.isDisposed())c.resize();}));
+
+/* interaction-revision */

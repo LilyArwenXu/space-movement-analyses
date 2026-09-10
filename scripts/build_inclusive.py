@@ -56,6 +56,10 @@ def build(refresh=True):
     pages()
     from final_revision import pages as final_pages
     final_pages()
+    from micro_revision import pages as micro_pages
+    micro_pages()
+    from interaction_revision import pages as interaction_pages
+    interaction_pages()
     shutil.copytree(ROOT/'aerial',ROOT/'dist',dirs_exist_ok=True,copy_function=copy_static)
     from prepare_pages import prepare
     prepare()

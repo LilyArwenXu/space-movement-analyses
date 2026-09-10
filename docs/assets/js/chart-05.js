@@ -177,7 +177,7 @@ function informationExplorer(parent,kind){
  }
  c.off('mouseover');c.off('globalout');
  labels.forEach((label,j)=>{const card=el('div','metric-control',controls);card.style.borderTopColor=PALETTE[j];
-  const main=el('button','metric-toggle',card);main.textContent=label;main.setAttribute('aria-pressed','false');main.onclick=()=>{cancelReveal();phase=selected===j?(phase+1)%3:1;selected=phase?j:-1;state.forEach((s,k)=>{s.visible=selected<0||k===selected;s.line=false;s.band=false;});controls.querySelectorAll('button').forEach((b,k)=>b.setAttribute('aria-pressed',String(k===selected)));render();if(phase===1)reveal(j);};
+  const main=el('button','metric-toggle',card);main.textContent=label;main.setAttribute('aria-pressed','false');main.onclick=()=>{cancelReveal();phase=selected===j?(phase+1)%3:1;selected=phase?j:-1;state.forEach((s,k)=>{s.visible=selected<0||k===selected;s.line=false;s.band=false;});controls.querySelectorAll('button').forEach((b,k)=>{b.setAttribute('aria-pressed',String(k===selected));b.dataset.phase=String(k===selected?phase:0);});render();if(phase===1)reveal(j);};
  });
  function render(){const compact=window.innerWidth<700,step=compact?23:42,leftCount=Math.ceil(count/2);
   const axes=mode?labels.map((label,j)=>{const valid=values[j].filter(finite);return {id:'metric-'+j,type:'value',min:valid.length?Math.min(...valid):0,max:valid.length?Math.max(...valid):1,show:state[j].visible,position:j<leftCount?'left':'right',offset:(j<leftCount?j:j-leftCount)*step,name:String(j+1),nameLocation:'end',nameTextStyle:{color:PALETTE[j],fontFamily:FONT},axisLine:{show:true,lineStyle:{color:PALETTE[j]}},axisLabel:{fontSize:compact?8:10,color:'#4B4B4B',formatter:v=>Number(v.toPrecision(3)).toString()},splitLine:{show:false}}}):original.yAxis;
@@ -193,7 +193,7 @@ function informationExplorer(parent,kind){
   if(parent===W)note(text);else caption.textContent=text;
   if(parent===W)caption.textContent='回归横轴为总表点位顺序，不代表时间或空间距离。OLS：ŷ=a+bx，b=Σ[(x−x̄)(y−ȳ)]/Σ(x−x̄)²，a=ȳ−bx̄。\n条带=ŷ±1.96×s√[1/n+(x−x̄)²/Σ(x−x̄)²]，s²=Σ(y−ŷ)²/(n−2)。R²≥0.5实线，其余虚线；不将顺序趋势解释为因果。';
  }
- tabs(nav,['校准展示','散点图'],i=>{cancelReveal();selected=-1;phase=0;state.forEach(s=>{s.visible=true;s.line=false;s.band=false;});controls.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed','false'));mode=i;render();});
+ tabs(nav,['校准展示','散点图'],i=>{cancelReveal();selected=-1;phase=0;state.forEach(s=>{s.visible=true;s.line=false;s.band=false;});controls.querySelectorAll('button').forEach(b=>{b.setAttribute('aria-pressed','false');b.dataset.phase='0';});mode=i;render();});
  if(parent!==W)el('p','caption',host).textContent='OLS以总表点位顺序为横轴：ŷ=a+bx，b=Σ[(x−x̄)(y−ȳ)]/Σ(x−x̄)²，a=ȳ−bx̄。条带=ŷ±1.96×SE，SE=s√[1/n+(x−x̄)²/Σ(x−x̄)²]，s²=Σ(y−ŷ)²/(n−2)。顺序趋势不表示时间、距离或因果。';
  c.setOption({tooltip:{formatter:p=>{const i=(p.data.value||p.data)[0],node=D.points[i];return node?esc(node.address)+'<br>'+labels.filter((_,j)=>!mode||state[j].visible).map(name=>{const j=labels.indexOf(name);return esc(name)+'：'+fmt(values[j][i])}).join('<br>'):''}}});
  c.on('mouseover',p=>{if(p.seriesIndex>=count)return;const i=(p.data.value||p.data)[0];c.dispatchAction({type:'downplay'});labels.forEach((_,j)=>{if(!mode||state[j].visible)c.dispatchAction({type:'highlight',seriesId:'info-'+j,dataIndex:i});});c.setOption({series:[{id:'focus-ring',data:finite(values[last][i])&&(!mode||state[last].visible)?[[i,mode?values[last][i]:last]]:[]}]});});
@@ -219,3 +219,5 @@ if(PAGE==='correlations')mainTabs(['Spearman相关系数','活力度信息表','
 if(PAGE==='qualityVitality'||PAGE==='qualityMix')qualityChart(PAGE);
 if(PAGE==='mismatch')mainTabs(['筛选','不配得性分析'],mismatch);
 let resizeTimer;window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>charts.forEach(c=>{c.resize();c.reflow?.()}),120)});
+
+/* interaction-revision */

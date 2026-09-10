@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>不配得性Ⅰ：区位资源/行人选择｜衡复风貌区</title><link rel="stylesheet" href="studies.css"><script src="echarts.min.js"></script><script src="survey-data.js"></script><link rel="stylesheet" href="../assets/css/legacy-light.css"><link rel="stylesheet" href="../assets/css/palette-revision.css"></head>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>不配得性Ⅰ：区位资源/行人选择｜衡复风貌区</title><link rel="stylesheet" href="studies.css"><script src="echarts.min.js"></script><script src="survey-data.js"></script><link rel="stylesheet" href="../assets/css/legacy-light.css"><link rel="stylesheet" href="../assets/css/palette-revision.css"><link rel="stylesheet" href="../assets/css/interaction-revision.css"></head>
 <body data-study="8" data-number="8" data-title="不配得性Ⅰ：区位资源/行人选择"><header><a href="../visualizations.html" aria-label="返回图表目录">←</a><h1>08 不配得性Ⅰ：区位资源/行人选择</h1><span class="meta"></span></header><nav role="tablist" aria-label="切换分析图表"></nav><p class="note"></p><main id="workspace" aria-label="数据图表"></main><script>
 /* All study inputs come from the 0906 worksheet. Missing observations stay missing. */
 const D=window.SURVEY, WHITE='#f5f5f2', POINT='#858583', ALPHA=1, LINE_ALPHA=.2;
@@ -86,4 +86,4 @@ if(page===7)single();
 if(page===8){D.headers.position='街道内节点区位比例';D.headers.choice='行人样本数 / 界面整体状态';scatterNote();note.textContent+=' 区位比例沿用原图门牌顺序归一化定义；评分为0的比值不绘制。';scatter('T','AH','界面整体状态 / 行人样本数');scatter('position','choice','区位比例 / 行人选择比值');}
 new ResizeObserver(()=>charts.forEach(c=>{c.resize();if(c.reflowCells)c.reflowCells();})).observe(workspace);
 
-</script></body></html>
+</script><script src="../assets/js/interaction-revision.js"></script></body></html>

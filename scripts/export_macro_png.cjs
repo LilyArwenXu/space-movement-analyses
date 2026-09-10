@@ -28,6 +28,7 @@ async function screenshotTiled(page,locator){
   const errors=[], manifest=previous?.files||[], views=previous?.views||[];
   page.on('pageerror', e=>errors.push(String(e)));
   await sheet.setContent('<html><body style="margin:0;background:white"></body></html>');
+  await sheet.evaluate(async url=>{const font=new FontFace('ExportHei',`url("${url}")`,{weight:'100 900'});await font.load();document.fonts.add(font);},'data:font/ttf;base64,'+fs.readFileSync(path.join(root,'docs/assets/fonts/FZVariable-LanTingHeiK.TTF')).toString('base64'));
   await page.goto(pathToFileURL(path.join(root,'docs/visualizations.html')).href);
   const panels = await page.locator('a.panel').evaluateAll(nodes=>nodes.map(n=>({url:n.href,title:n.getAttribute('aria-label')})));
   async function groups() {
@@ -39,7 +40,7 @@ async function screenshotTiled(page,locator){
   async function capture(panel, selections) {
     await page.evaluate(()=>document.querySelectorAll('[data-export-item]').forEach(n=>n.removeAttribute('data-export-item')));
     await page.evaluate(()=>document.querySelectorAll('.coefficients .score-table-wrap').forEach(n=>{n.style.maxHeight='none';n.style.overflow='visible';}));
-    const items=await page.evaluate(()=>[...document.querySelectorAll('.plot,.map-stage,.covariance,.coefficients,.shap-gallery:not(:has(.shap-triptych))>.shap-figure,.shap-gallery:has(.shap-triptych)')].filter(n=>n.getClientRects().length&&!n.closest('[hidden]')).map((n,i)=>{n.dataset.exportItem=i;const c=echarts.getInstanceByDom(n);return {id:i,chart:!!c,title:c?(c.getOption().title||[]).map(t=>t.text).filter(Boolean).join(' '):n.classList.contains('shap-figure')?n.querySelector('img').alt:n.className};}));
+    const items=await page.evaluate(()=>[...document.querySelectorAll('.plot,.map-stage,.covariance,.coefficients,.shap-gallery:not(:has(.shap-triptych))>.shap-figure,.shap-gallery:has(.shap-triptych),.mismatch-combined')].filter(n=>n.getClientRects().length&&!n.closest('[hidden]')).map((n,i)=>{n.dataset.exportItem=i;const c=echarts.getInstanceByDom(n);return {id:i,chart:!!c,title:c?(c.getOption().title||[]).map(t=>t.text).filter(Boolean).join(' '):n.classList.contains('mismatch-combined')?n.querySelector('h2').textContent:n.classList.contains('shap-figure')?n.querySelector('img').alt:n.className};}));
     if(!views.some(v=>v.panel===panel.title&&JSON.stringify(v.tabs)===JSON.stringify(selections)))views.push({panel:panel.title,tabs:selections,charts:items.length});
     for (const item of items) {
       const locator=page.locator(`[data-export-item="${item.id}"]`);
@@ -49,7 +50,7 @@ async function screenshotTiled(page,locator){
         if(c && !c.getOption().textStyle.fontFamily.startsWith('SimSun'))throw new Error('Chart font is not SimSun');
         const sourceLegend=scope.querySelector('.case-legend')||document.querySelector('.heat-legend'),legend=sourceLegend?.cloneNode(true);
         if(legend)sourceLegend.querySelectorAll('.heat-gradient,.correlation-gradient').forEach((source,i)=>{const target=legend.querySelectorAll('.heat-gradient,.correlation-gradient')[i];target.style.cssText='display:inline-block;width:260px;height:16px;vertical-align:middle;background:'+getComputedStyle(source).backgroundImage;target.className='export-gradient';});
-        return {note:document.querySelector('.readme').textContent,captions:[...scope.querySelectorAll('.caption')].map(n=>n.textContent),legend:legend?.outerHTML||''};
+        return {note:document.querySelector('.readme').textContent,captions:[...scope.querySelectorAll('.caption,.critic-method,.coefficient-conclusion,.mismatch-conclusion')].map(n=>n.textContent),legend:legend?.outerHTML||''};
       });
       let image,coefficientPNG;
       if(item.chart) image=await locator.evaluate(n=>{
@@ -85,7 +86,9 @@ async function screenshotTiled(page,locator){
           for(const note of notes)if(note.scrollHeight>note.clientHeight+1)throw new Error('SHAP side caption clipped');
         });
         await page.addStyleTag({content:'.dom-chart-download{visibility:hidden!important}'});
+        const exportStyle=await page.addStyleTag({content:'.shap-side,.shap-bottom,.shap-conclusion{font-family:FZLanTingHei,SimHei,sans-serif!important;font-weight:300!important;color:#000!important}'});
         const png=await screenshotTiled(page,locator);
+        await exportStyle.evaluate(n=>n.remove());
         if(item.title==='coefficients')coefficientPNG=png;
         else image='data:image/png;base64,'+png.toString('base64');
       }
@@ -94,9 +97,9 @@ async function screenshotTiled(page,locator){
         document.body.replaceChildren();
         const box=document.createElement('article');box.id='export';box.style.cssText='width:1600px;padding:30px;box-sizing:border-box;background:white;color:#292929;font:18px/1.65 SimSun,serif;';
         const title=document.createElement('div');title.textContent=heading;title.style.cssText='font-size:23px;margin-bottom:18px';box.append(title);
-        if(meta.legend){const legend=document.createElement('div');legend.innerHTML=meta.legend;legend.style.marginBottom='12px';legend.querySelectorAll('.case-legend-item').forEach(n=>n.style.cssText='display:inline-flex;align-items:center;gap:8px;margin-right:24px');legend.querySelectorAll('.case-legend-dot').forEach(n=>{n.style.display='inline-block';n.style.width='12px';n.style.height='12px';n.style.borderRadius='80%'});legend.querySelectorAll('.heat-gradient').forEach(n=>n.style.cssText='display:inline-block;width:180px;height:14px;background:linear-gradient(90deg, #2166ac, #67a9cf, #f7f7f7, #f4a582, #b2182b)');box.append(legend);}
+        if(meta.legend){const legend=document.createElement('div');legend.innerHTML=meta.legend;legend.style.marginBottom='12px';legend.querySelectorAll('.case-legend-item').forEach(n=>n.style.cssText='display:inline-flex;align-items:center;gap:8px;margin-right:24px');legend.querySelectorAll('.case-legend-dot').forEach(n=>{n.style.display='inline-block';n.style.width='12px';n.style.height='12px';n.style.borderRadius='50%'});legend.querySelectorAll('.heat-gradient').forEach(n=>n.style.cssText='display:inline-block;width:180px;height:14px;background:linear-gradient(90deg, #2166ac, #67a9cf, #f7f7f7, #f4a582, #b2182b)');box.append(legend);}
         let img;if(image){img=new Image();img.src=image;img.style.cssText='display:block;width:100%;height:auto';box.append(img);}
-        const note=document.createElement('div');note.textContent=[...new Set([...meta.captions,meta.note].filter(Boolean))].join('\n\n');note.style.cssText='white-space:pre-line;margin-top:20px;font:18px/1.65 SimSun,serif';box.append(note);
+        const note=document.createElement('div');note.textContent=[...new Set([...meta.captions,meta.note].filter(Boolean))].join('\n\n');note.style.cssText='white-space:pre-line;margin-top:20px;color:#000;font:300 18px/1.65 ExportHei,SimHei,sans-serif';box.append(note);
         document.body.append(box);if(img)await img.decode();await document.fonts.ready;
       },{image,heading,meta});
       const dir=clean(panel.title);fs.mkdirSync(path.join(output,dir),{recursive:true});
