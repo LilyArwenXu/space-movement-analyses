@@ -1,0 +1,8 @@
+.macro-stage.expanded .mismatch-entry{transform:translateX(-200%)}
+.mismatch-menu{left:33.333333%}
+.critic-method>summary{cursor:pointer;font-size:23px;line-height:1.6;font-weight:400;list-style-position:inside}
+.critic-method>summary:focus-visible{outline:2px solid #111;outline-offset:4px}
+.critic-method[open]>summary{margin-bottom:24px}.critic-method:not([open]){padding:16px 0}
+.shap-side{max-height:none;overflow:visible;padding-right:0}
+.shap-side .shap-description{margin:0;white-space:pre-line;font:inherit}
+.shap-side .shap-conclusion{margin:26px 0 0;padding-top:18px;border-top:1px solid #ddd;white-space:pre-line;font:inherit}

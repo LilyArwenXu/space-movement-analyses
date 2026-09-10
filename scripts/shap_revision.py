@@ -14,17 +14,23 @@ def load_scores(data):
             rows = list(csv.DictReader(f))
         assert len(rows) == len(data['points']), (filename, 'observation count mismatch')
         columns = list(rows[0])
-        fields = ['M','S','R','AE','AF','AG','Y','Z','AA','U','V'] if key == 'quality' else ['sample','clusters','density','gather']
+        fields = ['M','S','R','AE','AF','AG','Y','Z','AA','U','V'] if key == 'quality' else ['ageMix','activityMix','postureMix','socialMix','identityMix'] if key == 'mixScore' else ['sample','clusters','density','gather']
         for index, (row, point) in enumerate(zip(rows, data['points'])):
             original = point['values'] if key == 'quality' else point['metrics']
             for col, field in zip(columns, fields):
                 actual = float(row[col]) if row[col] else math.nan
                 expected = original.get(field)
+                # Revised mixing CSV supplies updated activity/identity predictors.
+                # Validate order with all three unchanged entropy dimensions; keep
+                # source predictors separately from workbook frequency charts.
+                if key == 'mixScore' and field in ['activityMix','identityMix']:
+                    continue
                 # Supplied CSVs explicitly encode missing workbook inputs as zero.
                 assert (expected is None and (actual == 0 or not math.isfinite(actual))) or (expected is not None and math.isclose(actual, expected, rel_tol=1e-8, abs_tol=1e-10)), (filename, index+2, col, actual, expected)
             score = float(row[column]) if row[column] else math.nan
             point[key] = score if math.isfinite(score) else None
             point.setdefault('scoreSourceRows', {})[key] = index + 2
+            point.setdefault('scoreSourceInputs', {})[key] = {field: float(row[col]) if row[col] else None for col, field in zip(columns, fields)}
         scores = [float(row[column]) for row in rows if row[column] and math.isfinite(float(row[column]))]
         data['scoreSources'][key] = {'file': 'result/shap/'+filename, 'column': column, 'count': len(scores), 'mean': math.fsum(scores)/len(scores)}
     for point in data['points']:

@@ -294,7 +294,7 @@ function compositionColor(k,count){
 function coefficient(kind){
  const letter={mix:'M',quality:'Q',vitality:'V'}[kind],box=el('section','coefficients'),img=el('img','coefficient-image',box);img.src='../assets/data/coefficients/'+letter+'.png';img.alt=letter+' 系数表征';
  const defs=kind==='mix'?[['w1','年龄混合度',.149],['w2','活动丰富度',.141],['w3','姿态丰富度',.250],['w4','社交状态混合度',.228],['w5','身份倾向混合度',.233]]:D.scoreWeights[kind].map((d,i)=>[(kind==='quality'?'x':'y')+(i+1),d[1],d[2]]);
- el('section','critic-method',box).innerHTML="<h2>Critic权重算法</h2>\n<h3>1. 对比强度</h3><p class=\"formula\">S_j = √ [ (1/(n-1)) × Σ(x_ij - x̄_j)² ]</p>\n<p>x_ij 是第i个样本第j个指标的值，x̄_j 是第j个指标的均值。\nΣ是对i从1到n求和。</p>\n<p>标准差越大，说明这个指标越能区分不同样本，越重要。</p>\n<h3>2. 冲突性</h3><p class=\"formula\">R_j = Σ (1 - |r_jk|)</p>\n<p>其中 r_jk 是第j个指标和第k个指标的皮尔逊相关系数，|r_jk| 是取绝对值。\nΣ是对k从1到m求和。\n当k=j时，自己跟自己的相关系数是1，1减1等于0，所以自己那一项自动为0。</p>\n<p>R_j越大，说明这个指标跟别人越不相关，提供的信息越独特。</p>\n<h3>3. 综合信息量及权重</h3><p class=\"formula\">C_j = S_j × R_j</p><p class=\"formula\">w_j = C_j / ΣC_j</p>\n<p>其中ΣC_j是对所有指标的C_j求和。</p>";
+ el('details','critic-method',box).innerHTML="<summary>Critic权重算法</summary>\n<h3>1. 对比强度</h3><p class=\"formula\">S_j = √ [ (1/(n-1)) × Σ(x_ij - x̄_j)² ]</p>\n<p>x_ij 是第i个样本第j个指标的值，x̄_j 是第j个指标的均值。\nΣ是对i从1到n求和。</p>\n<p>标准差越大，说明这个指标越能区分不同样本，越重要。</p>\n<h3>2. 冲突性</h3><p class=\"formula\">R_j = Σ (1 - |r_jk|)</p>\n<p>其中 r_jk 是第j个指标和第k个指标的皮尔逊相关系数，|r_jk| 是取绝对值。\nΣ是对k从1到m求和。\n当k=j时，自己跟自己的相关系数是1，1减1等于0，所以自己那一项自动为0。</p>\n<p>R_j越大，说明这个指标跟别人越不相关，提供的信息越独特。</p>\n<h3>3. 综合信息量及权重</h3><p class=\"formula\">C_j = S_j × R_j</p><p class=\"formula\">w_j = C_j / ΣC_j</p>\n<p>其中ΣC_j是对所有指标的C_j求和。</p>";
  const lower=el('div','coefficient-tables',box),left=el('section','',lower),right=el('section','',lower);
  const table=el('table','coefficient-table',left);table.innerHTML='<thead><tr><th>指标</th><th>系数</th><th>权重</th></tr></thead><tbody>'+defs.map(d=>'<tr><td>'+d[1]+'</td><td>'+d[0]+'</td><td>'+d[2].toFixed(3)+'</td></tr>').join('')+'</tbody>';
  if(kind==='mix')el('p','coefficient-conclusion',left).textContent="进一步结合指标相关性与CRITIC权重分析可见，姿态丰富度与身份倾向混合度对街区综合混合度的贡献最为突出。\n其中活动丰富度与社交状态混合度呈现较强的相关性，说明行人的行为活动与社交行为存在明显的耦合关系。\n而年龄混合度权重相对较低，对整体混合度的解释力有限。\n由此可以推测，街道空间能否容纳多样化的身体姿态行为、能否吸引多元身份人群到访，是提升街区混合度的核心驱动要素。";
@@ -350,34 +350,23 @@ function matrixWithAxes(){
  el('p','caption').textContent='横坐标：'+ys.map(k=>D.ys[k]).join('、')+'。纵坐标：'+D.fields.map(f=>f.label).join('、')+'。黑色实线方框表示 p<0.05，保留 * / ** / ***。';
 }
 function shapAnalysis(label){
- const content=window.SHAP_CAPTIONS, single=label==='高活力度低混合度';
+ const content=window.SHAP_CAPTIONS;
  el('h2','section-heading').textContent=label;
- const gallery=el('section','shap-gallery'),host=single?el('div','shap-triptych',gallery):gallery;
+ const gallery=el('section','shap-gallery');
  const lines=s=>s.replace(/([；;。])\s*/g,'$1\n').trim();
  [1,2,3].forEach((number,index)=>{
-  const figure=el('figure','shap-figure',host),row=single?figure:el('div','shap-row',figure),img=el('img','shap-image',row);
-  img.src='../assets/data/shap/'+label+'/'+number+'.png';img.alt=label+' · '+number+'.png';
-  let description=content.descriptions[index];
-  if(index===2&&['高混合度低界面品质','高混合度低活力度','高活力度低混合度'].includes(label))description=description.replace('第三维变量不配得性U','第三维变量'+(label==='高活力度低混合度'?'U（不配得性）':'U（不配得性）'));
-  const side=el(single?'figcaption':'aside',single?'shap-bottom':'shap-side',single?figure:row);side.textContent=lines(description);
-  if(!single){
-   side.textContent+='\n\n'+lines(content.groups[label][index]);
-   const fit=()=>{
-    if(!img.isConnected){observer.disconnect();return;}
-    img.style.minHeight='';
-    if(window.innerWidth>800)img.style.minHeight=side.scrollHeight+'px';
-    side.style.setProperty('--image-height',img.getBoundingClientRect().height+'px');
-   };
-   img.addEventListener('load',fit);const observer=new ResizeObserver(fit);observer.observe(row);
-  }
+  const figure=el('figure','shap-figure',gallery),row=el('div','shap-row',figure),img=el('img','shap-image',row);
+  img.src='../assets/data/shap/'+label+'/'+number+'.png?v='+content.assetVersion;img.alt=label+' · '+number+'.png';
+  const side=el('aside','shap-side',row);
+  el('p','shap-description',side).textContent=lines(content.descriptionOverrides?.[label]?.[index]||content.descriptions[index]);
+  el('p','shap-conclusion',side).textContent=lines(content.groups[label][index]);
  });
- if(single)el('p','shap-conclusion',gallery).textContent=content.singleConclusion;
  note('');
 }
 function mismatchView(i){
  const config={qualityVitality:['quality','vitality','界面品质','活力度','界面品质的底层指标组合','活力度的底层指标'],qualityMix:['quality','mixScore','界面品质','混合度','界面品质的底层指标组合','混合度的底层指标'],mismatch:['vitality','mixScore','活力度','混合度','活力度的底层指标组合','混合度的底层指标']}[PAGE], [x,y,xlabel,ylabel,first,second]=config;
  const labels=PAGE==='mismatch'?['高混合度低活力度','高活力度低混合度']:['高'+xlabel+'低'+ylabel,'高'+ylabel+'低'+xlabel],mx=D.scoreMeans[x],my=D.scoreMeans[y];
- if(i){if(PAGE==='mismatch'){labels.forEach(label=>{const group=el('section','mismatch-combined shap-gallery');el('h2','',group).textContent=label;const row=el('div','mismatch-triptych',group);[1,2,3].forEach(number=>{const figure=el('figure','',row),img=el('img','',figure);img.src='../assets/data/shap/'+label+'/'+number+'.png';img.alt=label+' · 图'+number;});});note('');}else sectionTabs(labels,j=>shapAnalysis(labels[j]));return;}
+ if(i){sectionTabs(labels,j=>shapAnalysis(labels[j]));return;}
  const c=chart(W,610),o=base();delete o.legend;o.grid={left:75,right:55,top:45,bottom:65};
  o.xAxis={...axis(xlabel),scale:true,axisLine:{show:false},axisTick:{show:false},splitLine:{show:false}};o.yAxis={...axis(ylabel),scale:true,axisLine:{show:false},axisTick:{show:false},splitLine:{show:false}};
  const pts=D.points.filter(p=>finite(p[x])&&finite(p[y]));o.series=[{type:'scatter',id:'nodes',data:pts.map(p=>({value:[p[x],p[y],p.address,p.id],itemStyle:{color:p.mismatchGroups[PAGE]===labels[0]?'#0071ee':p.mismatchGroups[PAGE]===labels[1]?'#c90097':'#9094c1',opacity:p.mismatchGroups[PAGE]?.85:.4}})),symbolSize:9,z:5,emphasis:{scale:1.6},markLine:{silent:true,symbol:'none',label:{show:true,position:'insideEndTop',formatter:p=>p.data.name,color:'#000',backgroundColor:'#fff',padding:3},lineStyle:{color:'#000',type:'solid',width:1.5},data:[{xAxis:mx,name:xlabel+'均值 '+fmt(mx,4)},{yAxis:my,name:ylabel+'均值 '+fmt(my,4)}]}}];
@@ -387,7 +376,8 @@ function mismatchView(i){
 }
 if(PAGE==='heat')mainTabs(['热力分布图','样本数'],i=>mapView(1-i));
 if(PAGE==='weights')mainTabs(['空间分析','系数表征','界面品质总表'],i=>{if(i===2)informationExplorer(W,'quality');else if(i===1)coefficient('quality');else sectionTabs(['有效空间分析','舒适度分析','效果分析'],j=>j<2?space(j):effectAnalysis());});
-if(PAGE==='composition')mainTabs(['构成分析','系数表征','混合度总表'],i=>i===0?sectionTabs(D.mixDimensions.map(d=>d.label),dimensionBars):i===1?coefficient('mix'):mixedTotal());
+if(PAGE==='mixRegression')mainTabs(['系数表征','混合度总表'],i=>i?mixedTotal():coefficient('mix'));
+if(PAGE==='composition')mainTabs(D.mixDimensions.map(d=>d.label),dimensionBars);
 if(PAGE==='memory')mainTabs(['系数表征','活力度总表'],i=>i?informationExplorer(W,'vitality'):coefficient('vitality'));
 if(PAGE==='correlations')mainTabs(['空间行为相关性分析'],matrixWithAxes);
 if(['qualityVitality','qualityMix','mismatch'].includes(PAGE))mainTabs(['筛选','不配得性分析'],mismatchView);

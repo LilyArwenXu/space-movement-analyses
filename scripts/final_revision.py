@@ -80,7 +80,7 @@ def renderer(js):
     js=presentation_renderer(js)
     return js
 
-TITLES={'heat':(1,'人员热力图'),'composition':(2,'混合度计算'),'correlations':(3,'空间行为相关性分析'),'weights':(4,'界面品质回归分析'),'memory':(5,'空间活力度回归分析'),'qualityVitality':(6,'不配得性Ⅰ：高界面品质是否必然带来高空间活力度？'),'qualityMix':(7,'不配得性Ⅱ：高界面品质是否必然促进人群的高度混合？'),'mismatch':(8,'不配得性Ⅲ：混合度与活力度有何关联特征？')}
+from regression_revision import TITLES
 def pages():
     from catalog import CATALOG
     cards=[]

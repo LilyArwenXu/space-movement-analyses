@@ -60,6 +60,8 @@ def build(refresh=True):
     micro_pages()
     from interaction_revision import pages as interaction_pages
     interaction_pages()
+    from regression_revision import pages as regression_pages
+    regression_pages()
     shutil.copytree(ROOT/'aerial',ROOT/'dist',dirs_exist_ok=True,copy_function=copy_static)
     from prepare_pages import prepare
     prepare()

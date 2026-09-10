@@ -4,7 +4,7 @@ const {pathToFileURL}=require('url');
 const runtime=process.env.CODEX_NODE_MODULES||'C:/Users/11346/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules';
 const {chromium}=require(require.resolve('playwright',{paths:[runtime]}));
 const sharp=require(require.resolve('sharp',{paths:[runtime]}));
-const root=path.resolve(__dirname,'..'),out=path.join(root,'result/02 混合度计算');
+const root=path.resolve(__dirname,'..'),out=path.join(root,'result/02 人群构成分析');
 function siteHashes(){const hashes={};for(const name of ['aerial','dist','docs']){const walk=dir=>{for(const entry of fs.readdirSync(dir,{withFileTypes:true})){const file=path.join(dir,entry.name);if(entry.isDirectory())walk(file);else if(/\.(html|css|js)$/.test(file))hashes[path.relative(root,file)]=crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');}};walk(path.join(root,name));}return hashes;}
 (async()=>{
  const before=siteHashes(),browser=await chromium.launch({channel:'msedge',headless:true});
@@ -15,7 +15,7 @@ function siteHashes(){const hashes={};for(const name of ['aerial','dist','docs']
   const files=[];
   for(let i=0;i<5;i++){
    const result=await page.evaluate(async index=>{
-    document.querySelectorAll('.workspace>.subtabs>button')[index].click();
+    document.querySelectorAll('.tabs>button')[index].click();
     const chart=echarts.getInstanceByDom(document.querySelector('.plot')),option=chart.getOption();
     const family='Microsoft YaHei',font='300 18px "Microsoft YaHei"';
     await document.fonts.load(font);
@@ -51,7 +51,7 @@ function siteHashes(){const hashes={};for(const name of ['aerial','dist','docs']
     const footerURL=canvas.toDataURL('image/png');canvas.width=0;canvas.height=0;
     return {name:window.INCLUSIVE.mixDimensions[index].label,url:chartURL,footer:footerURL,points:expected.length,textCount:text.length};
    },i);
-   const filename=String(8+i).padStart(3,'0')+'_构成分析_'+result.name+'_'+result.name+'.png';
+   const filename=String(8+i).padStart(3,'0')+'_'+result.name+'_'+result.name+'.png';
    const target=path.join(out,filename);
    const body=Buffer.from(result.url.split(',')[1],'base64'),footer=Buffer.from(result.footer.split(',')[1],'base64');
    const bodyMeta=await sharp(body,{limitInputPixels:false}).metadata(),footerMeta=await sharp(footer).metadata();
