@@ -41,19 +41,28 @@ def revise(data):
         c.update(n=len(a),rho=None,p=None)
         if len(a)>=3 and len({x for x,y in a})>1 and len({y for x,y in a})>1:
             stat=spearmanr(*zip(*a));c.update(rho=float(stat.statistic),p=float(stat.pvalue))
+    from shap_revision import load_scores
+    load_scores(data)
+    data['scoreMeans']={k:s['mean'] for k,s in data['scoreSources'].items()}
     extracted=[]
     for p in data['points']:
         p['mismatchGroups']={}
         for kind,x,y,xlabel,ylabel in [('qualityVitality','quality','vitality','界面品质','活力度'),('qualityMix','quality','mixScore','界面品质','混合度'),('mismatch','vitality','mixScore','活力度','混合度')]:
             a,b=p[x],p[y];group=None
             if finite(a) and finite(b):
-                group='高'+ylabel+'低'+xlabel if a<.5 and b>=.5 else '高'+xlabel+'低'+ylabel if a>=.5 and b<.5 else None
+                mx,my=data['scoreMeans'][x],data['scoreMeans'][y]
+                group='高'+ylabel+'低'+xlabel if a<mx and b>=my else '高'+xlabel+'低'+ylabel if a>=mx and b<my else None
             p['mismatchGroups'][kind]=group
-            if group:extracted.append([p['id'],p['address'],kind,group,p['quality'],p['vitality'],p['mixScore'],p['metrics']['sample']])
+            if group:extracted.append([p['id'],p['address'],kind,group,p['quality'],p['vitality'],p['mixScore'],p['metrics']['sample'],xlabel,ylabel,a,b,data['scoreMeans'][x],data['scoreMeans'][y],'左上' if a<data['scoreMeans'][x] else '右下'])
         p['quadrant']=p['mismatchGroups']['mismatch'];p['mismatch']=math.log((1+p['vitality'])/(1+p['mixScore'])) if finite(p['vitality']) and finite(p['mixScore']) else None
     for filename in ['data-extract.csv','data_extract.csv']:
         with (ROOT/filename).open('w',encoding='utf-8-sig',newline='') as f:
-            w=csv.writer(f);w.writerow(['point_id','完整地址','分析','组别','界面品质Q','活力度V','混合度M','行人样本数']);w.writerows(extracted)
+            w=csv.writer(f);w.writerow(['point_id','完整地址','分析','组别','界面品质Q','活力度V','混合度M','行人样本数','横轴指标','纵轴指标','横轴值','纵轴值','横轴全域有效评分均值','纵轴全域有效评分均值','象限']);w.writerows(extracted)
+    with (ROOT/'result/score-fields.csv').open('w',encoding='utf-8-sig',newline='') as f:
+        w=csv.writer(f)
+        w.writerow(['point_id','完整地址','CSV数据行','界面品质','活力度','混合度','界面品质均值','活力度均值','混合度均值','不配得性Ⅰ组别','不配得性Ⅱ组别','不配得性Ⅲ组别'])
+        for p in data['points']:
+            w.writerow([p['id'],p['address'],p['scoreSourceRows']['vitality'],p['quality'],p['vitality'],p['mixScore'],data['scoreMeans']['quality'],data['scoreMeans']['vitality'],data['scoreMeans']['mixScore'],p['mismatchGroups']['qualityVitality'],p['mismatchGroups']['qualityMix'],p['mismatchGroups']['mismatch']])
     (ROOT/'.site-build/final-audit.json').write_text(json.dumps({'source':data['spaceSheet'],'fields':data['mixDimensions'],'weights':data['scoreWeights'],'points':len(data['points']),'missing':{k:sum(p[k] is None for p in data['points']) for k in ['quality','vitality','mixScore']},'extracted':len(extracted)},ensure_ascii=False,indent=2),encoding='utf-8')
 
 def renderer(js):
@@ -65,6 +74,10 @@ def renderer(js):
     js=js.replace("mode?'#292929':'#A45668'","mode?'#292929':(['#607E95','#A45668','#8C793E','#497F73','#806A96','#BD7546'][['AU','AV','AX','BA','AY','BB'].indexOf(selected)]||'#607E95')")
     start=js.index("if(PAGE==='heat')");end=js.index('let resizeTimer',start)
     js=js[:start]+(ROOT/'aerial/assets/js/final-revision.js').read_text(encoding='utf-8')+'\n'+js[end:]
+    from palette_revision import renderer as palette_renderer
+    js=palette_renderer(js)
+    from presentation_revision import renderer as presentation_renderer
+    js=presentation_renderer(js)
     return js
 
 TITLES={'heat':(1,'人员热力图'),'composition':(2,'混合度计算'),'correlations':(3,'空间行为相关性分析'),'weights':(4,'界面品质回归分析'),'memory':(5,'空间活力度回归分析'),'qualityVitality':(6,'不配得性Ⅰ：高界面品质是否必然带来高空间活力度？'),'qualityMix':(7,'不配得性Ⅱ：高界面品质是否必然促进人群的高度混合？'),'mismatch':(8,'不配得性Ⅲ：混合度与活力度有何关联特征？')}
@@ -86,3 +99,7 @@ def pages():
     (ROOT/'aerial/team.html').write_text('<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>课程与团队信息</title><link rel="stylesheet" href="assets/css/inclusive.css"><link rel="stylesheet" href="assets/css/interface.css"></head><body><header class="topbar unified-topbar"><a class="brand" href="index.html">← INCLUSIVE VITALITY</a><h1>课程与团队信息</h1></header><main style="max-width:1000px;margin:8vh auto;padding:32px;line-height:2.4"><h2>指导老师：闫超</h2><p>孙靖琪、王霏杨、常思语、丁文颖、王一一、黄子童、苏嘉欣、黄希龄、徐韵晨、王倪潇、李严宇、蔡淙旭</p></main></body></html>',encoding='utf-8')
     dest=ROOT/'aerial/assets/data/coefficients';dest.mkdir(exist_ok=True)
     for name in ['M','Q','V']:shutil.copy2(ROOT/f'result/权重/{name}.png',dest/f'{name}.png')
+    from palette_revision import pages as palette_pages
+    palette_pages()
+    from shap_revision import pages as shap_pages
+    shap_pages()

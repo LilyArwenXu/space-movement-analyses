@@ -5,7 +5,7 @@ from build_data import read_source,ROOT
 d=json.loads((ROOT/'aerial/assets/data/inclusive-data.js').read_text(encoding='utf-8').split('=',1)[1].strip().rstrip(';'))
 _,rows=read_source(d['spaceSheet']);raw={r['A']:r for r in rows[3:] if isinstance(r.get('A'),(float,int)) and r.get('B')}
 assert len(raw)==len(d['points'])==135
-for p in d['points']:
+for index,p in enumerate(d['points']):
     r=raw[p['values']['A']]
     assert p['address']==r['B']
     for dim in d['mixDimensions']:
@@ -14,20 +14,25 @@ for p in d['points']:
             expected=-sum(x/sum(a)*math.log(x/sum(a)) for x in a if x)/math.log(len(a))
             assert math.isclose(expected,p['metrics'][dim['key']],abs_tol=1e-12)
         else:assert p['metrics'][dim['key']] is None
-    if all(x is not None for x in p['mix']):assert math.isclose(p['mixScore'],sum(x*w for x,w in zip(p['mix'],[.149,.141,.250,.228,.233])),abs_tol=1e-12)
-    # Explicit original workbook mapping, independent of the adapted column keys.
-    for kind,columns,weights in [('quality',['N','T','S','AF','AG','AH','Z','AA','AB','V','W'],[.068,.078,.167,.112,.069,.058,.095,.099,.077,.094,.084])]:
-        if p[kind] is not None:
-            score=0
-            for col,w in zip(columns,weights):
-                a=[row[col] for row in raw.values() if isinstance(row.get(col),(int,float))];lo,hi=min(a),max(a);score+=w*((r[col]-lo)/(hi-lo) if hi>lo else 0)
-            assert math.isclose(score,p[kind],abs_tol=1e-12),(p['id'],score,p[kind])
-    if p['vitality'] is not None:
-        total=0
-        for key,w in zip(['sample','clusters','density','gather'],[.194,.144,.205,.456]):
-            a=[n['metrics'][key] for n in d['points'] if n['metrics'][key] is not None];lo,hi=min(a),max(a);total+=w*((p['metrics'][key]-lo)/(hi-lo) if hi>lo else 0)
-        assert math.isclose(total,p['vitality'],abs_tol=1e-12)
+    for key,filename,column in [('quality','gua.csv','界面品质'),('vitality','four.csv','活力度'),('mixScore','mixing_scores.csv','混合度')]:
+        source=list(csv.DictReader((ROOT/'result/shap'/filename).open(encoding='utf-8-sig')))
+        expected=float(source[index][column])
+        assert math.isclose(p[key],expected,abs_tol=1e-12),(p['id'],key,p[key],expected)
 rows=list(csv.DictReader((ROOT/'data-extract.csv').open(encoding='utf-8-sig')))
-expected={(p['id'],k,g) for p in d['points'] for k,g in p['mismatchGroups'].items() if g}
+means={key:math.fsum(p[key] for p in d['points'] if p[key] is not None)/sum(p[key] is not None for p in d['points']) for key in ['quality','vitality','mixScore']}
+assert all(math.isclose(means[k],d['scoreMeans'][k],abs_tol=1e-12) for k in means)
+expected=set()
+for p in d['points']:
+    for kind,x,y,xlabel,ylabel in [('qualityVitality','quality','vitality','界面品质','活力度'),('qualityMix','quality','mixScore','界面品质','混合度'),('mismatch','vitality','mixScore','活力度','混合度')]:
+        a,b=p[x],p[y];group=None
+        if a is not None and b is not None:
+            if a<means[x] and b>=means[y]:group='高'+ylabel+'低'+xlabel
+            elif a>=means[x] and b<means[y]:group='高'+xlabel+'低'+ylabel
+        assert p['mismatchGroups'][kind]==group
+        if group:expected.add((p['id'],kind,group))
 assert {(r['point_id'],r['分析'],r['组别']) for r in rows}==expected
+for r in rows:
+    a,b,mx,my=[float(r[k]) for k in ['横轴值','纵轴值','横轴全域有效评分均值','纵轴全域有效评分均值']]
+    assert (a<mx and b>=my) if r['象限']=='左上' else (a>=mx and b<my)
 print('Verified 135 source points, five entropy dimensions, Q/V/M scores, and',len(rows),'mismatch memberships.')
+print('Mean thresholds:',means)

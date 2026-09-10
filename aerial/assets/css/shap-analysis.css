@@ -1,0 +1,12 @@
+.shap-gallery{display:grid;gap:44px;width:100%;max-width:1500px;margin:24px auto}
+.shap-figure{margin:0;min-width:0;padding:0 0 28px;border-bottom:1px solid #ddd}
+.shap-row{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:28px;align-items:start}
+.shap-image{display:block;width:100%;height:auto;object-fit:contain;object-position:center top;background:#fff}
+.shap-side,.shap-bottom{font:16px/1.65 SimSun,'Songti SC',serif;white-space:pre-line;overflow-wrap:anywhere;margin:0;color:#292929}
+.shap-side{box-sizing:border-box;padding:0 10px 0 0;overflow:auto;max-height:var(--image-height,none)}
+.shap-bottom{margin-top:20px}
+.shap-triptych{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}
+.shap-triptych .shap-image{height:280px;object-fit:contain;object-position:center top}
+.shap-triptych .shap-figure{border:0;padding:0}
+.shap-conclusion{font-size:18px;line-height:1.8;margin:24px 0 0;white-space:pre-line}
+@media(max-width:800px){.shap-row{grid-template-columns:1fr}.shap-side{max-height:none!important;overflow:visible}.shap-triptych{gap:12px}.shap-triptych .shap-image{height:150px}.shap-triptych .shap-bottom{font-size:14px}.shap-gallery{gap:28px}}

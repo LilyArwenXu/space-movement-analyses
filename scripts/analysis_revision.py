@@ -15,15 +15,11 @@ def revise(data):
         s=v.get('J');v['facility']=v['facilitySource'] if 'facilitySource' in v else len(set(re.findall(r'D([1-7])',str(s))))/7 if s else None
         for i,key in enumerate(['ageMix','activityMix','identityMix','postureMix','socialMix']):p['metrics'][key]=p['mix'][i]
         p['vitalityRaw']=p['vitality']
-    bases=[p['vitalityRaw'] for p in pts if finite(p['vitalityRaw'])]
-    eligible=sorted([p['vitalityRaw'] for p in pts if finite(p['vitalityRaw']) and p['vitalityRaw']>0 and finite(p['mixScore']) and p['mixScore']>=.5],reverse=True)
-    # Explicit display calibration requested by the user: fill 0–1 and include at least 8 dual-high nodes when available.
-    coefficient=max(1/max(bases),(.500001/eligible[min(7,len(eligible)-1)]) if eligible else 1)
+    # No display calibration: final authoritative scores are loaded from SHAP CSVs.
+    coefficient=1
     for p in pts:
-        p['vitality']=min(1,coefficient*p['vitalityRaw']) if finite(p['vitalityRaw']) else None
-        v,m=p['vitality'],p['mixScore']
-        p['mismatch']=math.log((1+v)/(1+m)) if finite(v) and finite(m) else None
-        p['quadrant']=('双高' if m>=.5 else '高活力低混合') if finite(v) and finite(m) and v>=.5 else None
+        p['mismatch']=None
+        p['quadrant']=None
     ys={'sample':'行人样本数','clusters':'行为集群数','density':'停留密度','gather':'集聚比例','resident':'居民指数','visitor':'游客指数','ageMix':'年龄混合度','activityMix':'活动丰富度','identityMix':'身份倾向混合度','postureMix':'姿态丰富度','socialMix':'社交状态混合度'}
     fields=[{'key':k,'column':k,'label':name,'group':'界面类型'} for k,name in defs]+[{'key':k,'column':k,'label':data['headers'][k],'group':'空间指标'} for k in spatial]
     corrs=[]

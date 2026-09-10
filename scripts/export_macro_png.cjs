@@ -1,17 +1,30 @@
 /* Export every macro tab, nested tab and road drill-down from the built site. */
-const fs = require('fs'), path = require('path'), {pathToFileURL} = require('url');
+const fs = require('fs'), path = require('path'), {pathToFileURL,fileURLToPath} = require('url');
 const runtime = process.env.CODEX_NODE_MODULES || 'C:/Users/11346/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules';
 const {chromium} = require(require.resolve('playwright', {paths:[runtime]}));
 const sharp = require(require.resolve('sharp', {paths:[runtime]}));
 const root = path.resolve(__dirname, '..'), output = path.join(root, 'result');
 const clean = s => s.replace(/[<>:"/\\|?*\x00-\x1f]/g, '_').trim().slice(0, 55);
+async function screenshotTiled(page,locator){
+  await page.evaluate(()=>window.scrollTo(0,0));
+  const box=await locator.boundingBox(),scale=3.125;
+  if(box.height*scale<11000)return locator.screenshot({animations:'disabled'});
+  const pieces=[];let top=0,width=0;
+  for(let offset=0;offset<box.height;offset+=1200){
+    const png=await page.screenshot({fullPage:true,animations:'disabled',clip:{x:box.x,y:box.y+offset,width:box.width,height:Math.min(1200,box.height-offset)}});
+    const meta=await sharp(png).metadata();width=meta.width;pieces.push({input:png,left:0,top});top+=meta.height;
+  }
+  return sharp({create:{width,height:top,channels:4,background:'#fff'},limitInputPixels:false}).composite(pieces).png().toBuffer();
+}
 (async () => {
   fs.mkdirSync(output, {recursive:true});
   const browser = await chromium.launch({channel:'msedge', headless:true});
   const context = await browser.newContext({viewport:{width:1800,height:1200},deviceScaleFactor:3.125});
   const page = await context.newPage(), sheet = await context.newPage();
   const only=process.argv.find(a=>a.startsWith('--only='))?.slice(7);
-  const previous=only&&fs.existsSync(path.join(output,'manifest.json'))?JSON.parse(fs.readFileSync(path.join(output,'manifest.json'),'utf8')):null;
+  const from=process.argv.find(a=>a.startsWith('--from='))?.slice(7);
+  const oldFiles=fs.existsSync(path.join(output,'manifest.json'))?JSON.parse(fs.readFileSync(path.join(output,'manifest.json'),'utf8')).files:[];
+  const previous=(only||from)&&fs.existsSync(path.join(output,'manifest.json'))?JSON.parse(fs.readFileSync(path.join(output,'manifest.json'),'utf8')):null;
   const errors=[], manifest=previous?.files||[], views=previous?.views||[];
   page.on('pageerror', e=>errors.push(String(e)));
   await sheet.setContent('<html><body style="margin:0;background:white"></body></html>');
@@ -25,7 +38,8 @@ const clean = s => s.replace(/[<>:"/\\|?*\x00-\x1f]/g, '_').trim().slice(0, 55);
   }
   async function capture(panel, selections) {
     await page.evaluate(()=>document.querySelectorAll('[data-export-item]').forEach(n=>n.removeAttribute('data-export-item')));
-    const items=await page.evaluate(()=>[...document.querySelectorAll('.plot,.map-stage,.covariance,.coefficients')].filter(n=>n.getClientRects().length&&!n.closest('[hidden]')).map((n,i)=>{n.dataset.exportItem=i;const c=echarts.getInstanceByDom(n);return {id:i,chart:!!c,title:c?(c.getOption().title||[]).map(t=>t.text).filter(Boolean).join(' '):n.className};}));
+    await page.evaluate(()=>document.querySelectorAll('.coefficients .score-table-wrap').forEach(n=>{n.style.maxHeight='none';n.style.overflow='visible';}));
+    const items=await page.evaluate(()=>[...document.querySelectorAll('.plot,.map-stage,.covariance,.coefficients,.shap-gallery:not(:has(.shap-triptych))>.shap-figure,.shap-gallery:has(.shap-triptych)')].filter(n=>n.getClientRects().length&&!n.closest('[hidden]')).map((n,i)=>{n.dataset.exportItem=i;const c=echarts.getInstanceByDom(n);return {id:i,chart:!!c,title:c?(c.getOption().title||[]).map(t=>t.text).filter(Boolean).join(' '):n.classList.contains('shap-figure')?n.querySelector('img').alt:n.className};}));
     if(!views.some(v=>v.panel===panel.title&&JSON.stringify(v.tabs)===JSON.stringify(selections)))views.push({panel:panel.title,tabs:selections,charts:items.length});
     for (const item of items) {
       const locator=page.locator(`[data-export-item="${item.id}"]`);
@@ -33,9 +47,11 @@ const clean = s => s.replace(/[<>:"/\\|?*\x00-\x1f]/g, '_').trim().slice(0, 55);
         const scope=n.closest('.case-scatter')||n.parentElement;
         const c=echarts.getInstanceByDom(n);
         if(c && !c.getOption().textStyle.fontFamily.startsWith('SimSun'))throw new Error('Chart font is not SimSun');
-        return {note:document.querySelector('.readme').textContent,captions:[...scope.querySelectorAll('.caption')].map(n=>n.textContent),legend:(scope.querySelector('.case-legend')||document.querySelector('.heat-legend'))?.outerHTML||''};
+        const sourceLegend=scope.querySelector('.case-legend')||document.querySelector('.heat-legend'),legend=sourceLegend?.cloneNode(true);
+        if(legend)sourceLegend.querySelectorAll('.heat-gradient,.correlation-gradient').forEach((source,i)=>{const target=legend.querySelectorAll('.heat-gradient,.correlation-gradient')[i];target.style.cssText='display:inline-block;width:260px;height:16px;vertical-align:middle;background:'+getComputedStyle(source).backgroundImage;target.className='export-gradient';});
+        return {note:document.querySelector('.readme').textContent,captions:[...scope.querySelectorAll('.caption')].map(n=>n.textContent),legend:legend?.outerHTML||''};
       });
-      let image;
+      let image,coefficientPNG;
       if(item.chart) image=await locator.evaluate(n=>{
         const c=echarts.getInstanceByDom(n),w=c.getWidth(),h=c.getHeight();
         c.setOption({animation:false,toolbox:{show:false}});
@@ -54,32 +70,45 @@ const clean = s => s.replace(/[<>:"/\\|?*\x00-\x1f]/g, '_').trim().slice(0, 55);
         const cells=[...document.querySelectorAll('.cov-cell')];
         d.fields.forEach((field,y)=>{
           ctx.fillStyle='#292929';ctx.textAlign='right';ctx.textBaseline='middle';ctx.fillText(field.label,left-12,top+(y+.5)*cellH,left-20);
-          ys.forEach((key,x)=>{const r=d.correlations.find(r=>r.x===field.key&&r.y===key);ctx.fillStyle=getComputedStyle(cells[y*ys.length+x]).backgroundColor;ctx.fillRect(left+x*cellW,top+y*cellH,cellW-1,cellH-1);ctx.fillStyle='#292929';ctx.textAlign='center';ctx.fillText(Number.isFinite(r.rho)?r.rho.toFixed(2)+(r.p<.001?'***':r.p<.01?'**':r.p<.05?'*':''):'—',left+(x+.5)*cellW,top+(y+.5)*cellH);});
+          ys.forEach((key,x)=>{const r=d.correlations.find(r=>r.x===field.key&&r.y===key);ctx.fillStyle=getComputedStyle(cells[y*ys.length+x]).backgroundColor;ctx.fillRect(left+x*cellW,top+y*cellH,cellW-1,cellH-1);ctx.fillStyle=getComputedStyle(cells[y*ys.length+x]).color;ctx.textAlign='center';ctx.fillText(Number.isFinite(r.rho)?r.rho.toFixed(2)+(r.p<.001?'***':r.p<.01?'**':r.p<.05?'*':''):'—',left+(x+.5)*cellW,top+(y+.5)*cellH);});
         });
         d.fields.forEach((field,y)=>ys.forEach((key,x)=>{const r=d.correlations.find(r=>r.x===field.key&&r.y===key);if(Number.isFinite(r.p)&&r.p<.05){ctx.strokeStyle='#000';ctx.lineWidth=1.5;ctx.strokeRect(left+x*cellW+1,top+y*cellH+1,cellW-3,cellH-3);}}));
         return canvas.toDataURL('image/png');
       });
+      else if(item.title==='coefficients') {
+        const source=await locator.locator('.coefficient-image').evaluate(img=>img.src);
+        image='data:image/png;base64,'+fs.readFileSync(fileURLToPath(source)).toString('base64');
+      }
       else {
         await locator.locator('img').evaluateAll(async imgs=>{await Promise.all(imgs.map(i=>i.decode()))});
+        await locator.locator('.shap-side').evaluateAll(notes=>{
+          for(const note of notes)if(note.scrollHeight>note.clientHeight+1)throw new Error('SHAP side caption clipped');
+        });
         await page.addStyleTag({content:'.dom-chart-download{visibility:hidden!important}'});
-        image='data:image/png;base64,'+(await locator.screenshot({animations:'disabled'})).toString('base64');
+        const png=await screenshotTiled(page,locator);
+        if(item.title==='coefficients')coefficientPNG=png;
+        else image='data:image/png;base64,'+png.toString('base64');
       }
       const heading=[panel.title,...selections,item.title].filter(Boolean).join(' / ');
       await sheet.evaluate(async ({image,heading,meta})=>{
         document.body.replaceChildren();
         const box=document.createElement('article');box.id='export';box.style.cssText='width:1600px;padding:30px;box-sizing:border-box;background:white;color:#292929;font:18px/1.65 SimSun,serif;';
         const title=document.createElement('div');title.textContent=heading;title.style.cssText='font-size:23px;margin-bottom:18px';box.append(title);
-        if(meta.legend){const legend=document.createElement('div');legend.innerHTML=meta.legend;legend.style.marginBottom='12px';legend.querySelectorAll('.case-legend-item').forEach(n=>n.style.cssText='display:inline-flex;align-items:center;gap:8px;margin-right:24px');legend.querySelectorAll('.case-legend-dot').forEach(n=>{n.style.display='inline-block';n.style.width='12px';n.style.height='12px';n.style.borderRadius='50%'});legend.querySelectorAll('.heat-gradient').forEach(n=>n.style.cssText='display:inline-block;width:180px;height:14px;background:linear-gradient(90deg,#2166ac,#67a9cf,#f7f7f7,#f4a582,#b2182b)');box.append(legend);}
-        const img=new Image();img.src=image;img.style.cssText='display:block;width:100%;height:auto';box.append(img);
+        if(meta.legend){const legend=document.createElement('div');legend.innerHTML=meta.legend;legend.style.marginBottom='12px';legend.querySelectorAll('.case-legend-item').forEach(n=>n.style.cssText='display:inline-flex;align-items:center;gap:8px;margin-right:24px');legend.querySelectorAll('.case-legend-dot').forEach(n=>{n.style.display='inline-block';n.style.width='12px';n.style.height='12px';n.style.borderRadius='80%'});legend.querySelectorAll('.heat-gradient').forEach(n=>n.style.cssText='display:inline-block;width:180px;height:14px;background:linear-gradient(90deg, #2166ac, #67a9cf, #f7f7f7, #f4a582, #b2182b)');box.append(legend);}
+        let img;if(image){img=new Image();img.src=image;img.style.cssText='display:block;width:100%;height:auto';box.append(img);}
         const note=document.createElement('div');note.textContent=[...new Set([...meta.captions,meta.note].filter(Boolean))].join('\n\n');note.style.cssText='white-space:pre-line;margin-top:20px;font:18px/1.65 SimSun,serif';box.append(note);
-        document.body.append(box);await img.decode();await document.fonts.ready;
+        document.body.append(box);if(img)await img.decode();await document.fonts.ready;
       },{image,heading,meta});
       const dir=clean(panel.title);fs.mkdirSync(path.join(output,dir),{recursive:true});
-      const filename=String(manifest.length+1).padStart(3,'0')+'_'+clean(selections.join('_')||'图表')+'_'+clean(item.title||String(item.id+1))+'.png';
+      const filename=String(manifest.length+1).padStart(3,'0')+'_'+clean(selections.join('_')||'图表')+'_'+clean((item.title||String(item.id+1)).replace(/\.png$/i,''))+'.png';
       const existing=manifest.find(m=>m.panel===panel.title&&m.title===item.title&&JSON.stringify(m.tabs)===JSON.stringify(selections));
       const relative=existing?.file||path.join(dir,filename);
-      const png=await sheet.locator('#export').screenshot();
-      await sharp(png).withMetadata({density:300}).toFile(path.join(output,relative));
+      let png=await screenshotTiled(sheet,sheet.locator('#export'));
+      if(coefficientPNG){
+        const header=await sharp(png).metadata(),body=await sharp(coefficientPNG,{limitInputPixels:false}).resize({width:header.width}).png().toBuffer(),bodyMeta=await sharp(body,{limitInputPixels:false}).metadata();
+        png=await sharp({create:{width:header.width,height:header.height+bodyMeta.height,channels:4,background:'#fff'},limitInputPixels:false}).composite([{input:png,left:0,top:0},{input:body,left:0,top:header.height}]).png().toBuffer();
+      }
+      await sharp(png,{limitInputPixels:false}).withMetadata({density:300}).toFile(path.join(output,relative));
       if(!existing)manifest.push({file:relative,panel:panel.title,tabs:selections,title:item.title});
       fs.writeFileSync(path.join(output,'manifest.json'),JSON.stringify({images:manifest.length,dpi:300,views,files:manifest,errors},null,2));
     }
@@ -95,14 +124,15 @@ const clean = s => s.replace(/[<>:"/\\|?*\x00-\x1f]/g, '_').trim().slice(0, 55);
     }
   }
   try {
-    for(const panel of panels.filter(p=>!only||p.title.startsWith(only))){
+    for(const panel of panels.filter(p=>(!only||p.title.startsWith(only))&&(!from||p.title.slice(0,2)>=from))){
       await page.goto(panel.url);await page.evaluate(()=>document.fonts.ready);
       await walk(panel,0,[]);
       console.log(panel.title+': '+manifest.filter(m=>m.panel===panel.title).length+' PNG');
     }
     fs.writeFileSync(path.join(output,'manifest.json'),JSON.stringify({images:manifest.length,dpi:300,views,files:manifest,errors},null,2));
-    fs.writeFileSync(path.join(output,'README.txt'),`宏观数据分析图表导出\n共 ${manifest.length} 张 PNG；${views.length} 个选项卡/道路视图。\n字体：宋体 SimSun；白底，宽 3200 像素，含图例与说明。\n按宏观目录的8个板块分文件夹；包括所有主选项卡、二级选项卡、道路展开及案例横轴选项。\n保留网页默认指标显示状态和默认回归条带参数；缺失数据提示原样保留。\n完整选项卡及文件对应关系见 manifest.json。\n重新导出：node scripts/export_macro_png.cjs\n`);
+    fs.writeFileSync(path.join(output,'README.txt'),`宏观数据分析图表导出\n共 ${manifest.length} 张 PNG；${views.length} 个选项卡/道路视图。\n字体：宋体 SimSun；白底，300 dpi，常规组合图宽 5000 像素，含图例与说明。\n按宏观目录的8个板块分文件夹；包括所有主选项卡、二级选项卡、道路展开及SHAP图注组合图。\n保留网页默认指标显示状态和默认回归条带参数；缺失数据提示原样保留。\n完整选项卡及文件对应关系见 manifest.json。\n重新导出：node scripts/export_macro_png.cjs\n`);
     if(errors.length)throw new Error(errors.join('\n'));
+    if(!only){const current=new Set(manifest.map(m=>path.resolve(output,m.file)));for(const old of oldFiles){const file=path.resolve(output,old.file);if(file.startsWith(output+path.sep)&&file.endsWith('.png')&&!current.has(file)&&fs.existsSync(file))fs.unlinkSync(file);}}
     console.log(`Exported ${manifest.length} PNGs from ${views.length} views.`);
   }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1});
