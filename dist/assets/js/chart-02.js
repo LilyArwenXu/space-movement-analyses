@@ -28,8 +28,7 @@ function chart(parent=W,height=520){const n=el('div','plot',parent);n.style.heig
   const darken=style=>{if(style&&['#72a9bc','#0071ee','#4d74a0','#607e95','#a8c3d6'].includes(String(style.color).toLowerCase())){style.color='#064b86';style.opacity=Math.max(.75,style.opacity??1);}};
   ([].concat(option.series||[])).forEach(s=>{
    if(s.type==='scatter'){darken(s.itemStyle);darken(s.emphasis?.itemStyle);(s.data||[]).forEach(p=>darken(p?.itemStyle));}
-   if(s.type==='line'&&s.name==='回归线'){s.lineStyle={...s.lineStyle,color:'#000',opacity:1};s.emphasis={...s.emphasis,lineStyle:{...s.emphasis?.lineStyle,color:'#000',opacity:1}};}
-   if(s.type==='line'&&String(s.id||'').startsWith('road-fit-')){s.lineStyle={...s.lineStyle,color:'#000',opacity:.72};s.emphasis={...s.emphasis,lineStyle:{...s.emphasis?.lineStyle,color:'#000',opacity:1}};}
+   if(s.type==='line'&&(s.name==='回归线'||String(s.id||'').startsWith('road-fit-'))){s.lineStyle={...s.lineStyle,color:'#000',opacity:1};s.emphasis={...s.emphasis,lineStyle:{...s.emphasis?.lineStyle,color:'#000',opacity:1}};}
   });
   return setOption(option,...args);
  };
@@ -43,7 +42,7 @@ function scatter(parent,xkey,ykey,title){const c=chart(parent),o=base(),series=[
  const f=regression(all);if(f){series.push({name:'回归线',type:'line',data:[[f.min,f.a+f.b*f.min],[f.max,f.a+f.b*f.max]],symbol:'none',silent:true,lineStyle:{color:'#292929',opacity:.18,type:f.r2>=.5?'solid':'dashed'}});o.graphic=[{type:'text',right:18,bottom:8,style:{text:`y=${fmt(f.b)}x+${fmt(f.a)}\nR²=${fmt(f.r2)} · n=${f.n}`,fill:'#4B4B4B',font:'12px '+FONT,lineHeight:17,textAlign:'right'}}];}
  o.series=series;o.tooltip.formatter=p=>p.seriesType==='scatter'?`${esc(p.data[2])}<br>${esc(D.headers[xkey])}：${fmt(p.data[0])}<br>${esc(D.headers[ykey])}：${fmt(p.data[1])}`:'';c.setOption(o);c.on('mouseover',p=>{if(p.seriesType==='scatter')highlight(p.seriesName)});c.on('globalout',()=>highlight(null));}
 
-function mapView(mode){note(mode===0?'选择活动查看原点位人数；圈越大人数越多，悬停时同一道路同时变实。\n圆半径 r=3+22×√(该点人数/当前指标最大人数)；按底图宽高的百分比定位。\n活动人数读取总表对应人数列；缺失观测仅在此地图按0显示。':'灰色表示人数少，橙色表示人数多；色块叠加展示人群在底图上的集中区域。\n权重 w=该点行人样本数/全域最大行人样本数。\n热度 h(x,y)=Σ[w_i×exp(−距离²/(2×σ²))]，σ=底图宽度的0.9%，以原始点位坐标为中心，核半径截断为3σ，栅格宽1400像素；热度按全图最大值归一化，缺失人数仅在此地图按0处理。');
+function mapView(mode){note(mode===0?'选择活动查看原点位人数；圈越大人数越多，悬停时同一道路同时变实。\n圆半径 r=3+22×√(该点人数/当前指标最大人数)；按底图宽高的百分比定位。\n活动人数读取总表对应人数列；缺失观测仅在此地图按0显示。':'灰色表示人数少，橙色表示人数多；色块叠加展示人群在底图上的集中区域。\n权重 w=该点行人样本数/全域最大行人样本数。\n热度 h(x,y)=Σ[w_i×exp(−距离²/(2×σ²))]，σ=底图宽度的0.9%，以原始点位坐标为中心，核半径截断为3σ；热度按全图最大值归一化，缺失人数仅在此地图按0处理。');
  const tools=el('div','map-tools');let selected='AU';const pick=el('select','',tools);['AU','AV','AX','AY','BA','BB'].forEach(k=>{const option=el('option','',pick);option.value=k;option.textContent=D.headers[k]});if(mode===1)pick.hidden=true;
  const stage=el('div','map-stage'),img=el('img','',stage);img.src='../assets/data/map.jpg';img.alt='衡复风貌区调研底图';
  const NS='http://www.w3.org/2000/svg',svg=document.createElementNS(NS,'svg');svg.setAttribute('viewBox','0 0 1000 706.38');svg.setAttribute('role','img');svg.setAttribute('aria-label',mode?'行人样本数热力分布':'活动样本数地图');stage.append(svg);
@@ -51,7 +50,7 @@ function mapView(mode){note(mode===0?'选择活动查看原点位人数；圈越
  function hover(ev,p,key){tip.innerHTML=esc(p.address)+'<br>'+esc(D.headers[key])+'：'+fmt(p.values[key]??0,0);tip.hidden=false;tip.style.left=Math.min(ev.clientX+12,window.innerWidth-280)+'px';tip.style.top=Math.max(10,Math.min(ev.clientY+12,window.innerHeight-100))+'px';}
  function draw(){svg.replaceChildren();const key=mode?'AH':selected,max=Math.max(1,...D.points.map(p=>p.values[key]||0));
   if(mode){
-   const width=1400,height=Math.round(width*.70638),sigma=width*.009;
+   const width=1400,height=Math.round(width*.70638),sigma=width*.100;
    const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;
    const ctx=canvas.getContext('2d'),values=new Float32Array(width*height);let peak=0;
    D.points.forEach(p=>{
@@ -295,14 +294,13 @@ function compositionColor(k,count){
 function coefficient(kind){
  const letter={mix:'M',quality:'Q',vitality:'V'}[kind],box=el('section','coefficients'),img=el('img','coefficient-image',box);img.src='../assets/data/coefficients/'+letter+'.png';img.alt=letter+' 系数表征';
  const defs=kind==='mix'?[['w1','年龄混合度',.149],['w2','活动丰富度',.141],['w3','姿态丰富度',.250],['w4','社交状态混合度',.228],['w5','身份倾向混合度',.233]]:D.scoreWeights[kind].map((d,i)=>[(kind==='quality'?'x':'y')+(i+1),d[1],d[2]]);
- NOTE.replaceChildren();NOTE.hidden=false;el('details','critic-method',NOTE).innerHTML="<summary>Critic权重算法</summary>\n<h3>1. 对比强度</h3><p class=\"formula\">S_j = √ [ (1/(n-1)) × Σ(x_ij - x̄_j)² ]</p>\n<p>x_ij 是第i个样本第j个指标的值，x̄_j 是第j个指标的均值。\nΣ是对i从1到n求和。</p>\n<p>标准差越大，说明这个指标越能区分不同样本，越重要。</p>\n<h3>2. 冲突性</h3><p class=\"formula\">R_j = Σ (1 - |r_jk|)</p>\n<p>其中 r_jk 是第j个指标和第k个指标的皮尔逊相关系数，|r_jk| 是取绝对值。\nΣ是对k从1到m求和。\n当k=j时，自己跟自己的相关系数是1，1减1等于0，所以自己那一项自动为0。</p>\n<p>R_j越大，说明这个指标跟别人越不相关，提供的信息越独特。</p>\n<h3>3. 综合信息量及权重</h3><p class=\"formula\">C_j = S_j × R_j</p><p class=\"formula\">w_j = C_j / ΣC_j</p>\n<p>其中ΣC_j是对所有指标的C_j求和。</p>";
+ el('details','critic-method',box).innerHTML="<summary>Critic权重算法</summary>\n<h3>1. 对比强度</h3><p class=\"formula\">S_j = √ [ (1/(n-1)) × Σ(x_ij - x̄_j)² ]</p>\n<p>x_ij 是第i个样本第j个指标的值，x̄_j 是第j个指标的均值。\nΣ是对i从1到n求和。</p>\n<p>标准差越大，说明这个指标越能区分不同样本，越重要。</p>\n<h3>2. 冲突性</h3><p class=\"formula\">R_j = Σ (1 - |r_jk|)</p>\n<p>其中 r_jk 是第j个指标和第k个指标的皮尔逊相关系数，|r_jk| 是取绝对值。\nΣ是对k从1到m求和。\n当k=j时，自己跟自己的相关系数是1，1减1等于0，所以自己那一项自动为0。</p>\n<p>R_j越大，说明这个指标跟别人越不相关，提供的信息越独特。</p>\n<h3>3. 综合信息量及权重</h3><p class=\"formula\">C_j = S_j × R_j</p><p class=\"formula\">w_j = C_j / ΣC_j</p>\n<p>其中ΣC_j是对所有指标的C_j求和。</p>";
  const lower=el('div','coefficient-tables',box),left=el('section','',lower),right=el('section','',lower);
  const table=el('table','coefficient-table',left);table.innerHTML='<thead><tr><th>指标</th><th>系数</th><th>权重</th></tr></thead><tbody>'+defs.map(d=>'<tr><td>'+d[1]+'</td><td>'+d[0]+'</td><td>'+d[2].toFixed(3)+'</td></tr>').join('')+'</tbody>';
  if(kind==='mix')el('p','coefficient-conclusion',left).textContent="进一步结合指标相关性与CRITIC权重分析可见，姿态丰富度与身份倾向混合度对街区综合混合度的贡献最为突出。\n其中活动丰富度与社交状态混合度呈现较强的相关性，说明行人的行为活动与社交行为存在明显的耦合关系。\n而年龄混合度权重相对较低，对整体混合度的解释力有限。\n由此可以推测，街道空间能否容纳多样化的身体姿态行为、能否吸引多元身份人群到访，是提升街区混合度的核心驱动要素。";
  const label={mix:'混合度',quality:'界面品质',vitality:'活力度'}[kind],key=kind==='mix'?'mixScore':kind;el('h2','section-heading',right).textContent=label+'总表';
  const wrap=el('div','score-table-wrap',right),scores=el('table','coefficient-table score-table',wrap);scores.innerHTML='<thead><tr><th>地址</th><th>'+label+'</th></tr></thead><tbody>'+D.points.map(p=>'<tr><td>'+esc(p.address)+'</td><td>'+fmt(p[key],6)+'</td></tr>').join('')+'</tbody>';
- const caption=el('p','readme coefficient-caption',box);img.after(caption);
- caption.textContent=kind==='mix'?String("第d维混合度 H_d=−Σ(p_k×ln p_k)/ln K_d；p_k=类别频数/该维频数合计，0×ln0记0。\n零合计或缺失不评分。\n综合混合度 M=0.149H年龄+0.141H活动+0.250H身份倾向+0.228H姿态+0.233H社交状态。\n权重按给定公式顺序使用，不二次归一化。\n权重说明保留给定w1–w5名称；综合混合度（综合评分）按指定M公式的维度顺序代入。").replace(/。\s*/g,'。\n').trim():kind==='quality'?"各底层指标 标准化值 z=(x−全域最小值)/(全域最大值−全域最小值)，常量记0；缺失则综合评分缺失。\n界面品质 Q=Σ(x×z)，采用系数表征的指定权重系数x。\n有效停留面积 0.068；可承载停留人数 0.078；消费型停留空间占比 0.167；遮荫率 0.112；声环境舒适度 0.069；气味环境 0.058；视觉丰富度 0.095；历史感知度 0.099；路面状态 0.077；界面开放度 0.094；临界互动性 0.084":"各底层指标 标准化值 z=(x−全域最小值)/(全域最大值−全域最小值)，常量记0；缺失则综合评分缺失。\n空间活力度V=Σ(y×z)，采用系数表征的指定权重系数y。\n人数 0.194；行人集群数 0.144；停留密度 0.205；聚集比例 0.456";
+ note(kind==='mix'?"第d维混合度 H_d=−Σ(p_k×ln p_k)/ln K_d；p_k=类别频数/该维频数合计，0×ln0记0。\n零合计或缺失不评分。\n综合混合度 M=0.149H年龄+0.141H活动+0.250H身份倾向+0.228H姿态+0.233H社交状态。\n权重按给定公式顺序使用，不二次归一化。\n权重说明保留给定w1–w5名称；综合混合度（综合评分）按指定M公式的维度顺序代入。":SFORM+'\n'+D.scoreWeights[kind].map(d=>d[1]+' '+d[2].toFixed(3)).join('；'));
 }
 function dimensionBars(i){
  const d=D.mixDimensions[i],points=D.points,c=chart(W,Math.max(650,points.length*28+140)),o=base();
@@ -350,24 +348,184 @@ function matrixWithAxes(){
  const legend=el('div','heat-legend correlation-legend');legend.innerHTML='负相关 −1 <span class="correlation-gradient"></span> 正相关 +1';
  el('p','caption').textContent='横坐标：'+ys.map(k=>D.ys[k]).join('、')+'。纵坐标：'+D.fields.map(f=>f.label).join('、')+'。黑色实线方框表示 p<0.05，保留 * / ** / ***。';
 }
-function shapAnalysis(label){
+function shapAnalysis(){
+ /*
+  * 三个“不配得性分析”页面不再根据
+  * “高XX低XX / 低XX高XX”切换图片。
+  *
+  * 根据当前 PAGE，直接选择固定的 SHAP 图片文件夹。
+  *
+  * qualityVitality → 不配得性Ⅰ
+  * qualityMix      → 不配得性Ⅱ
+  * mismatch        → 不配得性Ⅲ
+  */
+
  const content=window.SHAP_CAPTIONS;
- el('h2','section-heading').textContent=label;
+
+ // -------------------------------------------------
+ // 1. 根据当前页面决定图片文件夹
+ // -------------------------------------------------
+ const folderMap={
+  qualityVitality:'活力度界面品质',
+  qualityMix:'混合度界面品质',
+  mismatch:'活力度混合度'
+ };
+
+ // -------------------------------------------------
+// 三个不配得性页面的文字内容
+//
+// 每个页面有三组文字，分别对应：
+// 1.png
+// 2.png
+// 3.png
+//
+// description = 上方正文
+// conclusion  = 下方结论
+// -------------------------------------------------
+const textMap={
+
+ qualityVitality:[
+  {
+   description:'这里填写不配得性Ⅰ第一张图片旁边的正文。',
+   conclusion:'这里填写不配得性Ⅰ第一张图片旁边的结论。'
+  },
+  {
+   description:'这里填写不配得性Ⅰ第二张图片旁边的正文。',
+   conclusion:'这里填写不配得性Ⅰ第二张图片旁边的结论。'
+  },
+  {
+   description:'这里填写不配得性Ⅰ第三张图片旁边的正文。',
+   conclusion:'这里填写不配得性Ⅰ第三张图片旁边的结论。'
+  }
+ ],
+
+ qualityMix:[
+  {
+   description:'这里填写不配得性Ⅱ第一张图片旁边的正文。',
+   conclusion:'这里填写不配得性Ⅱ第一张图片旁边的结论。'
+  },
+  {
+   description:'这里填写不配得性Ⅱ第二张图片旁边的正文。',
+   conclusion:'这里填写不配得性Ⅱ第二张图片旁边的结论。'
+  },
+  {
+   description:'这里填写不配得性Ⅱ第三张图片旁边的正文。',
+   conclusion:'这里填写不配得性Ⅱ第三张图片旁边的结论。'
+  }
+ ],
+
+ mismatch:[
+  {
+   description:'这里填写不配得性Ⅲ第一张图片旁边的正文。',
+   conclusion:'这里填写不配得性Ⅲ第一张图片旁边的结论。'
+  },
+  {
+   description:'这里填写不配得性Ⅲ第二张图片旁边的正文。',
+   conclusion:'这里填写不配得性Ⅲ第二张图片旁边的结论。'
+  },
+  {
+   description:'这里填写不配得性Ⅲ第三张图片旁边的正文。',
+   conclusion:'这里填写不配得性Ⅲ第三张图片旁边的结论。'
+  }
+ ]
+
+};
+
+ const folder=folderMap[PAGE];
+
+ /*
+  * 理论上本函数只会在三个不配得性页面中调用。
+  * 如果以后代码结构改变，这里可以避免出现错误路径。
+  */
+ if(!folder){
+  note('当前页面没有配置不配得性分析图片。');
+  return;
+ }
+
+ // -------------------------------------------------
+ // 2. 保留原来的标题位置(已经不要啦！)
+ // -------------------------------------------------
+ 
+
+ // -------------------------------------------------
+ // 3. 保留原来的图片 + 右侧文字整体布局
+ // -------------------------------------------------
  const gallery=el('section','shap-gallery');
- const lines=s=>s.replace(/([；;。])\s*/g,'$1\n').trim();
+
+ /*
+  * 保留原来的文字换行规则。
+  */
+ const lines=s=>String(s||'')
+  .replace(/([；;。])\s*/g,'$1\n')
+  .trim();
+
+ // -------------------------------------------------
+ // 4. 固定加载 1.png / 2.png / 3.png
+ // -------------------------------------------------
  [1,2,3].forEach((number,index)=>{
-  const figure=el('figure','shap-figure',gallery),row=el('div','shap-row',figure),img=el('img','shap-image',row);
-  img.src='../assets/data/shap/'+label+'/'+number+'.png?v='+content.assetVersion;img.alt=label+' · '+number+'.png';
+
+  // 每一行仍然使用：
+  // 左侧图片 + 右侧文字
+  const figure=el('figure','shap-figure',gallery);
+  const row=el('div','shap-row',figure);
+
+  // 图片
+  const img=el('img','shap-image',row);
+
+  /*
+   * 最终浏览器路径：
+   *
+   * ../assets/data/shap/活力度界面品质/1.png
+   * ../assets/data/shap/活力度界面品质/2.png
+   * ../assets/data/shap/活力度界面品质/3.png
+   *
+   * 等。
+   *
+   * regression_revision.py 的 pages() 会自动把
+   * result/shap 整个复制到 aerial/assets/data/shap，
+   * 所以不需要手工复制图片。
+   */
+  img.src=
+   '../assets/data/shap/'
+   +folder
+   +'/'
+   +number
+   +'.png?v='
+   +content.assetVersion;
+
+  img.alt=folder+' · '+number+'.png';
+
+  // -------------------------------------------------
+  // 5. 右侧文字区域
+  // -------------------------------------------------
   const side=el('aside','shap-side',row);
-  el('p','shap-description',side).textContent=lines(content.descriptionOverrides?.[label]?.[index]||content.descriptions[index]);
-  el('p','shap-conclusion',side).textContent=lines(content.groups[label][index]);
+
+  /*
+   * 你目前还没有准备新的文字，
+   * 所以这里暂时继续沿用原来的文字数据。
+   *
+   * 为了避免删除“高低类型切换”之后旧 label 不存在，
+   * 这里按照当前页面寻找一组已有文字作为临时内容。
+   */
+
+  // 当前图片对应的文字
+const text=textMap[PAGE][index];
+
+// 第一段正文
+el('p','shap-description',side).textContent=
+ lines(text.description);
+
+// 第二段结论
+el('p','shap-conclusion',side).textContent=
+ lines(text.conclusion);
  });
+
  note('');
 }
 function mismatchView(i){
  const config={qualityVitality:['quality','vitality','界面品质','活力度','界面品质的底层指标组合','活力度的底层指标'],qualityMix:['quality','mixScore','界面品质','混合度','界面品质的底层指标组合','混合度的底层指标'],mismatch:['vitality','mixScore','活力度','混合度','活力度的底层指标组合','混合度的底层指标']}[PAGE], [x,y,xlabel,ylabel,first,second]=config;
  const labels=PAGE==='mismatch'?['高混合度低活力度','高活力度低混合度']:['高'+xlabel+'低'+ylabel,'高'+ylabel+'低'+xlabel],mx=D.scoreMeans[x],my=D.scoreMeans[y];
- if(i){sectionTabs(labels,j=>shapAnalysis(labels[j]));return;}
+ if(i){shapAnalysis();return;}
  const c=chart(W,610),o=base();delete o.legend;o.grid={left:75,right:55,top:45,bottom:65};
  o.xAxis={...axis(xlabel),scale:true,axisLine:{show:false},axisTick:{show:false},splitLine:{show:false}};o.yAxis={...axis(ylabel),scale:true,axisLine:{show:false},axisTick:{show:false},splitLine:{show:false}};
  const pts=D.points.filter(p=>finite(p[x])&&finite(p[y]));o.series=[{type:'scatter',id:'nodes',data:pts.map(p=>({value:[p[x],p[y],p.address,p.id],itemStyle:{color:p.mismatchGroups[PAGE]===labels[0]?'#0071ee':p.mismatchGroups[PAGE]===labels[1]?'#c90097':'#9094c1',opacity:p.mismatchGroups[PAGE]?.85:.4}})),symbolSize:9,z:5,emphasis:{scale:1.6},markLine:{silent:true,symbol:'none',label:{show:true,position:'insideEndTop',formatter:p=>p.data.name,color:'#000',backgroundColor:'#fff',padding:3},lineStyle:{color:'#000',type:'solid',width:1.5},data:[{xAxis:mx,name:xlabel+'均值 '+fmt(mx,4)},{yAxis:my,name:ylabel+'均值 '+fmt(my,4)}]}}];

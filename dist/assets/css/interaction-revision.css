@@ -12,13 +12,8 @@ body .metric-controls.axis-controls .metric-control .metric-toggle[data-phase="2
 .critic-method,.coefficient-conclusion,.mismatch-conclusion{font-family:SimSun,'Songti SC',serif;font-weight:400;line-height:1.9;white-space:pre-line}
 .critic-method{margin:28px 0 36px;padding:24px 0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;white-space:normal}
 .critic-method p{white-space:pre-line;margin:12px 0}.critic-method h2{font-size:23px;margin:0 0 24px}.critic-method h3{font-size:18px;margin:24px 0 12px}.critic-method .formula{overflow-wrap:anywhere}
-.readme .critic-method{margin:0;padding:0;border:0;font:inherit;color:inherit;line-height:inherit}
-.readme .critic-method h2,.readme .critic-method h3,.readme .critic-method p{margin:0;font:inherit;font-weight:inherit;line-height:inherit}
-.coefficient-caption{margin:14px 0 5em}
-.coefficient-tables>section:last-child>.section-heading{line-height:1.2}
-.coefficient-tables>section:first-child{padding-top:64.4px}
 .coefficient-conclusion{margin:24px 0}.mismatch-conclusion{margin:24px 0 32px}
 .mismatch-combined{width:100%;margin:12px 0 36px}.mismatch-combined h2{font-family:SimSun,'Songti SC',serif;font-size:22px;margin:24px 0 18px}
 .mismatch-triptych{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;align-items:start}.mismatch-triptych figure{margin:0;min-width:0}.mismatch-triptych img{display:block;width:100%;height:auto}
-@media(max-width:700px){.coefficient-tables>section:first-child{padding-top:0}}@media(max-width:650px){.mismatch-triptych{grid-template-columns:1fr;gap:18px}.critic-method{padding:20px 0}.readme .critic-method{padding:0}}
+@media(max-width:650px){.mismatch-triptych{grid-template-columns:1fr;gap:18px}.critic-method{padding:20px 0}}
 @media(prefers-reduced-motion:reduce){button,a.portal,[role="tab"],select,input{transition:none!important}}
