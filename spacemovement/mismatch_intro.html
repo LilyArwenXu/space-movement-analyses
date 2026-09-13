@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>什么是不配得性？｜Inclusive Vitality</title>
+<link rel="stylesheet" href="../assets/css/inclusive.css">
+<link rel="stylesheet" href="../assets/css/interface.css">
+<link rel="stylesheet" href="../assets/css/final-revision.css">
+<link rel="stylesheet" href="../assets/css/palette-revision.css">
+<link rel="stylesheet" href="../assets/css/interaction-revision.css">
+<link rel="stylesheet" href="../assets/css/regression-revision.css">
+</head>
+<body data-page="mismatchIntro">
+<header class="topbar unified-topbar">
+<a class="brand" href="../visualizations.html">← INCLUSIVE VITALITY</a>
+<h1 id="mismatch-intro-title">什么是不配得性？</h1>
+<span class="meta"></span>
+</header>
+<nav class="tabs" id="mismatch-intro-tabs" role="tablist" aria-label="不配得性介绍"></nav>
+<main class="workspace mismatch-intro-page">
+<section class="mismatch-intro-text" id="mismatch-intro-text"></section>
+</main>
+<script src="../assets/data/mismatch-content.js"></script>
+<script>
+(function(){
+ const content=(window.MISMATCH_CONTENT||{}).intro||{};
+ const title=document.getElementById('mismatch-intro-title');
+ const tabs=document.getElementById('mismatch-intro-tabs');
+ const text=document.getElementById('mismatch-intro-text');
+ title.textContent=content.title||'什么是不配得性？';
+
+ // Use the same tab controls for the introduction and its seven reading guides.
+ function makeTabs(nav,host,items,prefix){
+  function select(index){
+   render(items[index],host);
+   host.setAttribute('aria-labelledby',prefix+'-'+index);
+   Array.from(nav.children).forEach((button,i)=>{
+    button.classList.toggle('active',i===index);
+    button.setAttribute('aria-selected',String(i===index));
+    button.tabIndex=i===index?0:-1;
+   });
+  }
+  host.id=prefix+'-panel';
+  host.setAttribute('role','tabpanel');
+  items.forEach((item,index)=>{
+   const button=document.createElement('button');
+   button.type='button';
+   button.id=prefix+'-'+index;
+   button.textContent=item.title||('选项 '+(index+1));
+   button.setAttribute('role','tab');
+   button.setAttribute('aria-controls',host.id);
+   button.addEventListener('click',()=>select(index));
+   button.addEventListener('keydown',event=>{
+    let next=index;
+    if(event.key==='ArrowRight')next=(index+1)%items.length;
+    else if(event.key==='ArrowLeft')next=(index+items.length-1)%items.length;
+    else if(event.key==='Home')next=0;
+    else if(event.key==='End')next=items.length-1;
+    else return;
+    event.preventDefault();
+    select(next);
+    nav.children[next].focus();
+   });
+   nav.appendChild(button);
+  });
+  if(items.length)select(0);
+ }
+ function render(item,host){
+  host.replaceChildren();
+  if(item.image){
+   const image=document.createElement('img');
+   image.className='mismatch-intro-image';
+   image.src=item.image;
+   image.alt=item.imageAlt||item.title||'';
+   image.loading='lazy';
+   image.decoding='async';
+   host.appendChild(image);
+  }
+  if(item.tabs){
+   const nav=document.createElement('nav');
+   nav.className='subtabs';
+   nav.setAttribute('role','tablist');
+   nav.setAttribute('aria-label','读图类型');
+   const panel=document.createElement('section');
+   host.append(nav,panel);
+   makeTabs(nav,panel,item.tabs,'mismatch-reading');
+  }else{
+   if(item.heading){
+    const heading=document.createElement('h2');
+    heading.className='mini-heading';
+    heading.textContent=item.heading;
+    host.appendChild(heading);
+   }
+   const copy=document.createElement('div');
+   copy.className='mismatch-intro-copy';
+   copy.textContent=Array.isArray(item.text)?item.text.join('\n'):(item.text||'');
+   host.appendChild(copy);
+  }
+ }
+ makeTabs(tabs,text,content.tabs||[],'mismatch-intro');
+})();
+</script>
+</body>
+</html>

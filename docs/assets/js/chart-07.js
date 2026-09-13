@@ -349,178 +349,411 @@ function matrixWithAxes(){
  el('p','caption').textContent='横坐标：'+ys.map(k=>D.ys[k]).join('、')+'。纵坐标：'+D.fields.map(f=>f.label).join('、')+'。黑色实线方框表示 p<0.05，保留 * / ** / ***。';
 }
 function shapAnalysis(){
- /*
-  * 三个“不配得性分析”页面不再根据
-  * “高XX低XX / 低XX高XX”切换图片。
-  *
-  * 根据当前 PAGE，直接选择固定的 SHAP 图片文件夹。
-  *
-  * qualityVitality → 不配得性Ⅰ
-  * qualityMix      → 不配得性Ⅱ
-  * mismatch        → 不配得性Ⅲ
-  */
 
- const content=window.SHAP_CAPTIONS;
+ const all=window.MISMATCH_CONTENT;
 
- // -------------------------------------------------
- // 1. 根据当前页面决定图片文件夹
- // -------------------------------------------------
- const folderMap={
-  qualityVitality:'活力度界面品质',
-  qualityMix:'混合度界面品质',
-  mismatch:'活力度混合度'
- };
-
- // -------------------------------------------------
-// 三个不配得性页面的文字内容
-//
-// 每个页面有三组文字，分别对应：
-// 1.png
-// 2.png
-// 3.png
-//
-// description = 上方正文
-// conclusion  = 下方结论
-// -------------------------------------------------
-const textMap={
-
- qualityVitality:[
-  {
-   description:'这里填写不配得性Ⅰ第一张图片旁边的正文。',
-   conclusion:'这里填写不配得性Ⅰ第一张图片旁边的结论。'
-  },
-  {
-   description:'这里填写不配得性Ⅰ第二张图片旁边的正文。',
-   conclusion:'这里填写不配得性Ⅰ第二张图片旁边的结论。'
-  },
-  {
-   description:'这里填写不配得性Ⅰ第三张图片旁边的正文。',
-   conclusion:'这里填写不配得性Ⅰ第三张图片旁边的结论。'
-  }
- ],
-
- qualityMix:[
-  {
-   description:'这里填写不配得性Ⅱ第一张图片旁边的正文。',
-   conclusion:'这里填写不配得性Ⅱ第一张图片旁边的结论。'
-  },
-  {
-   description:'这里填写不配得性Ⅱ第二张图片旁边的正文。',
-   conclusion:'这里填写不配得性Ⅱ第二张图片旁边的结论。'
-  },
-  {
-   description:'这里填写不配得性Ⅱ第三张图片旁边的正文。',
-   conclusion:'这里填写不配得性Ⅱ第三张图片旁边的结论。'
-  }
- ],
-
- mismatch:[
-  {
-   description:'这里填写不配得性Ⅲ第一张图片旁边的正文。',
-   conclusion:'这里填写不配得性Ⅲ第一张图片旁边的结论。'
-  },
-  {
-   description:'这里填写不配得性Ⅲ第二张图片旁边的正文。',
-   conclusion:'这里填写不配得性Ⅲ第二张图片旁边的结论。'
-  },
-  {
-   description:'这里填写不配得性Ⅲ第三张图片旁边的正文。',
-   conclusion:'这里填写不配得性Ⅲ第三张图片旁边的结论。'
-  }
- ]
-
-};
-
- const folder=folderMap[PAGE];
-
- /*
-  * 理论上本函数只会在三个不配得性页面中调用。
-  * 如果以后代码结构改变，这里可以避免出现错误路径。
-  */
- if(!folder){
-  note('当前页面没有配置不配得性分析图片。');
+ if(!all || !all.analysis){
+  note('未找到不配得性内容配置。');
   return;
  }
 
- // -------------------------------------------------
- // 2. 保留原来的标题位置(已经不要啦！)
- // -------------------------------------------------
- 
+ const config=all.analysis[PAGE];
 
- // -------------------------------------------------
- // 3. 保留原来的图片 + 右侧文字整体布局
- // -------------------------------------------------
- const gallery=el('section','shap-gallery');
+ if(!config){
+  note('当前页面没有配置不配得性分析内容。');
+  return;
+ }
+
 
  /*
-  * 保留原来的文字换行规则。
+  * ==========================================================
+  * 整个图片区
+  * ==========================================================
   */
- const lines=s=>String(s||'')
-  .replace(/([；;。])\s*/g,'$1\n')
-  .trim();
 
- // -------------------------------------------------
- // 4. 固定加载 1.png / 2.png / 3.png
- // -------------------------------------------------
- [1,2,3].forEach((number,index)=>{
+ const gallery=el(
+  'section',
+  'shap-gallery'
+ );
 
-  // 每一行仍然使用：
-  // 左侧图片 + 右侧文字
-  const figure=el('figure','shap-figure',gallery);
-  const row=el('div','shap-row',figure);
+ /*
+  * 直接写内联样式。
+  *
+  * 不再依赖旧项目里的 .shap-gallery CSS，
+  * 防止原有样式把新布局覆盖。
+  */
+ gallery.style.cssText=`
+  display:block !important;
+  width:100% !important;
+  max-width:none !important;
+  margin:0 !important;
+  padding:0 !important;
+ `;
 
-  // 图片
-  const img=el('img','shap-image',row);
 
-  /*
-   * 最终浏览器路径：
-   *
-   * ../assets/data/shap/活力度界面品质/1.png
-   * ../assets/data/shap/活力度界面品质/2.png
-   * ../assets/data/shap/活力度界面品质/3.png
-   *
-   * 等。
-   *
-   * regression_revision.py 的 pages() 会自动把
-   * result/shap 整个复制到 aerial/assets/data/shap，
-   * 所以不需要手工复制图片。
-   */
-  img.src=
-   '../assets/data/shap/'
-   +folder
-   +'/'
-   +number
-   +'.png?v='
-   +content.assetVersion;
+ /*
+  * ==========================================================
+  * JSON 文字转换
+  * ==========================================================
+  *
+  * 支持：
+  *
+  * "description":"普通字符串"
+  *
+  * 以及：
+  *
+  * "description":[
+  *   "第一行",
+  *   "第二行",
+  *   "",
+  *   "第四行"
+  * ]
+  */
 
-  img.alt=folder+' · '+number+'.png';
+ const lines=s=>{
 
-  // -------------------------------------------------
-  // 5. 右侧文字区域
-  // -------------------------------------------------
-  const side=el('aside','shap-side',row);
+  if(Array.isArray(s)){
+   return s.join('\n');
+  }
 
-  /*
-   * 你目前还没有准备新的文字，
-   * 所以这里暂时继续沿用原来的文字数据。
-   *
-   * 为了避免删除“高低类型切换”之后旧 label 不存在，
-   * 这里按照当前页面寻找一组已有文字作为临时内容。
-   */
+  return String(s||'').trim();
 
-  // 当前图片对应的文字
-const text=textMap[PAGE][index];
+ };
 
-// 第一段正文
-el('p','shap-description',side).textContent=
- lines(text.description);
 
-// 第二段结论
-el('p','shap-conclusion',side).textContent=
- lines(text.conclusion);
- });
+ /*
+  * ==========================================================
+  * 根据 mismatch_content.json 创建所有图片
+  * ==========================================================
+  */
 
+ (config.items||[]).forEach(
+  (item,index)=>{
+
+
+   /*
+    * --------------------------------------------------------
+    * 每一张图的总容器
+    * --------------------------------------------------------
+    */
+
+   const figure=el(
+    'figure',
+    'shap-figure',
+    gallery
+   );
+
+
+   figure.style.cssText=`
+    box-sizing:border-box !important;
+    display:block !important;
+    width:100% !important;
+    max-width:none !important;
+    margin:0 0 72px 0 !important;
+    padding:0 0 72px 0 !important;
+    border-bottom:1px solid #dedede !important;
+   `;
+
+
+   /*
+    * 最后一张图不要底部横线和额外空白。
+    */
+   if(
+    index===
+    (config.items||[]).length-1
+   ){
+
+    figure.style.marginBottom=
+     '0';
+
+    figure.style.paddingBottom=
+     '0';
+
+    figure.style.borderBottom=
+     '0';
+
+   }
+
+
+   /*
+    * --------------------------------------------------------
+    * 图文容器
+    * --------------------------------------------------------
+    */
+
+   const row=el(
+    'div',
+    'shap-row',
+    figure
+   );
+
+
+   /*
+    * ========================================================
+    * full
+    *
+    * 图片占满整行；
+    * 正文和结论在图片下面。
+    * ========================================================
+    */
+
+   if(item.layout==='full'){
+
+    figure.classList.add(
+     'shap-figure-full'
+    );
+
+    row.classList.add(
+     'shap-row-full'
+    );
+
+
+    row.style.cssText=`
+     box-sizing:border-box !important;
+     display:block !important;
+     width:100% !important;
+     max-width:none !important;
+     margin:0 !important;
+     padding:0 !important;
+    `;
+
+   }
+
+
+   /*
+    * ========================================================
+    * side
+    *
+    * 默认：
+    *
+    * 左边图片；
+    * 右边正文。
+    * ========================================================
+    */
+
+   else{
+
+    figure.classList.add(
+     'shap-figure-side'
+    );
+
+    row.classList.add(
+     'shap-row-side'
+    );
+
+
+    row.style.cssText=`
+     box-sizing:border-box !important;
+     display:grid !important;
+     grid-template-columns:
+      minmax(0,58%)
+      minmax(0,1fr) !important;
+     column-gap:42px !important;
+     align-items:start !important;
+     width:100% !important;
+     max-width:none !important;
+     margin:0 !important;
+     padding:0 !important;
+    `;
+
+   }
+
+
+   /*
+    * --------------------------------------------------------
+    * 图片
+    * --------------------------------------------------------
+    */
+
+   let img=null;
+
+
+   if(item.image){
+
+    img=el(
+     'img',
+     'shap-image',
+     row
+    );
+
+
+    img.src=
+     '../assets/data/shap/'
+     +config.folder
+     +'/'
+     +item.image
+     +'?v='
+     +(all.assetVersion||'');
+
+
+    img.alt=
+     config.folder
+     +' · '
+     +item.image;
+
+
+    /*
+     * full 图片：
+     *
+     * 真正强制占满所在内容区。
+     */
+
+    if(item.layout==='full'){
+
+     img.style.cssText=`
+      box-sizing:border-box !important;
+      display:block !important;
+      width:100% !important;
+      max-width:none !important;
+      height:auto !important;
+      object-fit:contain !important;
+      margin:0 !important;
+      padding:0 !important;
+     `;
+
+    }
+
+
+    /*
+     * side 图片：
+     *
+     * 占左边这一列的 100%。
+     */
+
+    else{
+
+     img.style.cssText=`
+      box-sizing:border-box !important;
+      display:block !important;
+      width:100% !important;
+      max-width:100% !important;
+      height:auto !important;
+      object-fit:contain !important;
+      margin:0 !important;
+      padding:0 !important;
+     `;
+
+    }
+
+   }
+
+
+   /*
+    * --------------------------------------------------------
+    * 正文容器
+    * --------------------------------------------------------
+    */
+
+   const side=el(
+    'aside',
+    'shap-side',
+    row
+   );
+
+
+   /*
+    * full：
+    *
+    * 因为 row 是 block，
+    * aside 自然位于图片下方。
+    */
+
+   if(item.layout==='full'){
+
+    side.style.cssText=`
+     box-sizing:border-box !important;
+     display:block !important;
+     width:100% !important;
+     max-width:none !important;
+     height:auto !important;
+     max-height:none !important;
+     overflow:visible !important;
+     margin:32px 0 0 0 !important;
+     padding:0 !important;
+    `;
+
+   }
+
+
+   /*
+    * side：
+    *
+    * 正文占右边列。
+    */
+
+   else{
+
+    side.style.cssText=`
+     box-sizing:border-box !important;
+     display:block !important;
+     width:100% !important;
+     max-width:none !important;
+     height:auto !important;
+     max-height:none !important;
+     overflow:visible !important;
+     margin:0 !important;
+     padding:0 !important;
+    `;
+
+   }
+
+
+   /*
+    * --------------------------------------------------------
+    * 读图
+    * --------------------------------------------------------
+    */
+
+   if(item.description){
+    const details=el('details','shap-reading',side);
+    el('summary','mini-heading',details).textContent=item.descriptionTitle||'读图';
+    el('p','shap-description caption',details).textContent=lines(item.description);
+   }
+
+
+   /*
+    * --------------------------------------------------------
+    * 结论
+    * --------------------------------------------------------
+    */
+
+   if(item.conclusion){
+
+    const conclusion=el(
+     'p',
+     'shap-conclusion',
+     side
+    );
+
+
+    conclusion.textContent=
+     lines(item.conclusion);
+
+
+    conclusion.style.cssText=`
+     box-sizing:border-box !important;
+     display:block !important;
+     width:100% !important;
+     max-width:none !important;
+     margin:26px 0 0 0 !important;
+     padding:18px 0 0 0 !important;
+     border-top:1px solid #dddddd !important;
+     white-space:pre-line !important;
+     font:inherit !important;
+     line-height:1.8 !important;
+    `;
+
+   }
+
+  }
+ );
+
+
+ /*
+  * 页面顶部原来的说明区域清空。
+  */
  note('');
+
 }
 function mismatchView(i){
  const config={qualityVitality:['quality','vitality','界面品质','活力度','界面品质的底层指标组合','活力度的底层指标'],qualityMix:['quality','mixScore','界面品质','混合度','界面品质的底层指标组合','混合度的底层指标'],mismatch:['vitality','mixScore','活力度','混合度','活力度的底层指标组合','混合度的底层指标']}[PAGE], [x,y,xlabel,ylabel,first,second]=config;

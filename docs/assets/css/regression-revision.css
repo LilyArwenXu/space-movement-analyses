@@ -1,8 +1,124 @@
-.macro-stage.expanded .mismatch-entry{transform:translateX(-200%)}
-.mismatch-menu{left:33.333333%}
-.critic-method>summary{cursor:pointer;font-size:23px;line-height:1.6;font-weight:400;list-style-position:inside}
-.critic-method>summary:focus-visible{outline:2px solid #111;outline-offset:4px}
-.critic-method[open]>summary{margin-bottom:24px}.critic-method:not([open]){padding:16px 0}
-.shap-side{max-height:none;overflow:visible;padding-right:0}
-.shap-side .shap-description{margin:0;white-space:pre-line;font:inherit}
-.shap-side .shap-conclusion{margin:26px 0 0;padding-top:18px;border-top:1px solid #ddd;white-space:pre-line;font:inherit}
+
+/* ==========================================================
+   不配得性入口
+   ========================================================== */
+
+.macro-stage.expanded .mismatch-entry{
+ transform:translateX(-200%);
+}
+
+.mismatch-menu{
+ left:33.333333%;
+}
+
+
+/* ==========================================================
+   Critic
+   ========================================================== */
+
+.critic-method>summary{
+ cursor:pointer;
+ font-size:23px;
+ line-height:1.6;
+ font-weight:400;
+ list-style-position:inside;
+}
+
+.critic-method>summary:focus-visible{
+ outline:2px solid #111;
+ outline-offset:4px;
+}
+
+.critic-method[open]>summary{
+ margin-bottom:24px;
+}
+
+.critic-method:not([open]){
+ padding:16px 0;
+}
+
+
+/* ==========================================================
+   “什么是不配得性？”入口
+   ========================================================== */
+
+.mismatch-intro-card .panel-detail h2{
+ max-width:90%;
+}
+
+
+/* ==========================================================
+   SHAP 总区域
+   ========================================================== */
+
+.shap-gallery{
+ display:block !important;
+ width:100% !important;
+ max-width:none !important;
+}
+
+
+/*
+ * figure 的 margin 默认值清除。
+ */
+.shap-gallery figure{
+ box-sizing:border-box;
+}
+
+
+/*
+ * 图片不要受浏览器默认 inline-image 基线影响。
+ */
+.shap-gallery img{
+ display:block;
+ height:auto;
+}
+
+
+/*
+ * JSON 数组中的换行正常显示。
+ */
+.shap-description,
+.shap-conclusion{
+ white-space:pre-line;
+}
+
+
+/* ==========================================================
+   手机 / 小屏幕
+   ========================================================== */
+
+@media(max-width:900px){
+
+ /*
+  * 即使是 side，
+  * 小屏幕也改成上下排列。
+  */
+
+ .shap-row-side{
+  display:block !important;
+ }
+
+
+ .shap-row-side .shap-image{
+  width:100% !important;
+  max-width:100% !important;
+ }
+
+
+ .shap-row-side .shap-side{
+  width:100% !important;
+  margin-top:28px !important;
+ }
+
+}
+
+/* Reuse shared navigation and subtitle typography for the reading guides. */
+.mismatch-intro-page{padding-top:24px}
+.mismatch-intro-text{font-size:17px;line-height:1.9}
+.mismatch-intro-image{display:block;width:100%;height:auto;margin:0 0 32px}
+.mismatch-intro-copy{max-width:960px;white-space:pre-line;overflow-wrap:anywhere}
+.shap-reading{white-space:normal}
+.shap-reading>summary{cursor:pointer;line-height:1.8;list-style-position:inside;margin:0}
+.shap-reading>summary:focus-visible{outline:2px solid var(--ink);outline-offset:4px}
+.shap-reading .shap-description{margin:16px 0 0;overflow-wrap:anywhere}

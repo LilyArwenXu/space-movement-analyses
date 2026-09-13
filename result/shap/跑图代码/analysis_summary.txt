@@ -1,0 +1,196 @@
+================================================================================
+Q底层指标 → U1/U2/U3：控制变量 + SHAP + Interaction + GAM + ALE
+================================================================================
+
+【1. 数据读取与对齐】
+[对齐] CSV缺少index，但三表行数一致，按当前行顺序创建 sample_id 对齐。
+[提醒] 这要求三个CSV第n行确实对应同一个点位。
+[Q底层指标] 原始共 11 个
+[排除指标] ['路面状态', '消费型停留空间占比(%)']
+[实际进入分析] 共 9 个
+[排除原因1：路面状态] 大多数样本的路面状态均较完好，该指标整体取值偏高、区分度有限，容易形成普遍抬升，因此不再将其作为后续不配得性解释变量。
+[排除原因2：消费型停留空间占比] 该指标受到消费、停留和使用行为影响，并非完全由物质界面品质本身决定。为了使后续解释变量更集中于界面品质本身，本研究不再将其纳入SHAP、Interaction、GAM和ALE分析。
+[说明] 仅从底层指标解释分析中排除，原始界面品质Q不重新计算。
+[样本] 共同样本数：135
+[Q底层指标] 共 9 个
+[恒等式检查] max|U1-U2-U3| = 5.55111512313e-17
+[Q指标尺度] 已按各指标全域 min/max 转为 [0,1]。
+
+【2. 本版输出原则】
+每个U只保留7类核心图，并新增SHAP Dependence + LOWESS；不再输出：
+- U分布图
+- U之间的散点图
+- 单独SHAP重要性bar图
+- Top组合bar图
+- 每个Top组合的真实U彩色散点图
+- Top2/Top3的GAM/ALE/分解图
+
+每个U只对SHAP Interaction排名第1的组合做GAM、ALE和构成项分解。
+
+========================================================================
+【U1 分析】
+========================================================================
+目标：U1
+控制变量：ln(1+V)
+控制含义：控制不同点位活力度V本身的差异，只解释Q底层指标部分
+
+[交叉验证]
+CV R²   = 0.9107
+CV RMSE = 0.060709
+CV MAE  = 0.045278
+
+[SHAP：Q底层指标重要性 Top5]
+1. 遮荫率(%) (Mean|SHAP|=0.021686)
+2. 可承载停留人数(人) (Mean|SHAP|=0.012540)
+3. 历史感知度 (Mean|SHAP|=0.012170)
+4. 声环境舒适度 (Mean|SHAP|=0.008690)
+5. 临街互动性 (Mean|SHAP|=0.008415)
+
+[SHAP Dependence + LOWESS]
+绘制指标：遮荫率(%)、可承载停留人数(人)、历史感知度
+解释：用于观察单个Q底层指标从低到高变化时，其SHAP贡献如何变化，并通过LOWESS识别非线性、阈值、平台期或拐点。
+
+[Top1 二元组合]
+有效停留空间面积(㎡) × 遮荫率(%)
+Mean|SHAP interaction| = 0.001831
+
+[GAM Tensor]
+Tensor项 p值 = 6.44425e-09
+Explained deviance = 0.9659
+解释：GAM图用于观察在控制其余Q指标和控制变量后，Top1组合在不同取值区域如何共同推高/压低U。
+
+[U1 对应图表]
+图1 SHAP蜂群图：analysis_U123_Q_features_compact\01_SHAP\U1_SHAP_summary.png
+    用途：判断哪些Q底层指标最重要，以及高/低指标值通常把U往哪个方向推动。
+图2 SHAP Dependence + LOWESS：analysis_U123_Q_features_compact\01_SHAP\U1_SHAP_dependence_Top3_LOWESS.png
+    用途：展开SHAP排名前3的单指标响应形态，观察指标值从低到高时SHAP贡献的非线性趋势、可能阈值、平台期和拐点。
+图3 SHAP Interaction Top10渐变棒棒糖图：analysis_U123_Q_features_compact\02_Interaction\U1_SHAP_interaction_Top10_lollipop_gradient.png
+    用途：按Mean|SHAP interaction|从高到低展示前10组组合，并筛选Top1组合；完整结果保存在CSV中。
+图4 Top1组合真实U散点图：analysis_U123_Q_features_compact\02_Interaction\U1_Top1_有效停留空间面积(㎡)__遮荫率(%)_real_U_scatter.png
+    用途：直接查看Top1两个指标在真实样本中的组合位置，以及对应真实U值的高低分布；该图不依赖模型预测，是对SHAP交互结果的原始数据辅助验证。
+图5 Top1 GAM Tensor曲面：analysis_U123_Q_features_compact\03_GAM\U1_Top1_有效停留空间面积(㎡)__遮荫率(%)_GAM.png
+    用途：重点解释 有效停留空间面积(㎡) × 遮荫率(%) 在控制其余Q指标及ln(1+V) 后的二维联合效应。
+图6 Top1 2D ALE：analysis_U123_Q_features_compact\04_ALE\U1_Top1_有效停留空间面积(㎡)__遮荫率(%)_ALE.png
+    用途：ALE图用于从XGBoost角度辅助验证GAM二维联合效应的主要方向/高低区域是否一致。
+图7 Top1 构成项分解图：analysis_U123_Q_features_compact\05_Decomposition\U1_Top1_有效停留空间面积(㎡)__遮荫率(%)_Decomposition.png
+    用途：比较同一指标组合对 ln(1+V) 与 ln(1+Q) 两端的响应，解释V-Q不配得为什么形成。
+
+========================================================================
+【U2 分析】
+========================================================================
+目标：U2
+控制变量：ln(1+M)
+控制含义：控制不同点位混合度M本身的差异，只解释Q底层指标部分
+
+[交叉验证]
+CV R²   = 0.8735
+CV RMSE = 0.066884
+CV MAE  = 0.050093
+
+[SHAP：Q底层指标重要性 Top5]
+1. 遮荫率(%) (Mean|SHAP|=0.014736)
+2. 视觉丰富度 (Mean|SHAP|=0.012088)
+3. 可承载停留人数(人) (Mean|SHAP|=0.011728)
+4. 历史感知度 (Mean|SHAP|=0.010046)
+5. 有效停留空间面积(㎡) (Mean|SHAP|=0.009990)
+
+[SHAP Dependence + LOWESS]
+绘制指标：遮荫率(%)、视觉丰富度、可承载停留人数(人)
+解释：用于观察单个Q底层指标从低到高变化时，其SHAP贡献如何变化，并通过LOWESS识别非线性、阈值、平台期或拐点。
+
+[Top1 二元组合]
+有效停留空间面积(㎡) × 声环境舒适度
+Mean|SHAP interaction| = 0.001382
+
+[GAM Tensor]
+Tensor项 p值 = 0.594482
+Explained deviance = 0.9605
+解释：GAM图用于观察在控制其余Q指标和控制变量后，Top1组合在不同取值区域如何共同推高/压低U。
+
+[U2 对应图表]
+图1 SHAP蜂群图：analysis_U123_Q_features_compact\01_SHAP\U2_SHAP_summary.png
+    用途：判断哪些Q底层指标最重要，以及高/低指标值通常把U往哪个方向推动。
+图2 SHAP Dependence + LOWESS：analysis_U123_Q_features_compact\01_SHAP\U2_SHAP_dependence_Top3_LOWESS.png
+    用途：展开SHAP排名前3的单指标响应形态，观察指标值从低到高时SHAP贡献的非线性趋势、可能阈值、平台期和拐点。
+图3 SHAP Interaction Top10渐变棒棒糖图：analysis_U123_Q_features_compact\02_Interaction\U2_SHAP_interaction_Top10_lollipop_gradient.png
+    用途：按Mean|SHAP interaction|从高到低展示前10组组合，并筛选Top1组合；完整结果保存在CSV中。
+图4 Top1组合真实U散点图：analysis_U123_Q_features_compact\02_Interaction\U2_Top1_有效停留空间面积(㎡)__声环境舒适度_real_U_scatter.png
+    用途：直接查看Top1两个指标在真实样本中的组合位置，以及对应真实U值的高低分布；该图不依赖模型预测，是对SHAP交互结果的原始数据辅助验证。
+图5 Top1 GAM Tensor曲面：analysis_U123_Q_features_compact\03_GAM\U2_Top1_有效停留空间面积(㎡)__声环境舒适度_GAM.png
+    用途：重点解释 有效停留空间面积(㎡) × 声环境舒适度 在控制其余Q指标及ln(1+M) 后的二维联合效应。
+图6 Top1 2D ALE：analysis_U123_Q_features_compact\04_ALE\U2_Top1_有效停留空间面积(㎡)__声环境舒适度_ALE.png
+    用途：ALE图用于从XGBoost角度辅助验证GAM二维联合效应的主要方向/高低区域是否一致。
+图7 Top1 构成项分解图：analysis_U123_Q_features_compact\05_Decomposition\U2_Top1_有效停留空间面积(㎡)__声环境舒适度_Decomposition.png
+    用途：比较同一指标组合对 ln(1+M) 与 ln(1+Q) 两端的响应，解释M-Q不配得为什么形成。
+
+========================================================================
+【U3 分析】
+========================================================================
+目标：U3
+控制变量：L_VM=[ln(1+V)+ln(1+M)]/2
+控制含义：控制V/M总体水平高低，但保留V-M之间的不配得差异
+
+[交叉验证]
+CV R²   = -0.0237
+CV RMSE = 0.187241
+CV MAE  = 0.142137
+
+[SHAP：Q底层指标重要性 Top5]
+1. 遮荫率(%) (Mean|SHAP|=0.027086)
+2. 有效停留空间面积(㎡) (Mean|SHAP|=0.026150)
+3. 临街互动性 (Mean|SHAP|=0.022360)
+4. 可承载停留人数(人) (Mean|SHAP|=0.014651)
+5. 视觉丰富度 (Mean|SHAP|=0.014535)
+
+[SHAP Dependence + LOWESS]
+绘制指标：遮荫率(%)、有效停留空间面积(㎡)、临街互动性
+解释：用于观察单个Q底层指标从低到高变化时，其SHAP贡献如何变化，并通过LOWESS识别非线性、阈值、平台期或拐点。
+
+[Top1 二元组合]
+有效停留空间面积(㎡) × 遮荫率(%)
+Mean|SHAP interaction| = 0.005730
+
+[GAM Tensor]
+Tensor项 p值 = 0.112989
+Explained deviance = 0.3369
+解释：GAM图用于观察在控制其余Q指标和控制变量后，Top1组合在不同取值区域如何共同推高/压低U。
+
+[U3 对应图表]
+图1 SHAP蜂群图：analysis_U123_Q_features_compact\01_SHAP\U3_SHAP_summary.png
+    用途：判断哪些Q底层指标最重要，以及高/低指标值通常把U往哪个方向推动。
+图2 SHAP Dependence + LOWESS：analysis_U123_Q_features_compact\01_SHAP\U3_SHAP_dependence_Top3_LOWESS.png
+    用途：展开SHAP排名前3的单指标响应形态，观察指标值从低到高时SHAP贡献的非线性趋势、可能阈值、平台期和拐点。
+图3 SHAP Interaction Top10渐变棒棒糖图：analysis_U123_Q_features_compact\02_Interaction\U3_SHAP_interaction_Top10_lollipop_gradient.png
+    用途：按Mean|SHAP interaction|从高到低展示前10组组合，并筛选Top1组合；完整结果保存在CSV中。
+图4 Top1组合真实U散点图：analysis_U123_Q_features_compact\02_Interaction\U3_Top1_有效停留空间面积(㎡)__遮荫率(%)_real_U_scatter.png
+    用途：直接查看Top1两个指标在真实样本中的组合位置，以及对应真实U值的高低分布；该图不依赖模型预测，是对SHAP交互结果的原始数据辅助验证。
+图5 Top1 GAM Tensor曲面：analysis_U123_Q_features_compact\03_GAM\U3_Top1_有效停留空间面积(㎡)__遮荫率(%)_GAM.png
+    用途：重点解释 有效停留空间面积(㎡) × 遮荫率(%) 在控制其余Q指标及L_VM=[ln(1+V)+ln(1+M)]/2 后的二维联合效应。
+图6 Top1 2D ALE：analysis_U123_Q_features_compact\04_ALE\U3_Top1_有效停留空间面积(㎡)__遮荫率(%)_ALE.png
+    用途：ALE图用于从XGBoost角度辅助验证GAM二维联合效应的主要方向/高低区域是否一致。
+图7 Top1 构成项分解图：analysis_U123_Q_features_compact\05_Decomposition\U3_Top1_有效停留空间面积(㎡)__遮荫率(%)_Decomposition.png
+    用途：比较同一指标组合对 ln(1+V) 与 ln(1+M) 两端的响应，解释V-M不配得为什么形成。
+
+================================================================================
+【3. 指标排除说明】
+================================================================================
+本研究将“路面状态”和“消费型停留空间占比”从Q底层指标的后续解释分析中排除。
+路面状态：多数样本均较完好，整体取值偏高、差异度有限，容易形成普遍抬升，对点位差异的辨识作用较弱。
+消费型停留空间占比：该指标受到人的消费、停留及使用行为影响，并非完全由物质界面品质本身决定。为保持Q底层解释变量的概念一致性，后续不再将其作为界面品质解释指标。
+需要强调：以上两个指标只从SHAP、Interaction、GAM、ALE等底层解释分析中排除；原始界面品质Q仍保持原有定义和数值，不重新计算。
+
+================================================================================
+【4. 三类不配得性的解释边界】
+================================================================================
+U1：Q底层指标与U1既存在Q构成上的结构联系，也存在与V相关的现实空间关联；本模型用 ln(1+V) 作为控制变量排除V本身在点位间的大幅波动。
+U2：同理，本模型用 ln(1+M) 作为控制变量排除M本身在点位间的大幅波动。
+U3：U3定义中没有Q，因此Q底层指标与U3的结果应解释为统计关联/空间响应关系，不能写成“通过Q直接导致U3”。
+U3控制 L_VM=[ln(1+V)+ln(1+M)]/2，目的是控制V/M总体水平高低，但保留V-M之间真正的不配得差异。
+
+【5. 核心结果汇总表】
+analysis_U123_Q_features_compact\06_Tables\U123_core_results.csv
+
+Outcome                  Control     CV_R2  CV_RMSE   CV_MAE Top_Feature              Dependence_TopN  Top_Pair_1 Top_Pair_2  Top_Pair_Interaction  GAM_Tensor_p  GAM_Explained_Deviance
+     U1                  ln(1+V)  0.910713 0.060709 0.045278      遮荫率(%)  遮荫率(%) | 可承载停留人数(人) | 历史感知度 有效停留空间面积(㎡)     遮荫率(%)              0.001831  6.444255e-09                0.965935
+     U2                  ln(1+M)  0.873499 0.066884 0.050093      遮荫率(%)  遮荫率(%) | 视觉丰富度 | 可承载停留人数(人) 有效停留空间面积(㎡)     声环境舒适度              0.001382  5.944823e-01                0.960548
+     U3 L_VM=[ln(1+V)+ln(1+M)]/2 -0.023715 0.187241 0.142137      遮荫率(%) 遮荫率(%) | 有效停留空间面积(㎡) | 临街互动性 有效停留空间面积(㎡)     遮荫率(%)              0.005730  1.129892e-01                0.336908
