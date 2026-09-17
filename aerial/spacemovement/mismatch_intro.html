@@ -95,7 +95,15 @@
    }
    const copy=document.createElement('div');
    copy.className='mismatch-intro-copy';
-   copy.textContent=Array.isArray(item.text)?item.text.join('\n'):(item.text||'');
+   const lines=Array.isArray(item.text)?item.text:[item.text||''];
+   const headings=new Set(item.headings||[]);
+   lines.forEach((line,index)=>{
+    const node=document.createElement(headings.has(index)?'h2':'p');
+    node.textContent=line;
+    if(headings.has(index))node.className='mini-heading';
+    if(!line)node.classList.add('mismatch-intro-spacer');
+    copy.appendChild(node);
+   });
    host.appendChild(copy);
   }
  }

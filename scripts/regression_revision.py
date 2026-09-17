@@ -462,7 +462,7 @@ SHAP_RENDERER = r'''function shapAnalysis(){
     const details=el('details','shap-reading',side);
     el('summary','mini-heading',details).textContent=item.descriptionTitle||'读图';
     el('p','shap-description caption',details).textContent=lines(item.description);
-   }
+   }0
 
 
    /*
@@ -508,6 +508,35 @@ SHAP_RENDERER = r'''function shapAnalysis(){
   */
  note('');
 
+}
+
+/* Three horizontal, button-driven analysis groups. */
+function shapAnalysis(){
+ const all=window.MISMATCH_CONTENT,config=all&&all.analysis&&all.analysis[PAGE];
+ if(!config){note('当前页面没有配置不配得性分析内容。');return;}
+ const gallery=el('section','shap-gallery mismatch-slides');
+ const tabs=el('nav','subtabs mismatch-analysis-tabs',gallery);tabs.setAttribute('role','tablist');tabs.setAttribute('aria-label','不配得性分析方式');
+ const text=value=>Array.isArray(value)?value.join('\n'):String(value||'').trim();
+ const draw=(host,item)=>{
+  const figure=el('figure','shap-figure',host),row=el('div','shap-row',figure);
+  row.classList.add(item.layout==='full'?'shap-row-full':'shap-row-side');
+  const image=el('img','shap-image',row);image.src='../assets/data/shap/'+config.folder+'/'+item.image+'?v='+(all.assetVersion||'');image.alt=config.folder+' · '+item.image;
+  const side=el('aside','shap-side',row);
+  if(item.description){const details=el('details','shap-reading',side);el('summary','mini-heading',details).textContent=item.descriptionTitle||'读图';el('p','shap-description caption',details).textContent=text(item.description);}
+  const conclusion=el('p','shap-conclusion',side);conclusion.textContent=text(item.conclusion);
+ };
+ const labels=['单指标分析','多指标组合筛选','联合效应影响'];
+ (config.groups||[[0,1],[2,3],[4,6,5]]).forEach((indexes,groupIndex)=>{
+  const tab=el('button','',tabs);tab.type='button';tab.textContent=labels[groupIndex];tab.setAttribute('role','tab');
+  const group=el('section','mismatch-slide-group',gallery),stage=el('div','mismatch-slide-stage',group),back=el('button','mismatch-slide-button mismatch-slide-back',stage),viewport=el('div','mismatch-slide-viewport',stage),track=el('div','mismatch-slide-track',viewport),more=el('button','mismatch-slide-button mismatch-slide-more',stage);
+  group.setAttribute('role','tabpanel');group.hidden=groupIndex!==0;tab.setAttribute('aria-selected',String(groupIndex===0));
+  indexes.forEach(index=>{const panel=el('div','mismatch-slide',track);draw(panel,config.items[index]);});
+  back.type=more.type='button';back.textContent='BACK';more.textContent='MORE';back.setAttribute('aria-label','返回上一张图');more.setAttribute('aria-label','查看下一张图');
+  let active=0;const update=()=>{track.style.transform='translateX('+(-active*100)+'%)';back.hidden=active===0;more.hidden=active===indexes.length-1;stage.classList.toggle('is-first',active===0);stage.classList.toggle('is-last',active===indexes.length-1);};
+  back.onclick=()=>{active--;update();};more.onclick=()=>{active++;update();};update();
+  tab.onclick=()=>{[...gallery.querySelectorAll('.mismatch-slide-group')].forEach((panel,index)=>panel.hidden=index!==groupIndex);[...tabs.querySelectorAll('[role=tab]')].forEach((button,index)=>button.setAttribute('aria-selected',String(index===groupIndex)));};
+ });
+ note('');
 }
 '''
 
@@ -634,11 +663,24 @@ CSS = r'''
 .mismatch-intro-page{padding-top:24px}
 .mismatch-intro-text{font-size:17px;line-height:1.9}
 .mismatch-intro-image{display:block;width:100%;height:auto;margin:0 0 32px}
-.mismatch-intro-copy{max-width:960px;white-space:pre-line;overflow-wrap:anywhere}
+.mismatch-intro-copy{max-width:960px;overflow-wrap:anywhere}.mismatch-intro-copy p{margin:0 0 18px}.mismatch-intro-copy .mini-heading{margin:34px 0 18px;font-weight:700}.mismatch-intro-copy .mismatch-intro-spacer{height:8px;margin:0}
 .shap-reading{white-space:normal}
 .shap-reading>summary{cursor:pointer;line-height:1.8;list-style-position:inside;margin:0}
 .shap-reading>summary:focus-visible{outline:2px solid var(--ink);outline-offset:4px}
 .shap-reading .shap-description{margin:16px 0 0;overflow-wrap:anywhere}
+
+.mismatch-slides{display:grid;gap:28px}.mismatch-analysis-tabs{margin:0 0 20px}
+.mismatch-slide-group{border-bottom:1px solid #dedede;padding-bottom:48px}
+.mismatch-slide-stage{display:grid;grid-template-columns:42px minmax(0,1fr) 42px;gap:14px;align-items:stretch}.mismatch-slide-stage.is-first{grid-template-columns:minmax(0,1fr) 42px}.mismatch-slide-stage.is-last{grid-template-columns:42px minmax(0,1fr)}
+.mismatch-slide-viewport{min-width:0;overflow:hidden}
+.mismatch-slide-track{display:flex;transition:transform .42s ease}
+.mismatch-slide{flex:0 0 100%;min-width:0}
+.mismatch-slide .shap-figure{border:0;padding:0;margin:0}
+.mismatch-slide .shap-row-side{display:grid;grid-template-columns:minmax(0,58%) minmax(0,1fr);gap:42px;align-items:start}
+.mismatch-slide .shap-row-full{display:block}.mismatch-slide .shap-row-full .shap-side{margin-top:32px}
+.mismatch-slide .shap-image{display:block;width:100%;height:auto}.mismatch-slide .shap-conclusion{white-space:pre-line;line-height:1.8}
+.mismatch-slide-button{width:42px;border:1px solid #222;background:#fff;color:#222;letter-spacing:.08em;writing-mode:vertical-rl}.mismatch-slide-button:hover{background:#222;color:#fff}
+@media(max-width:800px){.mismatch-slide-stage{grid-template-columns:1fr;gap:12px}.mismatch-slide .shap-row-side{grid-template-columns:1fr;gap:24px}.mismatch-slide-button{writing-mode:initial;width:auto;min-height:38px;padding:8px 16px}.mismatch-slide-back{grid-row:2;justify-self:start}.mismatch-slide-more{grid-row:3;justify-self:end}}
 
 '''
 
@@ -758,7 +800,15 @@ def mismatch_intro_page():
    }
    const copy=document.createElement('div');
    copy.className='mismatch-intro-copy';
-   copy.textContent=Array.isArray(item.text)?item.text.join('\n'):(item.text||'');
+   const lines=Array.isArray(item.text)?item.text:[item.text||''];
+   const headings=new Set(item.headings||[]);
+   lines.forEach((line,index)=>{
+    const node=document.createElement(headings.has(index)?'h2':'p');
+    node.textContent=line;
+    if(headings.has(index))node.className='mini-heading';
+    if(!line)node.classList.add('mismatch-intro-spacer');
+    copy.appendChild(node);
+   });
    host.appendChild(copy);
   }
  }

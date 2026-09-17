@@ -112,13 +112,26 @@
  }
 
 }
-
 /* Reuse shared navigation and subtitle typography for the reading guides. */
 .mismatch-intro-page{padding-top:24px}
 .mismatch-intro-text{font-size:17px;line-height:1.9}
 .mismatch-intro-image{display:block;width:100%;height:auto;margin:0 0 32px}
-.mismatch-intro-copy{max-width:960px;white-space:pre-line;overflow-wrap:anywhere}
+.mismatch-intro-copy{max-width:960px;overflow-wrap:anywhere}.mismatch-intro-copy p{margin:0 0 18px}.mismatch-intro-copy .mini-heading{margin:34px 0 18px;font-weight:700}.mismatch-intro-copy .mismatch-intro-spacer{height:8px;margin:0}
 .shap-reading{white-space:normal}
 .shap-reading>summary{cursor:pointer;line-height:1.8;list-style-position:inside;margin:0}
 .shap-reading>summary:focus-visible{outline:2px solid var(--ink);outline-offset:4px}
 .shap-reading .shap-description{margin:16px 0 0;overflow-wrap:anywhere}
+
+.mismatch-slides{display:grid;gap:28px}.mismatch-analysis-tabs{margin:0 0 20px}
+.mismatch-slide-group{border-bottom:1px solid #dedede;padding-bottom:48px}
+.mismatch-slide-stage{display:grid;grid-template-columns:42px minmax(0,1fr) 42px;gap:14px;align-items:stretch}.mismatch-slide-stage.is-first{grid-template-columns:minmax(0,1fr) 42px}.mismatch-slide-stage.is-last{grid-template-columns:42px minmax(0,1fr)}
+.mismatch-slide-viewport{min-width:0;overflow:hidden}
+.mismatch-slide-track{display:flex;transition:transform .42s ease}
+.mismatch-slide{flex:0 0 100%;min-width:0}
+.mismatch-slide .shap-figure{border:0;padding:0;margin:0}
+.mismatch-slide .shap-row-side{display:grid;grid-template-columns:minmax(0,58%) minmax(0,1fr);gap:42px;align-items:start}
+.mismatch-slide .shap-row-full{display:block}.mismatch-slide .shap-row-full .shap-side{margin-top:32px}
+.mismatch-slide .shap-image{display:block;width:100%;height:auto}.mismatch-slide .shap-conclusion{white-space:pre-line;line-height:1.8}
+.mismatch-slide-button{width:42px;border:1px solid #222;background:#fff;color:#222;letter-spacing:.08em;writing-mode:vertical-rl}.mismatch-slide-button:hover{background:#222;color:#fff}
+@media(max-width:800px){.mismatch-slide-stage{grid-template-columns:1fr;gap:12px}.mismatch-slide .shap-row-side{grid-template-columns:1fr;gap:24px}.mismatch-slide-button{writing-mode:initial;width:auto;min-height:38px;padding:8px 16px}.mismatch-slide-back{grid-row:2;justify-self:start}.mismatch-slide-more{grid-row:3;justify-self:end}}
+

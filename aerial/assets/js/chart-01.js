@@ -705,31 +705,10 @@ function shapAnalysis(){
     */
 
    if(item.description){
-
-    const description=el(
-     'p',
-     'shap-description',
-     side
-    );
-
-
-    description.textContent=
-     lines(item.description);
-
-
-    description.style.cssText=`
-     box-sizing:border-box !important;
-     display:block !important;
-     width:100% !important;
-     max-width:none !important;
-     margin:0 !important;
-     padding:0 !important;
-     white-space:pre-line !important;
-     font:inherit !important;
-     line-height:1.8 !important;
-    `;
-
-   }
+    const details=el('details','shap-reading',side);
+    el('summary','mini-heading',details).textContent=item.descriptionTitle||'读图';
+    el('p','shap-description caption',details).textContent=lines(item.description);
+   }0
 
 
    /*
@@ -775,6 +754,35 @@ function shapAnalysis(){
   */
  note('');
 
+}
+
+/* Three horizontal, button-driven analysis groups. */
+function shapAnalysis(){
+ const all=window.MISMATCH_CONTENT,config=all&&all.analysis&&all.analysis[PAGE];
+ if(!config){note('当前页面没有配置不配得性分析内容。');return;}
+ const gallery=el('section','shap-gallery mismatch-slides');
+ const tabs=el('nav','subtabs mismatch-analysis-tabs',gallery);tabs.setAttribute('role','tablist');tabs.setAttribute('aria-label','不配得性分析方式');
+ const text=value=>Array.isArray(value)?value.join('\n'):String(value||'').trim();
+ const draw=(host,item)=>{
+  const figure=el('figure','shap-figure',host),row=el('div','shap-row',figure);
+  row.classList.add(item.layout==='full'?'shap-row-full':'shap-row-side');
+  const image=el('img','shap-image',row);image.src='../assets/data/shap/'+config.folder+'/'+item.image+'?v='+(all.assetVersion||'');image.alt=config.folder+' · '+item.image;
+  const side=el('aside','shap-side',row);
+  if(item.description){const details=el('details','shap-reading',side);el('summary','mini-heading',details).textContent=item.descriptionTitle||'读图';el('p','shap-description caption',details).textContent=text(item.description);}
+  const conclusion=el('p','shap-conclusion',side);conclusion.textContent=text(item.conclusion);
+ };
+ const labels=['单指标分析','多指标组合筛选','联合效应影响'];
+ (config.groups||[[0,1],[2,3],[4,6,5]]).forEach((indexes,groupIndex)=>{
+  const tab=el('button','',tabs);tab.type='button';tab.textContent=labels[groupIndex];tab.setAttribute('role','tab');
+  const group=el('section','mismatch-slide-group',gallery),stage=el('div','mismatch-slide-stage',group),back=el('button','mismatch-slide-button mismatch-slide-back',stage),viewport=el('div','mismatch-slide-viewport',stage),track=el('div','mismatch-slide-track',viewport),more=el('button','mismatch-slide-button mismatch-slide-more',stage);
+  group.setAttribute('role','tabpanel');group.hidden=groupIndex!==0;tab.setAttribute('aria-selected',String(groupIndex===0));
+  indexes.forEach(index=>{const panel=el('div','mismatch-slide',track);draw(panel,config.items[index]);});
+  back.type=more.type='button';back.textContent='BACK';more.textContent='MORE';back.setAttribute('aria-label','返回上一张图');more.setAttribute('aria-label','查看下一张图');
+  let active=0;const update=()=>{track.style.transform='translateX('+(-active*100)+'%)';back.hidden=active===0;more.hidden=active===indexes.length-1;stage.classList.toggle('is-first',active===0);stage.classList.toggle('is-last',active===indexes.length-1);};
+  back.onclick=()=>{active--;update();};more.onclick=()=>{active++;update();};update();
+  tab.onclick=()=>{[...gallery.querySelectorAll('.mismatch-slide-group')].forEach((panel,index)=>panel.hidden=index!==groupIndex);[...tabs.querySelectorAll('[role=tab]')].forEach((button,index)=>button.setAttribute('aria-selected',String(index===groupIndex)));};
+ });
+ note('');
 }
 function mismatchView(i){
  const config={qualityVitality:['quality','vitality','界面品质','活力度','界面品质的底层指标组合','活力度的底层指标'],qualityMix:['quality','mixScore','界面品质','混合度','界面品质的底层指标组合','混合度的底层指标'],mismatch:['vitality','mixScore','活力度','混合度','活力度的底层指标组合','混合度的底层指标']}[PAGE], [x,y,xlabel,ylabel,first,second]=config;
