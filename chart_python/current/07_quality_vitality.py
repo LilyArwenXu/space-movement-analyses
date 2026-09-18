@@ -1,4 +1,4 @@
-"""不配得性Ⅰ：缺乏活力的场地：修改 JAVASCRIPT 后运行，即更新网站和发布包。"""
+"""不配得性Ⅰ：街道品质是否必然带来空间活力度？：修改 JAVASCRIPT 后运行，即更新网站和发布包。"""
 JAVASCRIPT = r'''/* Stable light-theme charts. All calculated values come from the shared point-ID dataset. */
 'use strict';
 const D=window.INCLUSIVE, PAGE=document.body.dataset.page;

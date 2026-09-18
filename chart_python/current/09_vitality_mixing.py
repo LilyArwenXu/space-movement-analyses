@@ -1,4 +1,4 @@
-"""不配得性Ⅲ：活力度-混合度：修改 JAVASCRIPT 后运行，即更新网站和发布包。"""
+"""不配得性Ⅲ：空间活力度是否必然意味着社会混合度？：修改 JAVASCRIPT 后运行，即更新网站和发布包。"""
 JAVASCRIPT = r'''/* Stable light-theme charts. All calculated values come from the shared point-ID dataset. */
 'use strict';
 const D=window.INCLUSIVE, PAGE=document.body.dataset.page;

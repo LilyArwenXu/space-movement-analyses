@@ -1,4 +1,4 @@
-"""不配得性Ⅱ：包容性的形成与消解：修改 JAVASCRIPT 后运行，即更新网站和发布包。"""
+"""不配得性Ⅱ：街道品质是否必然促进社会混合度？：修改 JAVASCRIPT 后运行，即更新网站和发布包。"""
 JAVASCRIPT = r'''/* Stable light-theme charts. All calculated values come from the shared point-ID dataset. */
 'use strict';
 const D=window.INCLUSIVE, PAGE=document.body.dataset.page;
