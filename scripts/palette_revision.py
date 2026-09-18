@@ -24,6 +24,9 @@ def pages():
         if 'final-revision.css' not in s:s=s.replace('</head>','<link rel="stylesheet" href="assets/css/final-revision.css"></head>')
         p.write_text(s,encoding='utf-8')
     (ROOT/'aerial/team.html').write_text('''<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>课程与团队信息</title><link rel="stylesheet" href="assets/css/inclusive.css"><link rel="stylesheet" href="assets/css/interface.css"><link rel="stylesheet" href="assets/css/final-revision.css"></head><body><header class="topbar unified-topbar"><a class="brand" href="index.html">← INCLUSIVE VITALITY</a><h1>课程与团队信息</h1></header><main class="team-information"><section lang="zh-CN"><p>同济大学 | 建筑与城市规划学院</p><h2>衡复容活</h2><p class="team-subtitle">城市活动与社会融合的人因空间驱动力</p><p>指导老师：闫超</p><p>蔡淙旭、常思语、丁文颖、黄希龄、黄子童、李严宇、苏嘉欣、孙靖琪、王霏杨、王倪潇、王一一、徐韵晨</p></section><section lang="en"><p>CAUP, Tongji University</p><h2>Inclusive Vitality</h2><p class="team-subtitle">Socio-Spatial Drivers of Urban Activity and Social Mixing in Fuheng District</p><p>Instructor：Chao Yan</p><p>Congxu Cai, Siyu Chang, Wenying Ding, Xiling Huang, Zitong Huang. Yanyu Li, Jiaxin Su, Jingqi Sun, Feiyang Wang, Nixiao Wang, Yiyi Wang, Yunchen Xu.</p></section></main></body></html>''',encoding='utf-8')
+    from refresh_content import add_team_hosting
+    team = ROOT/'aerial/team.html'
+    team.write_text(add_team_hosting(team.read_text(encoding='utf-8')), encoding='utf-8')
     for folder,prefix in [('aerial','assets/css/'),('aerial/spacemovement','../assets/css/'),('spacemovement','../assets/css/')]:
         for p in (ROOT/folder).glob('*.html'):
             s=p.read_text(encoding='utf-8')

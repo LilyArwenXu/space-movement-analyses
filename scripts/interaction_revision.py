@@ -55,7 +55,7 @@ window.exportAnnotatedChart=async(c,node)=>{
 '''
 
 def renderer(js):
-    axis_title="name:{quality:'所有点位（按界面品质从低到高）',mix:'所有点位（按综合混合度从低到高）',vitality:'所有点位（按空间活力度从低到高）'}[kind]"
+    axis_title="name:{quality:'所有点位（按街道品质从低到高）',mix:'所有点位（按综合混合度从低到高）',vitality:'所有点位（按空间活力度从低到高）'}[kind]"
     js=js.replace('name:original.xAxis[0].name',axis_title)
     old="saveAsImage:{type:'png',name:(document.title||'图表').split('｜')[0],title:'下载 PNG',pixelRatio:2,backgroundColor:'#fff',excludeComponents:['toolbox']}"
     new="mySaveAsImage:{show:true,title:'下载 PNG',icon:'path://M4,16 L4,21 L20,21 L20,16 M12,2 L12,16 M6,10 L12,16 L18,10',onclick:()=>window.exportAnnotatedChart(c,node)}"
@@ -68,10 +68,10 @@ def renderer(js):
     js=js.replace("main.style.background=PALETTE[j%PALETTE.length];", "main.dataset.phase='0';")
     js=js.replace("controls.querySelectorAll('button').forEach((b,k)=>b.setAttribute('aria-pressed',String(k===selected)));", "controls.querySelectorAll('button').forEach((b,k)=>{b.setAttribute('aria-pressed',String(k===selected));b.dataset.phase=String(k===selected?phase:0);});")
     js=js.replace("controls.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed','false'));", "controls.querySelectorAll('button').forEach(b=>{b.setAttribute('aria-pressed','false');b.dataset.phase='0';});")
-    js=js.replace("const controls=el('div','metric-controls axis-controls',host)", "original.xAxis.forEach(axis=>axis.name={quality:'所有点位（按界面品质从低到高）',mix:'所有点位（按综合混合度从低到高）',vitality:'所有点位（按空间活力度从低到高）'}[kind]);\n const controls=el('div','metric-controls axis-controls',host)")
+    js=js.replace("const controls=el('div','metric-controls axis-controls',host)", "original.xAxis.forEach(axis=>axis.name={quality:'所有点位（按街道品质从低到高）',mix:'所有点位（按综合混合度从低到高）',vitality:'所有点位（按空间活力度从低到高）'}[kind]);\n const controls=el('div','metric-controls axis-controls',host)")
     js=js.replace("name:'所有点位（按综合评分从低到高）'", axis_title)
     js=js.replace(" const lower=el('div','coefficient-tables',box)", " el('section','critic-method',box).innerHTML="+json.dumps(CRITIC,ensure_ascii=False)+";\n const lower=el('div','coefficient-tables',box)")
-    js=js.replace(" const label={mix:'混合度',quality:'界面品质',vitality:'活力度'}", " if(kind==='mix')el('p','coefficient-conclusion',left).textContent="+json.dumps(MIX_CONCLUSION.replace('。','。\n').strip(),ensure_ascii=False)+";\n const label={mix:'混合度',quality:'界面品质',vitality:'活力度'}")
+    js=js.replace(" const label={mix:'混合度',quality:'街道品质',vitality:'活力度'}", " if(kind==='mix')el('p','coefficient-conclusion',left).textContent="+json.dumps(MIX_CONCLUSION.replace('。','。\n').strip(),ensure_ascii=False)+";\n const label={mix:'混合度',quality:'街道品质',vitality:'活力度'}")
     js=js.replace("MFORM+'\\n权重说明保留给定w1–w5名称；综合评分按指定M公式的维度顺序代入。'",json.dumps(MIX_SUBTITLE,ensure_ascii=False))
     js=js.replace("if(i){sectionTabs(labels,j=>shapAnalysis(labels[j]));return;}", "if(i){if(PAGE==='mismatch'){labels.forEach(label=>{const group=el('section','mismatch-combined shap-gallery');el('h2','',group).textContent=label;const row=el('div','mismatch-triptych',group);[1,2,3].forEach(number=>{const figure=el('figure','',row),img=el('img','',figure);img.src='../assets/data/shap/'+label+'/'+number+'.png';img.alt=label+' · 图'+number;});});note('');}else sectionTabs(labels,j=>shapAnalysis(labels[j]));return;}")
     needle="el('p','caption').textContent=labels.map(label=>label+'：'+D.points.filter(p=>p.mismatchGroups[PAGE]===label).length+' 个点位').join('；');"

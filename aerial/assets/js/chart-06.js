@@ -138,7 +138,7 @@ function informationScatter(parent,kind){
  const points=rankedInformationPoints(kind);
  const quality=kind==='quality',mix=kind==='mix',keys=quality?D.qualityFields:mix?['ageMix','activityMix','identityMix','postureMix','socialMix']:['sample','clusters','density','gather'],labels=[...keys.map(k=>quality?D.headers[k]:D.ys[k]),'综合评分'];
  const c=chart(parent,Math.max(440,Math.min(650,window.innerHeight*.68))),o=base();delete o.legend;
- o.grid={left:150,right:25,top:25,bottom:50};o.xAxis={type:'category',data:points.map(p=>p.name),axisLabel:{show:false},axisTick:{show:false},name:{quality:'所有点位（按界面品质从低到高）',mix:'所有点位（按综合混合度从低到高）',vitality:'所有点位（按空间活力度从低到高）'}[kind],nameLocation:'middle',nameGap:28};
+ o.grid={left:150,right:25,top:25,bottom:50};o.xAxis={type:'category',data:points.map(p=>p.name),axisLabel:{show:false},axisTick:{show:false},name:{quality:'所有点位（按街道品质从低到高）',mix:'所有点位（按综合混合度从低到高）',vitality:'所有点位（按空间活力度从低到高）'}[kind],nameLocation:'middle',nameGap:28};
  o.yAxis={type:'category',data:labels,inverse:true,axisLabel:{color:'#4B4B4B',fontFamily:FONT,fontSize:14,interval:0},axisTick:{show:false},splitLine:{show:true,lineStyle:{color:'#cd96be'}}};
  const values=keys.map(k=>points.map(p=>(quality?p.qualityNormalized:kind==='vitality'?p.vitalityNormalized:p.metrics)[k]));values.push(points.map(p=>p[quality?'quality':mix?'mixScore':'vitality']));
  const ranges=values.map(a=>{const v=a.filter(finite);return [Math.min(...v),Math.max(...v)]});
@@ -174,9 +174,9 @@ function covarianceMatrix(){
 }
 function correlations(i){document.body.classList.remove('screen-analysis');if(i===0){covarianceMatrix();return;}if(i===1){note('每列代表一个节点，每行是一个指标；悬停显示同节点的全部信息并圈出综合评分。居民/游客指数用于对照展示，不纳入活动强度评分，以免把身份倾向当作活力高低。\n'+SFORM);vitalityInformation();return;}mixingInformation();}
 function qualityChart(kind){const selected=D.qualityFields,desc=selected.map(k=>D.headers[k]).join('、');
- note('每个点为一个节点；横轴是从显著正相关空间指标构建的界面品质，纵轴为'+(kind==='qualityMix'?'混合度':'活力度')+'。\n指标筛选：'+(D.qualityRule||'ρ≥0.5 且 p<0.05')+'，相同空间指标只计一次。\nQ=(Σ z_j)/m，z_j=(x_j−min x_j)/(max x_j−min x_j)，m为筛出的空间指标数；任一输入缺失则Q缺失。\n本次入选：'+(desc||'无符合项，无法计算界面品质')+'。');
- if(!selected.length){el('p','empty').textContent='当前没有符合筛选标准的空间指标，界面品质暂无可计算结果。';return;}
- const key=kind==='qualityMix'?'mixScore':'vitality',c=chart(W,570),o=base();delete o.legend;o.xAxis={...axis('界面品质 Q'),min:0,max:1};o.yAxis={...axis(kind==='qualityMix'?'混合度 M':'活力度 V'),min:0,max:1};const pts=D.points.filter(p=>finite(p.quality)&&finite(p[key]));o.series=[{type:'scatter',data:pts.map(p=>[p.quality,p[key],p.address]),symbolSize:9,itemStyle:{color:PALETTE[0],opacity:.65}}];o.tooltip.formatter=p=>esc(p.data[2])+'<br>Q='+fmt(p.data[0])+'<br>评分='+fmt(p.data[1]);const f=fittedRegression(o.series[0].data);
+ note('每个点为一个节点；横轴是从显著正相关空间指标构建的街道品质，纵轴为'+(kind==='qualityMix'?'混合度':'活力度')+'。\n指标筛选：'+(D.qualityRule||'ρ≥0.5 且 p<0.05')+'，相同空间指标只计一次。\nQ=(Σ z_j)/m，z_j=(x_j−min x_j)/(max x_j−min x_j)，m为筛出的空间指标数；任一输入缺失则Q缺失。\n本次入选：'+(desc||'无符合项，无法计算街道品质')+'。');
+ if(!selected.length){el('p','empty').textContent='当前没有符合筛选标准的空间指标，街道品质暂无可计算结果。';return;}
+ const key=kind==='qualityMix'?'mixScore':'vitality',c=chart(W,570),o=base();delete o.legend;o.xAxis={...axis('街道品质 Q'),min:0,max:1};o.yAxis={...axis(kind==='qualityMix'?'混合度 M':'活力度 V'),min:0,max:1};const pts=D.points.filter(p=>finite(p.quality)&&finite(p[key]));o.series=[{type:'scatter',data:pts.map(p=>[p.quality,p[key],p.address]),symbolSize:9,itemStyle:{color:PALETTE[0],opacity:.65}}];o.tooltip.formatter=p=>esc(p.data[2])+'<br>Q='+fmt(p.data[0])+'<br>评分='+fmt(p.data[1]);const f=fittedRegression(o.series[0].data);
  const controls=el('label','band-controls'),slider=el('input','',controls),value=el('span','',controls);slider.type='range';slider.min='0';slider.max='4';slider.step='0.05';slider.value='1.96';slider.setAttribute('aria-label','回归条带宽度');
  function update(){const k=Number(slider.value);value.textContent='回归条带宽度：'+k.toFixed(2)+' × 标准误';c.setOption({series:[o.series[0],...regressionSeries(f,Math.max(.000001,k),true)]},{replaceMerge:'series'});}
  c.setOption(o);update();slider.oninput=update;slider.disabled=!f;
@@ -196,7 +196,7 @@ function informationExplorer(parent,kind){
  const quality=kind==='quality',mix=kind==='mix',keys=quality?D.qualityFields:mix?['ageMix','activityMix','identityMix','postureMix','socialMix']:['sample','clusters','density','gather'];
  const labels=[...keys.map(k=>quality?D.headers[k]:D.ys[k]),'综合评分'],count=labels.length,last=count-1;
  const nav=el('div','subtabs',parent),host=el('div','',parent),c=informationScatter(host,kind),original=c.getOption();
- original.xAxis.forEach(axis=>axis.name={quality:'所有点位（按界面品质从低到高）',mix:'所有点位（按综合混合度从低到高）',vitality:'所有点位（按空间活力度从低到高）'}[kind]);
+ original.xAxis.forEach(axis=>axis.name={quality:'所有点位（按街道品质从低到高）',mix:'所有点位（按综合混合度从低到高）',vitality:'所有点位（按空间活力度从低到高）'}[kind]);
  const controls=el('div','metric-controls axis-controls',host),caption=host.querySelector('.caption');
  const values=keys.map(k=>points.map(p=>(quality?p.qualityNormalized:kind==='vitality'?p.vitalityNormalized:p.metrics)[k]));values.push(points.map(p=>p[quality?'quality':mix?'mixScore':'vitality']));
  const fits=values.map(v=>fittedRegression(v.map((y,x)=>[x,y]))),state=labels.map(()=>({visible:true,line:false,band:false}));let mode=0,selected=-1,phase=0,timer=null,generation=0;
@@ -220,9 +220,9 @@ function informationExplorer(parent,kind){
    series.push({...fit[1],id:'info-band-'+j,type:'custom',silent:true,clip:true,yAxisIndex:mode?j:0,data:enabled&&state[j].band&&f?[0]:[],renderItem:f?(params,api)=>({type:'polygon',shape:{points:[...f.points.map(p=>api.coord([p[0],p[1]+1.96*p[2]])),...f.points.slice().reverse().map(p=>api.coord([p[0],p[1]-1.96*p[2]]))]},style:{fill:PALETTE[j%PALETTE.length],opacity:.14}}):()=>null});
   });
   series.push({id:'focus-ring',type:'scatter',silent:true,yAxisIndex:mode?last:0,data:[],symbolSize:27,itemStyle:{color:'transparent',borderColor:PALETTE[last%PALETTE.length],borderWidth:2,opacity:1},z:10});
-  c.setOption({animation:true,animationDurationUpdate:850,animationEasingUpdate:'cubicInOut',grid:{left:mode?step*(leftCount-1)+42:150,right:mode?step*(count-leftCount-1)+42:25,top:40,bottom:82},xAxis:mode?{type:'value',min:0,max:points.length-1,data:[],axisLabel:{show:false},axisTick:{show:false},name:{quality:'所有点位（按界面品质从低到高）',mix:'所有点位（按综合混合度从低到高）',vitality:'所有点位（按空间活力度从低到高）'}[kind],nameLocation:'middle',nameGap:34}:original.xAxis,yAxis:axes,series},{replaceMerge:'yAxis'});
+  c.setOption({animation:true,animationDurationUpdate:850,animationEasingUpdate:'cubicInOut',grid:{left:mode?step*(leftCount-1)+42:150,right:mode?step*(count-leftCount-1)+42:25,top:40,bottom:82},xAxis:mode?{type:'value',min:0,max:points.length-1,data:[],axisLabel:{show:false},axisTick:{show:false},name:{quality:'所有点位（按街道品质从低到高）',mix:'所有点位（按综合混合度从低到高）',vitality:'所有点位（按空间活力度从低到高）'}[kind],nameLocation:'middle',nameGap:34}:original.xAxis,yAxis:axes,series},{replaceMerge:'yAxis'});
   controls.hidden=!mode;positionAxisControls(controls,c,count);c.reflow=()=>positionAxisControls(controls,c,count);
-  const text=(mode?count+'组散点叠加，各自独立纵轴从小到大；轴号依次对应：'+labels.join('、')+'。同一指标按钮依次点击：单项散点与回归动画 → 仅单项散点 → 全部指标。换点其他指标从第一步开始。不同指标的绝对高度不可直接比较。':'每列为一个点位（按综合评分升序，缺失评分置后），每行代表一个指标，点大小表示该行相对大小。')+'\n悬停联动同一点位，综合评分加外圈；切换视图时点位平滑移动。\n'+(quality?'界面品质：11项指标按全域最小最大值标准化后，依系数表征权重求和。':mix?MFORM:SFORM);
+  const text=(mode?count+'组散点叠加，各自独立纵轴从小到大；轴号依次对应：'+labels.join('、')+'。同一指标按钮依次点击：单项散点与回归动画 → 仅单项散点 → 全部指标。换点其他指标从第一步开始。不同指标的绝对高度不可直接比较。':'每列为一个点位（按综合评分升序，缺失评分置后），每行代表一个指标，点大小表示该行相对大小。')+'\n悬停联动同一点位，综合评分加外圈；切换视图时点位平滑移动。\n'+(quality?'街道品质：11项指标按全域最小最大值标准化后，依系数表征权重求和。':mix?MFORM:SFORM);
   if(parent===W)note(text);else caption.textContent=text;
   if(parent===W)caption.textContent='回归横轴为综合评分排序，不代表时间或空间距离。OLS：ŷ=a+bx，b=Σ[(x−x̄)(y−ȳ)]/Σ(x−x̄)²，a=ȳ−bx̄。\n条带=ŷ±1.96×s√[1/n+(x−x̄)²/Σ(x−x̄)²]，s²=Σ(y−ŷ)²/(n−2)。R²≥0.5实线，其余虚线；不将顺序趋势解释为因果。';
  }
@@ -298,7 +298,7 @@ function coefficient(kind){
  const lower=el('div','coefficient-tables',box),left=el('section','',lower),right=el('section','',lower);
  const table=el('table','coefficient-table',left);table.innerHTML='<thead><tr><th>指标</th><th>系数</th><th>权重</th></tr></thead><tbody>'+defs.map(d=>'<tr><td>'+d[1]+'</td><td>'+d[0]+'</td><td>'+d[2].toFixed(3)+'</td></tr>').join('')+'</tbody>';
  if(kind==='mix')el('p','coefficient-conclusion',left).textContent="进一步结合指标相关性与CRITIC权重分析可见，姿态丰富度与身份倾向混合度对街区综合混合度的贡献最为突出。\n其中活动丰富度与社交状态混合度呈现较强的相关性，说明行人的行为活动与社交行为存在明显的耦合关系。\n而年龄混合度权重相对较低，对整体混合度的解释力有限。\n由此可以推测，街道空间能否容纳多样化的身体姿态行为、能否吸引多元身份人群到访，是提升街区混合度的核心驱动要素。";
- const label={mix:'混合度',quality:'界面品质',vitality:'活力度'}[kind],key=kind==='mix'?'mixScore':kind;el('h2','section-heading',right).textContent=label+'总表';
+ const label={mix:'混合度',quality:'街道品质',vitality:'活力度'}[kind],key=kind==='mix'?'mixScore':kind;el('h2','section-heading',right).textContent=label+'总表';
  const wrap=el('div','score-table-wrap',right),scores=el('table','coefficient-table score-table',wrap);scores.innerHTML='<thead><tr><th>地址</th><th>'+label+'</th></tr></thead><tbody>'+D.points.map(p=>'<tr><td>'+esc(p.address)+'</td><td>'+fmt(p[key],6)+'</td></tr>').join('')+'</tbody>';
  note(kind==='mix'?"第d维混合度 H_d=−Σ(p_k×ln p_k)/ln K_d；p_k=类别频数/该维频数合计，0×ln0记0。\n零合计或缺失不评分。\n综合混合度 M=0.149H年龄+0.141H活动+0.250H身份倾向+0.228H姿态+0.233H社交状态。\n权重按给定公式顺序使用，不二次归一化。\n权重说明保留给定w1–w5名称；综合混合度（综合评分）按指定M公式的维度顺序代入。":SFORM+'\n'+D.scoreWeights[kind].map(d=>d[1]+' '+d[2].toFixed(3)).join('；'));
 }
@@ -786,7 +786,7 @@ function shapAnalysis(){
  note('');
 }
 function mismatchView(i){
- const config={qualityVitality:['quality','vitality','界面品质','活力度','界面品质的底层指标组合','活力度的底层指标'],qualityMix:['quality','mixScore','界面品质','混合度','界面品质的底层指标组合','混合度的底层指标'],mismatch:['vitality','mixScore','活力度','混合度','活力度的底层指标组合','混合度的底层指标']}[PAGE], [x,y,xlabel,ylabel,first,second]=config;
+ const config={qualityVitality:['quality','vitality','街道品质','活力度','街道品质的底层指标组合','活力度的底层指标'],qualityMix:['quality','mixScore','街道品质','混合度','街道品质的底层指标组合','混合度的底层指标'],mismatch:['vitality','mixScore','活力度','混合度','活力度的底层指标组合','混合度的底层指标']}[PAGE], [x,y,xlabel,ylabel,first,second]=config;
  const labels=PAGE==='mismatch'?['高混合度低活力度','高活力度低混合度']:['高'+xlabel+'低'+ylabel,'高'+ylabel+'低'+xlabel],mx=D.scoreMeans[x],my=D.scoreMeans[y];
  if(i){shapAnalysis();return;}
  const c=chart(W,610),o=base();delete o.legend;o.grid={left:75,right:55,top:45,bottom:65};
@@ -797,7 +797,7 @@ function mismatchView(i){
  if(PAGE==='mismatch')el('p','mismatch-conclusion').textContent="活力度与人群身份混合度呈显著正相关，混合度整体随活力度上升。\n散点分布显示，多数点位混合度取值略高于活力度，仅少数样本呈高活力度—低混合度的背离特征。\n据此推断，人群构成的多元化或先于街道活力的提升而发生；通过增强街道空间包容性、适配多元人群需求，可有效促进街道活力。";
 }
 if(PAGE==='heat')mainTabs(['热力分布图','样本数'],i=>mapView(1-i));
-if(PAGE==='weights')mainTabs(['空间分析','系数表征','界面品质总表'],i=>{if(i===2)informationExplorer(W,'quality');else if(i===1)coefficient('quality');else sectionTabs(['有效空间分析','舒适度分析','效果分析'],j=>j<2?space(j):effectAnalysis());});
+if(PAGE==='weights')mainTabs(['空间分析','系数表征','街道品质总表'],i=>{if(i===2)informationExplorer(W,'quality');else if(i===1)coefficient('quality');else sectionTabs(['有效空间分析','舒适度分析','效果分析'],j=>j<2?space(j):effectAnalysis());});
 if(PAGE==='mixRegression')mainTabs(['系数表征','混合度总表'],i=>i?mixedTotal():coefficient('mix'));
 if(PAGE==='composition')mainTabs(D.mixDimensions.map(d=>d.label),dimensionBars);
 if(PAGE==='memory')mainTabs(['系数表征','活力度总表'],i=>i?informationExplorer(W,'vitality'):coefficient('vitality'));

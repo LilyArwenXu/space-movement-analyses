@@ -12,7 +12,7 @@ function coefficient(kind){
  const defs=kind==='mix'?[['w1','年龄混合度',.149],['w2','活动丰富度',.141],['w3','姿态丰富度',.250],['w4','社交状态混合度',.228],['w5','身份倾向混合度',.233]]:D.scoreWeights[kind].map((d,i)=>[(kind==='quality'?'x':'y')+(i+1),d[1],d[2]]);
  const lower=el('div','coefficient-tables',box),left=el('section','',lower),right=el('section','',lower);
  const table=el('table','coefficient-table',left);table.innerHTML='<thead><tr><th>指标</th><th>系数</th><th>权重</th></tr></thead><tbody>'+defs.map(d=>'<tr><td>'+d[1]+'</td><td>'+d[0]+'</td><td>'+d[2].toFixed(3)+'</td></tr>').join('')+'</tbody>';
- const label={mix:'混合度',quality:'界面品质',vitality:'活力度'}[kind],key=kind==='mix'?'mixScore':kind;el('h2','section-heading',right).textContent=label+'总表';
+ const label={mix:'混合度',quality:'街道品质',vitality:'活力度'}[kind],key=kind==='mix'?'mixScore':kind;el('h2','section-heading',right).textContent=label+'总表';
  const wrap=el('div','score-table-wrap',right),scores=el('table','coefficient-table score-table',wrap);scores.innerHTML='<thead><tr><th>地址</th><th>'+label+'</th></tr></thead><tbody>'+D.points.map(p=>'<tr><td>'+esc(p.address)+'</td><td>'+fmt(p[key],6)+'</td></tr>').join('')+'</tbody>';
  note(kind==='mix'?MFORM+'\n权重说明保留给定w1–w5名称；综合评分按指定M公式的维度顺序代入。':SFORM+'\n'+D.scoreWeights[kind].map(d=>d[1]+' '+d[2].toFixed(3)).join('；'));
 }
@@ -71,7 +71,7 @@ function shapAnalysis(label){
   const figure=el('figure','shap-figure',host),row=single?figure:el('div','shap-row',figure),img=el('img','shap-image',row);
   img.src='../assets/data/shap/'+label+'/'+number+'.png';img.alt=label+' · '+number+'.png';
   let description=content.descriptions[index];
-  if(index===2&&['高混合度低界面品质','高混合度低活力度','高活力度低混合度'].includes(label))description=description.replace('第三维变量不配得性U','第三维变量'+(label==='高活力度低混合度'?'U（不配得性）':'U（不配得性）'));
+  if(index===2&&['高混合度低街道品质','高混合度低活力度','高活力度低混合度'].includes(label))description=description.replace('第三维变量不配得性U','第三维变量'+(label==='高活力度低混合度'?'U（不配得性）':'U（不配得性）'));
   const side=el(single?'figcaption':'aside',single?'shap-bottom':'shap-side',single?figure:row);side.textContent=lines(description);
   if(!single){
    side.textContent+='\n\n'+lines(content.groups[label][index]);
@@ -88,7 +88,7 @@ function shapAnalysis(label){
  note('');
 }
 function mismatchView(i){
- const config={qualityVitality:['quality','vitality','界面品质','活力度','界面品质的底层指标组合','活力度的底层指标'],qualityMix:['quality','mixScore','界面品质','混合度','界面品质的底层指标组合','混合度的底层指标'],mismatch:['vitality','mixScore','活力度','混合度','活力度的底层指标组合','混合度的底层指标']}[PAGE], [x,y,xlabel,ylabel,first,second]=config;
+ const config={qualityVitality:['quality','vitality','街道品质','活力度','街道品质的底层指标组合','活力度的底层指标'],qualityMix:['quality','mixScore','街道品质','混合度','街道品质的底层指标组合','混合度的底层指标'],mismatch:['vitality','mixScore','活力度','混合度','活力度的底层指标组合','混合度的底层指标']}[PAGE], [x,y,xlabel,ylabel,first,second]=config;
  const labels=PAGE==='mismatch'?['高混合度低活力度','高活力度低混合度']:['高'+xlabel+'低'+ylabel,'高'+ylabel+'低'+xlabel],mx=D.scoreMeans[x],my=D.scoreMeans[y];
  if(i){sectionTabs(labels,j=>shapAnalysis(labels[j]));return;}
  const c=chart(W,610),o=base();delete o.legend;o.grid={left:75,right:55,top:45,bottom:65};
@@ -98,7 +98,7 @@ function mismatchView(i){
  note('横轴：'+xlabel+'；纵轴：'+ylabel+'。按各指标全域有效评分的平均值划分四象限：'+xlabel+'均值='+fmt(mx,6)+'，'+ylabel+'均值='+fmt(my,6)+'。左上与右下两类点位纳入不配得性分析，等于均值归高组。\nQ、V、M与各总表综合评分完全一致，缺失评分不参与筛选。');el('p','caption').textContent=labels.map(label=>label+'：'+D.points.filter(p=>p.mismatchGroups[PAGE]===label).length+' 个点位').join('；');
 }
 if(PAGE==='heat')mainTabs(['热力分布图','样本数'],i=>mapView(1-i));
-if(PAGE==='weights')mainTabs(['空间分析','系数表征','界面品质总表'],i=>{if(i===2)informationExplorer(W,'quality');else if(i===1)coefficient('quality');else sectionTabs(['有效空间分析','舒适度分析','效果分析'],j=>j<2?space(j):effectAnalysis());});
+if(PAGE==='weights')mainTabs(['空间分析','系数表征','街道品质总表'],i=>{if(i===2)informationExplorer(W,'quality');else if(i===1)coefficient('quality');else sectionTabs(['有效空间分析','舒适度分析','效果分析'],j=>j<2?space(j):effectAnalysis());});
 if(PAGE==='composition')mainTabs(['构成分析','系数表征','混合度总表'],i=>i===0?sectionTabs(D.mixDimensions.map(d=>d.label),dimensionBars):i===1?coefficient('mix'):mixedTotal());
 if(PAGE==='memory')mainTabs(['系数表征','活力度总表'],i=>i?informationExplorer(W,'vitality'):coefficient('vitality'));
 if(PAGE==='correlations')mainTabs(['空间行为相关性分析'],matrixWithAxes);

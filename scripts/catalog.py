@@ -1,7 +1,7 @@
 """Display order is independent of the stable chart renderer and legacy filenames."""
 CATALOG=[
     (1,'address_people_heatmaps.html','人员热力图','heat'),
-    (2,'street_interface_weights.html','节点空间与界面品质信息表','weights'),
+    (2,'street_interface_weights.html','节点空间与街道品质信息表','weights'),
     (3,'people_composition.html','人群构成分析','composition'),
     (10,'mixing_regression.html','混合度回归分析','mixRegression'),
     (4,'local_memory_sankey.html','悬置记忆与活力度信息表','memory'),

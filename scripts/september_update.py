@@ -73,7 +73,7 @@ def renderer(js):
     js=js.replace('keys.map(k=>D.ys[k])','keys.map(k=>quality?D.headers[k]:D.ys[k])')
     js=js.replace('D.points.map(p=>p.metrics[k])',"D.points.map(p=>(quality?p.values:p.metrics)[k])")
     js=js.replace("p[mix?'mixScore':'vitality']","p[quality?'quality':mix?'mixScore':'vitality']")
-    js=js.replace('(mix?MFORM:SFORM)',"(quality?'界面品质：沿用不配得性Ⅰ的正向显著指标，各指标全域最小最大标准化后等权平均。':mix?MFORM:SFORM)")
+    js=js.replace('(mix?MFORM:SFORM)',"(quality?'街道品质：沿用不配得性Ⅰ的正向显著指标，各指标全域最小最大标准化后等权平均。':mix?MFORM:SFORM)")
     js=re.sub(r'PALETTE\[j\]', 'PALETTE[j%PALETTE.length]',js)
     js=js.replace('PALETTE[last]','PALETTE[last%PALETTE.length]')
     start=js.index("if(PAGE==='heat')")

@@ -47,7 +47,7 @@ def revise(data):
     extracted=[]
     for p in data['points']:
         p['mismatchGroups']={}
-        for kind,x,y,xlabel,ylabel in [('qualityVitality','quality','vitality','界面品质','活力度'),('qualityMix','quality','mixScore','界面品质','混合度'),('mismatch','vitality','mixScore','活力度','混合度')]:
+        for kind,x,y,xlabel,ylabel in [('qualityVitality','quality','vitality','街道品质','活力度'),('qualityMix','quality','mixScore','街道品质','混合度'),('mismatch','vitality','mixScore','活力度','混合度')]:
             a,b=p[x],p[y];group=None
             if finite(a) and finite(b):
                 mx,my=data['scoreMeans'][x],data['scoreMeans'][y]
@@ -57,10 +57,10 @@ def revise(data):
         p['quadrant']=p['mismatchGroups']['mismatch'];p['mismatch']=math.log((1+p['vitality'])/(1+p['mixScore'])) if finite(p['vitality']) and finite(p['mixScore']) else None
     for filename in ['data-extract.csv','data_extract.csv']:
         with (ROOT/filename).open('w',encoding='utf-8-sig',newline='') as f:
-            w=csv.writer(f);w.writerow(['point_id','完整地址','分析','组别','界面品质Q','活力度V','混合度M','行人样本数','横轴指标','纵轴指标','横轴值','纵轴值','横轴全域有效评分均值','纵轴全域有效评分均值','象限']);w.writerows(extracted)
+            w=csv.writer(f);w.writerow(['point_id','完整地址','分析','组别','街道品质Q','活力度V','混合度M','行人样本数','横轴指标','纵轴指标','横轴值','纵轴值','横轴全域有效评分均值','纵轴全域有效评分均值','象限']);w.writerows(extracted)
     with (ROOT/'result/score-fields.csv').open('w',encoding='utf-8-sig',newline='') as f:
         w=csv.writer(f)
-        w.writerow(['point_id','完整地址','CSV数据行','界面品质','活力度','混合度','界面品质均值','活力度均值','混合度均值','不配得性Ⅰ组别','不配得性Ⅱ组别','不配得性Ⅲ组别'])
+        w.writerow(['point_id','完整地址','CSV数据行','街道品质','活力度','混合度','街道品质均值','活力度均值','混合度均值','不配得性Ⅰ组别','不配得性Ⅱ组别','不配得性Ⅲ组别'])
         for p in data['points']:
             w.writerow([p['id'],p['address'],p['scoreSourceRows']['vitality'],p['quality'],p['vitality'],p['mixScore'],data['scoreMeans']['quality'],data['scoreMeans']['vitality'],data['scoreMeans']['mixScore'],p['mismatchGroups']['qualityVitality'],p['mismatchGroups']['qualityMix'],p['mismatchGroups']['mismatch']])
     (ROOT/'.site-build/final-audit.json').write_text(json.dumps({'source':data['spaceSheet'],'fields':data['mixDimensions'],'weights':data['scoreWeights'],'points':len(data['points']),'missing':{k:sum(p[k] is None for p in data['points']) for k in ['quality','vitality','mixScore']},'extracted':len(extracted)},ensure_ascii=False,indent=2),encoding='utf-8')
@@ -69,7 +69,7 @@ def renderer(js):
     js=re.sub(r'const SFORM=.*?;\nconst MFORM=.*?;\n',"const SFORM='各底层指标 z=(x−全域最小值)/(全域最大值−全域最小值)，常量记0；缺失则综合评分缺失。综合评分=Σ(w×z)，采用系数表征的指定权重，不额外缩放。';\nconst MFORM='H_d=−Σ(p_k×ln p_k)/ln K_d；p_k=类别频数/该维频数合计，0×ln0记0。零合计或缺失不评分。M=0.149H年龄+0.141H活动+0.250H身份倾向+0.228H姿态+0.233H社交状态。权重按给定公式顺序使用，不二次归一化。';\n",js,flags=re.S)
     js=js.replace("['sample','clusters','density','gather','resident','visitor']","['sample','clusters','density','gather']")
     js=js.replace('(quality?p.values:p.metrics)[k]',"(quality?p.qualityNormalized:kind==='vitality'?p.vitalityNormalized:p.metrics)[k]")
-    js=js.replace("界面品质：沿用不配得性Ⅰ的正向显著指标，各指标全域最小最大标准化后等权平均。","界面品质：11项指标按全域最小最大值标准化后，依系数表征权重求和。")
+    js=js.replace("街道品质：沿用不配得性Ⅰ的正向显著指标，各指标全域最小最大标准化后等权平均。","街道品质：11项指标按全域最小最大值标准化后，依系数表征权重求和。")
     js=js.replace("scatter(grid,'T',y,t)","scatter(grid,'AH',y,t)")
     js=js.replace("mode?'#292929':'#A45668'","mode?'#292929':(['#607E95','#A45668','#8C793E','#497F73','#806A96','#BD7546'][['AU','AV','AX','BA','AY','BB'].indexOf(selected)]||'#607E95')")
     start=js.index("if(PAGE==='heat')");end=js.index('let resizeTimer',start)

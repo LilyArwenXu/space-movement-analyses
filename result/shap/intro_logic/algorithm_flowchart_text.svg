@@ -14,7 +14,7 @@
 <title>raw</title>
 <path fill="#f1f3f5" stroke="#aeb4bc" stroke-width="1.15" d="M713.18,-2206.88C713.18,-2206.88 511.38,-2206.88 511.38,-2206.88 505.38,-2206.88 499.38,-2200.88 499.38,-2194.88 499.38,-2194.88 499.38,-2162.96 499.38,-2162.96 499.38,-2156.96 505.38,-2150.96 511.38,-2150.96 511.38,-2150.96 713.18,-2150.96 713.18,-2150.96 719.18,-2150.96 725.18,-2156.96 725.18,-2162.96 725.18,-2162.96 725.18,-2194.88 725.18,-2194.88 725.18,-2200.88 719.18,-2206.88 713.18,-2206.88"/>
 <text xml:space="preserve" text-anchor="middle" x="612.28" y="-2183.47" font-family="Microsoft YaHei" font-size="11.00" fill="#333333">底层指标数据</text>
-<text xml:space="preserve" text-anchor="middle" x="612.28" y="-2168.47" font-family="Microsoft YaHei" font-size="11.00" fill="#333333">活力度、混合度与界面品质的底层指标</text>
+<text xml:space="preserve" text-anchor="middle" x="612.28" y="-2168.47" font-family="Microsoft YaHei" font-size="11.00" fill="#333333">活力度、混合度与街道品质的底层指标</text>
 </g>
 <!-- norm -->
 <g id="node2" class="node">
@@ -75,7 +75,7 @@
 <g id="node6" class="node">
 <title>Q</title>
 <path fill="#fff3eb" stroke="#d7a987" stroke-width="1.15" d="M818.43,-1799.12C818.43,-1799.12 738.12,-1799.12 738.12,-1799.12 732.12,-1799.12 726.12,-1793.12 726.12,-1787.12 726.12,-1787.12 726.12,-1755.2 726.12,-1755.2 726.12,-1749.2 732.12,-1743.2 738.12,-1743.2 738.12,-1743.2 818.43,-1743.2 818.43,-1743.2 824.43,-1743.2 830.43,-1749.2 830.43,-1755.2 830.43,-1755.2 830.43,-1787.12 830.43,-1787.12 830.43,-1793.12 824.43,-1799.12 818.43,-1799.12"/>
-<text xml:space="preserve" text-anchor="middle" x="778.28" y="-1775.71" font-family="Microsoft YaHei" font-size="11.00" fill="#333333">界面品质 Q</text>
+<text xml:space="preserve" text-anchor="middle" x="778.28" y="-1775.71" font-family="Microsoft YaHei" font-size="11.00" fill="#333333">街道品质 Q</text>
 <text xml:space="preserve" text-anchor="middle" x="778.28" y="-1760.71" font-family="Microsoft YaHei" font-size="11.00" fill="#333333">Q = Σᵢ₌₁ʳ wᵢ · xᵢ</text>
 </g>
 <!-- critic&#45;&gt;Q -->
@@ -89,7 +89,7 @@
 <g id="node10" class="node">
 <title>U1</title>
 <path fill="#f8f1ec" stroke="#d1a98c" stroke-width="1.15" d="M172.56,-1678.2C172.56,-1678.2 12,-1678.2 12,-1678.2 6,-1678.2 0,-1672.2 0,-1666.2 0,-1666.2 0,-1634.28 0,-1634.28 0,-1628.28 6,-1622.28 12,-1622.28 12,-1622.28 172.56,-1622.28 172.56,-1622.28 178.56,-1622.28 184.56,-1628.28 184.56,-1634.28 184.56,-1634.28 184.56,-1666.2 184.56,-1666.2 184.56,-1672.2 178.56,-1678.2 172.56,-1678.2"/>
-<text xml:space="preserve" text-anchor="middle" x="92.28" y="-1654.79" font-family="Microsoft YaHei" font-size="11.00" fill="#333333">U₁ 活力度－界面品质不配得性</text>
+<text xml:space="preserve" text-anchor="middle" x="92.28" y="-1654.79" font-family="Microsoft YaHei" font-size="11.00" fill="#333333">U₁ 活力度－街道品质不配得性</text>
 <text xml:space="preserve" text-anchor="middle" x="92.28" y="-1639.79" font-family="Microsoft YaHei" font-size="11.00" fill="#333333">U₁ = ln(1+V) − ln(1+Q)</text>
 </g>
 <!-- V&#45;&gt;U1 -->
@@ -116,7 +116,7 @@
 <g id="node11" class="node">
 <title>U2</title>
 <path fill="#f8f1ec" stroke="#d1a98c" stroke-width="1.15" d="M418.56,-1678.2C418.56,-1678.2 258,-1678.2 258,-1678.2 252,-1678.2 246,-1672.2 246,-1666.2 246,-1666.2 246,-1634.28 246,-1634.28 246,-1628.28 252,-1622.28 258,-1622.28 258,-1622.28 418.56,-1622.28 418.56,-1622.28 424.56,-1622.28 430.56,-1628.28 430.56,-1634.28 430.56,-1634.28 430.56,-1666.2 430.56,-1666.2 430.56,-1672.2 424.56,-1678.2 418.56,-1678.2"/>
-<text xml:space="preserve" text-anchor="middle" x="338.28" y="-1654.79" font-family="Microsoft YaHei" font-size="11.00" fill="#333333">U₂ 混合度－界面品质不配得性</text>
+<text xml:space="preserve" text-anchor="middle" x="338.28" y="-1654.79" font-family="Microsoft YaHei" font-size="11.00" fill="#333333">U₂ 混合度－街道品质不配得性</text>
 <text xml:space="preserve" text-anchor="middle" x="338.28" y="-1639.79" font-family="Microsoft YaHei" font-size="11.00" fill="#333333">U₂ = ln(1+M) − ln(1+Q)</text>
 </g>
 <!-- M&#45;&gt;U2 -->

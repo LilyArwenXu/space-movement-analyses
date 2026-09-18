@@ -63,7 +63,7 @@ TITLES = {
 
     'weights': (
         5,
-        '界面品质回归分析'
+        '街道品质回归分析'
     ),
 
     'memory': (
@@ -73,12 +73,12 @@ TITLES = {
 
     'qualityVitality': (
         7,
-        '不配得性Ⅰ：高界面品质是否必然带来高空间活力度？'
+        '不配得性Ⅰ：高街道品质是否必然带来高空间活力度？'
     ),
 
     'qualityMix': (
         8,
-        '不配得性Ⅱ：高界面品质是否必然促进人群的高度混合？'
+        '不配得性Ⅱ：高街道品质是否必然促进人群的高度混合？'
     ),
 
     'mismatch': (
@@ -664,6 +664,15 @@ CSS = r'''
 .mismatch-intro-text{font-size:17px;line-height:1.9}
 .mismatch-intro-image{display:block;width:100%;height:auto;margin:0 0 32px}
 .mismatch-intro-copy{max-width:960px;overflow-wrap:anywhere}.mismatch-intro-copy p{margin:0 0 18px}.mismatch-intro-copy .mini-heading{margin:34px 0 18px;font-weight:700}.mismatch-intro-copy .mismatch-intro-spacer{height:8px;margin:0}
+.mismatch-principle{padding:16px 0 24px;border-bottom:1px solid var(--line,#ccc)}
+.mismatch-principle h2{font-size:24px;margin:12px 0 20px}
+.mismatch-principle p{font-size:16px;line-height:1.95;white-space:pre-line;overflow-wrap:anywhere}
+.mismatch-intro-copy.mismatch-principles{max-width:none;font-family:Arial,"Microsoft YaHei",sans-serif}
+.mismatch-principles p{margin:1em 0}
+.mismatch-principles .algorithm-step{margin:0}
+.mismatch-principles .algorithm-step+.algorithm-step{margin-top:1.95em}
+.mismatch-intro-page:has(.mismatch-principles){padding:10px 3vw 48px}
+@media(max-width:650px){.mismatch-intro-page:has(.mismatch-principles){padding:6px 16px 32px}.mismatch-principles p{font-size:15px}}
 .shap-reading{white-space:normal}
 .shap-reading>summary{cursor:pointer;line-height:1.8;list-style-position:inside;margin:0}
 .shap-reading>summary:focus-visible{outline:2px solid var(--ink);outline-offset:4px}
@@ -802,13 +811,69 @@ def mismatch_intro_page():
    copy.className='mismatch-intro-copy';
    const lines=Array.isArray(item.text)?item.text:[item.text||''];
    const headings=new Set(item.headings||[]);
-   lines.forEach((line,index)=>{
-    const node=document.createElement(headings.has(index)?'h2':'p');
-    node.textContent=line;
-    if(headings.has(index))node.className='mini-heading';
-    if(!line)node.classList.add('mismatch-intro-spacer');
-    copy.appendChild(node);
-   });
+   if(item.title==='算法逻辑'){
+    copy.classList.add('mismatch-principles');
+    const titles=new Set(['已经进行过的数据处理','研究前序准备','数据分析-单指标','数据分析-指标组合','数据分析-联合效应分析']);
+    let section,paragraph,isAnalysis=false;
+    lines.forEach(line=>{
+     const label=line.trim().replace(/[：:]$/,'');
+     if(titles.has(label)){
+      section=document.createElement('article');
+      section.className='mismatch-principle';
+      const heading=document.createElement('h2');
+      heading.textContent=label;
+      section.appendChild(heading);
+      copy.appendChild(section);
+      paragraph=null;
+      isAnalysis=label.startsWith('数据分析-');
+      return;
+     }
+     if(!section)return;
+     if(!line.trim()){
+      if(!isAnalysis)paragraph=null;
+      else if(paragraph)paragraph.textContent+='\n';
+      return;
+     }
+     // A numbered method and all its explanations form one paragraph group.
+     if(!paragraph||(isAnalysis&&/^\s*\d+[.．、]/.test(line))){
+      paragraph=document.createElement('p');
+      if(isAnalysis)paragraph.className='algorithm-step';
+      section.appendChild(paragraph);
+     }
+     paragraph.textContent+=(paragraph.textContent?'\n':'')+line;
+    });
+   }else if(item.title==='研究目的'){
+    // Keep this tab consistent with the segmented copy in 微观数据分析 → 可视化原理.
+    copy.classList.add('mismatch-principles');
+    let section;
+    lines.forEach((line,index)=>{
+     if(headings.has(index)){
+      section=document.createElement('article');
+      section.className='mismatch-principle';
+      const heading=document.createElement('h2');
+      heading.textContent=line;
+      section.appendChild(heading);
+      copy.appendChild(section);
+     }else if(line){
+      if(!section){
+       section=document.createElement('article');
+       section.className='mismatch-principle';
+       copy.appendChild(section);
+      }
+      const paragraph=document.createElement('p');
+      paragraph.textContent=line;
+      section.appendChild(paragraph);
+     }
+    });
+   }else{
+    lines.forEach((line,index)=>{
+     const node=document.createElement(headings.has(index)?'h2':'p');
+     node.textContent=line;
+     if(headings.has(index))node.className='mini-heading';
+     if(!line)node.classList.add('mismatch-intro-spacer');
+     copy.appendChild(node);
+    });
+   }
    host.appendChild(copy);
   }
  }

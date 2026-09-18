@@ -35,7 +35,7 @@ def load_scores(data):
         data['scoreSources'][key] = {'file': 'result/shap/'+filename, 'column': column, 'count': len(scores), 'mean': math.fsum(scores)/len(scores)}
     for point in data['points']:
         point['vitalityRaw'] = point['vitality']
-    data['qualityRule'] = '直接使用 result/shap/gua.csv 的界面品质原始评分，不额外缩放'
+    data['qualityRule'] = '直接使用 result/shap/gua.csv 的街道品质原始评分，不额外缩放'
 
 def pages():
     shutil.copytree(ROOT/'result/shap', ROOT/'aerial/assets/data/shap', dirs_exist_ok=True)
